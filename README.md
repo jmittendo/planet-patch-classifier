@@ -2,7 +2,7 @@ planet-patch-classifier
 =======================
 
 **planet-patch-classifier** is a Python tool for generating
-and classifing [planet patches](#planet-patches) from
+and classifying [planet patches](#planet-patches) from
 [satellite imagery](#satellite-datasets) via unsupervised machine learning.
 
 Planet Patches
