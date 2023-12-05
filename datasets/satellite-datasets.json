@@ -1,0 +1,6 @@
+{
+    "example-name": {
+        "path": "datasets/satellite-datasets/example-dataset",
+        "satellite": "example-satellite"
+    }
+}
