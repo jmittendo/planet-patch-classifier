@@ -1,0 +1,26 @@
+{
+    "archives": {
+        "vex-vmc": {
+            "url": "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/",
+            "href-filter": "VEX-V-VMC-3-RDR"
+        }
+    },
+    "datasets": {
+        "vex-vmc-n1": {
+            "archive": "vex-vmc",
+            "file-name-filter": "N12"
+        },
+        "vex-vmc-n2": {
+            "archive": "vex-vmc",
+            "file-name-filter": "N22"
+        },
+        "vex-vmc-uv": {
+            "archive": "vex-vmc",
+            "file-name-filter": "UV2"
+        },
+        "vex-vmc-vi": {
+            "archive": "vex-vmc",
+            "file-name-filter": "VI2"
+        }
+    }
+}

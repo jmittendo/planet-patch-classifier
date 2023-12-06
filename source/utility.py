@@ -15,6 +15,9 @@ class Config:
         cfg_parser = ConfigParser()
         cfg_parser.read(config_path)
 
+        self.download_configs_json_path = Path(
+            cfg_parser["Paths"]["download_configs_json"]
+        )
         self.satellite_datasets_json_path = Path(
             cfg_parser["Paths"]["satellite_datasets_json"]
         )

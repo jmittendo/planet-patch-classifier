@@ -1,30 +1,63 @@
+import json
 import warnings
 from pathlib import Path
+from typing import TypedDict
 
 import requests
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
-DIRECTORY_URL = "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/"
-SUB_URL_FILTER = "VEX-V-VMC-3-RDR"
-FILE_NAME_FILTER = "UV2"
+from source.utility import config
+
 OUTPUT_DIR = "datasets/satellite-datasets/vex-test"
+DATASET_NAME = "vex-vmc-uv"
 
 
-def main() -> None:
-    dir_url_stripped = DIRECTORY_URL.rstrip("/")
+ArchiveInfo = TypedDict("ArchiveInfo", {"url": str, "href-filter": str})
+DatasetInfo = TypedDict("DatasetInfo", {"archive": str, "file-name-filter": str})
+
+
+class DownloadsConfig(TypedDict):
+    archives: dict[str, ArchiveInfo]
+    datasets: dict[str, DatasetInfo]
+
+
+def main():
+    with open(config.download_configs_json_path, "r") as json_file:
+        downloads_config: DownloadsConfig = json.load(json_file)
+
+    dataset_info = downloads_config["datasets"][DATASET_NAME]
+    archive_name = dataset_info["archive"]
+    file_name_filter = dataset_info["file-name-filter"]
+    archive_info = downloads_config["archives"][archive_name]
+    archive_url = archive_info["url"]
+    href_filter = archive_info["href-filter"]
+
+    match archive_name:
+        case "vex-vmc":
+            download_vex_vmc_dataset(archive_url, href_filter, file_name_filter)
+        case _:
+            raise ValueError(
+                f"No download script implemented for archive with name '{archive_name}'"
+            )
+
+
+def download_vex_vmc_dataset(
+    archive_url: str, href_filter: str, file_name_filter: str
+) -> None:
+    url_stripped = archive_url.rstrip("/")
 
     mission_dir_names = [
         href.rstrip("/")
         for href in get_hrefs(
-            DIRECTORY_URL, dir_only=True, positive_filters=[SUB_URL_FILTER]
+            archive_url, dir_only=True, positive_filters=[href_filter]
         )
     ]
 
     for mission_dir_name in tqdm(
         mission_dir_names, desc="Full download progress", leave=False
     ):
-        mission_dir_url = f"{dir_url_stripped}/{mission_dir_name}"
+        mission_dir_url = f"{url_stripped}/{mission_dir_name}"
         mission_dir_path = Path(OUTPUT_DIR) / mission_dir_name
 
         img_dir_url = f"{mission_dir_url}/DATA"
@@ -50,7 +83,7 @@ def main() -> None:
             geo_file_dir_path.mkdir(parents=True, exist_ok=True)
 
             img_file_names = get_hrefs(
-                orbit_dir_url, positive_filters=[FILE_NAME_FILTER, ".IMG"]
+                orbit_dir_url, positive_filters=[file_name_filter, ".IMG"]
             )
 
             for img_file_name in tqdm(
