@@ -1,3 +1,8 @@
-.venv
-.vscode
 __pycache__
+
+/.venv
+/.vscode
+
+/datasets
+!/datasets/satellite-datasets/example-dataset
+!/datasets/satellite-datasets/satellite-datasets.json
