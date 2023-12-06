@@ -15,6 +15,7 @@ class Config:
         cfg_parser = ConfigParser()
         cfg_parser.read(config_path)
 
+        self.downloads_dir = Path(cfg_parser["Paths"]["downloads_dir"])
         self.download_configs_json_path = Path(
             cfg_parser["Paths"]["download_configs_json"]
         )
