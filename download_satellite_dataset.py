@@ -17,19 +17,19 @@ ArchiveInfo = TypedDict("ArchiveInfo", {"url": str, "href-filter": str})
 DatasetInfo = TypedDict("DatasetInfo", {"archive": str, "file-name-filter": str})
 
 
-class DownloadsConfig(TypedDict):
+class DownloadConfigs(TypedDict):
     archives: dict[str, ArchiveInfo]
     datasets: dict[str, DatasetInfo]
 
 
 def main():
     with open(config.download_configs_json_path, "r") as json_file:
-        downloads_config: DownloadsConfig = json.load(json_file)
+        download_configs: DownloadConfigs = json.load(json_file)
 
-    dataset_info = downloads_config["datasets"][DATASET_NAME]
+    dataset_info = download_configs["datasets"][DATASET_NAME]
     archive_name = dataset_info["archive"]
     file_name_filter = dataset_info["file-name-filter"]
-    archive_info = downloads_config["archives"][archive_name]
+    archive_info = download_configs["archives"][archive_name]
     archive_url = archive_info["url"]
     href_filter = archive_info["href-filter"]
 
