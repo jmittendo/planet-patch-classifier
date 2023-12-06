@@ -1,9 +1,13 @@
 from configparser import ConfigParser
 from pathlib import Path
+from typing import TypedDict
 
 CONFIG_PATH = "config.cfg"
 
-type SatelliteDataset = dict[str, str]
+
+class SatelliteDataset(TypedDict):
+    path: str
+    satellite: str
 
 
 class Config:
