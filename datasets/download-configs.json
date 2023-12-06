@@ -1,26 +1,51 @@
 {
     "archives": {
+        "vco": {
+            "url": "https://data.darts.isas.jaxa.jp/pub/pds3/",
+            "filter-patterns": [
+                "vco-v-[identifier]-3-cdr-v[number].[number]/",
+                "vco_[identifier]_v[number].[number]"
+            ]
+        },
         "vex-vmc": {
             "url": "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/",
-            "href-filter": "VEX-V-VMC-3-RDR"
+            "filter-patterns": [
+                "VEX-V-VMC-3-RDR"
+            ]
         }
     },
     "datasets": {
+        "vco-ir1": {
+            "archive": "vco",
+            "identifier": "ir1"
+        },
+        "vco-ir2": {
+            "archive": "vco",
+            "identifier": "ir2"
+        },
+        "vco-lir": {
+            "archive": "vco",
+            "identifier": "lir"
+        },
+        "vco-uvi": {
+            "archive": "vco",
+            "identifier": "uvi"
+        },
         "vex-vmc-n1": {
             "archive": "vex-vmc",
-            "file-name-filter": "N12"
+            "identifier": "N12"
         },
         "vex-vmc-n2": {
             "archive": "vex-vmc",
-            "file-name-filter": "N22"
+            "identifier": "N22"
         },
         "vex-vmc-uv": {
             "archive": "vex-vmc",
-            "file-name-filter": "UV2"
+            "identifier": "UV2"
         },
         "vex-vmc-vi": {
             "archive": "vex-vmc",
-            "file-name-filter": "VI2"
+            "identifier": "VI2"
         }
     }
 }

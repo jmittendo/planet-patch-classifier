@@ -11,8 +11,12 @@ from tqdm import tqdm
 import source.utility as util
 from source.utility import config
 
-ArchiveInfo = TypedDict("ArchiveInfo", {"url": str, "href-filter": str})
-DatasetInfo = TypedDict("DatasetInfo", {"archive": str, "file-name-filter": str})
+ArchiveInfo = TypedDict("ArchiveInfo", {"url": str, "filter-patterns": list[str]})
+
+
+class DatasetInfo(TypedDict):
+    archive: str
+    identifier: str
 
 
 class DownloadConfigs(TypedDict):
@@ -40,17 +44,17 @@ def main():
 
     dataset_info = download_configs["datasets"][dataset_name]
     archive_name = dataset_info["archive"]
-    file_name_filter = dataset_info["file-name-filter"]
+    dataset_identifier = dataset_info["identifier"]
     archive_info = download_configs["archives"][archive_name]
     archive_url = archive_info["url"]
-    href_filter = archive_info["href-filter"]
+    filter_patterns = archive_info["filter-patterns"]
 
     output_dir_path = config.downloads_dir / dataset_name
 
     match archive_name:
         case "vex-vmc":
             download_vex_vmc_dataset(
-                archive_url, href_filter, file_name_filter, output_dir_path
+                archive_url, filter_patterns[0], dataset_identifier, output_dir_path
             )
         case _:
             raise ValueError(
@@ -145,6 +149,10 @@ def download_vex_vmc_dataset(
 
                 with open(geo_file_path, "wb") as geo_file:
                     geo_file.write(geo_file_response.content)
+
+
+def download_vco_dataset():
+    ...
 
 
 def get_hrefs(
