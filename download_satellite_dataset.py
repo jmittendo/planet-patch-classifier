@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import TypedDict
 
 import requests
-from requests import HTTPError
 from bs4 import BeautifulSoup, Tag
+from requests import HTTPError
 from tqdm import tqdm
 
 import source.utility as util
