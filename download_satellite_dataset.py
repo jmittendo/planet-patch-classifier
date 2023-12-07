@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import requests
+from requests import HTTPError
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
@@ -24,7 +25,7 @@ class DownloadConfigs(TypedDict):
     datasets: dict[str, DatasetInfo]
 
 
-def main():
+def main() -> None:
     with open(config.download_configs_json_path, "r") as json_file:
         download_configs: DownloadConfigs = json.load(json_file)
 
@@ -53,8 +54,26 @@ def main():
 
     match archive_name:
         case "vex-vmc":
+            href_filter = filter_patterns[0]
+
             download_vex_vmc_dataset(
-                archive_url, filter_patterns[0], dataset_identifier, output_dir_path
+                archive_url,
+                href_filter,
+                dataset_identifier,
+                output_dir_path,
+                config.download_chunk_size,
+            )
+        case "vco":
+            img_href_filter, geo_href_filter = [
+                fp.replace("[identifier]", dataset_identifier) for fp in filter_patterns
+            ]
+
+            download_vco_dataset(
+                archive_url,
+                img_href_filter,
+                geo_href_filter,
+                output_dir_path,
+                config.download_chunk_size,
             )
         case _:
             raise ValueError(
@@ -74,30 +93,32 @@ def parse_input_args() -> Namespace:
 
 
 def download_vex_vmc_dataset(
-    archive_url: str, href_filter: str, file_name_filter: str, output_dir_path: Path
+    archive_url: str,
+    href_filter: str,
+    file_name_filter: str,
+    output_dir_path: Path,
+    chunk_size: int,
 ) -> None:
-    url_stripped = archive_url.rstrip("/")
+    archive_url_stripped = archive_url.rstrip("/")
 
     mission_dir_names = [
         href.rstrip("/")
-        for href in get_hrefs(
-            archive_url, dir_only=True, positive_filters=[href_filter]
-        )
+        for href in get_hrefs(archive_url, dir_only=True)
+        if href_filter in href
     ]
 
     for mission_dir_name in tqdm(
         mission_dir_names, desc="Full download progress", leave=False
     ):
-        mission_dir_url = f"{url_stripped}/{mission_dir_name}"
+        mission_dir_url = f"{archive_url_stripped}/{mission_dir_name}"
         mission_dir_path = output_dir_path / mission_dir_name
 
         img_dir_url = f"{mission_dir_url}/DATA"
 
         orbit_dir_names = [
             href.rstrip("/")
-            for href in get_hrefs(
-                img_dir_url, dir_only=True, negative_filters=[mission_dir_name]
-            )
+            for href in get_hrefs(img_dir_url, dir_only=True)
+            if mission_dir_name not in href
         ]
 
         for orbit_dir_name in tqdm(
@@ -107,15 +128,17 @@ def download_vex_vmc_dataset(
         ):
             orbit_dir_url = f"{img_dir_url}/{orbit_dir_name}"
 
-            img_file_dir_path = mission_dir_path / "DATA" / orbit_dir_name
-            img_file_dir_path.mkdir(parents=True, exist_ok=True)
+            img_dir_path = mission_dir_path / "DATA" / orbit_dir_name
+            img_dir_path.mkdir(parents=True, exist_ok=True)
 
-            geo_file_dir_path = mission_dir_path / "GEOMETRY" / orbit_dir_name
-            geo_file_dir_path.mkdir(parents=True, exist_ok=True)
+            geo_dir_path = mission_dir_path / "GEOMETRY" / orbit_dir_name
+            geo_dir_path.mkdir(parents=True, exist_ok=True)
 
-            img_file_names = get_hrefs(
-                orbit_dir_url, positive_filters=[file_name_filter, ".IMG"]
-            )
+            img_file_names = [
+                href
+                for href in get_hrefs(orbit_dir_url)
+                if file_name_filter in href and ".IMG" in href
+            ]
 
             for img_file_name in tqdm(
                 img_file_names,
@@ -123,44 +146,114 @@ def download_vex_vmc_dataset(
                 leave=False,
             ):
                 img_file_url = f"{orbit_dir_url}/{img_file_name}"
+                img_file_path = img_dir_path / img_file_name
 
                 geo_file_name = img_file_name.rstrip(".IMG") + ".GEO"
                 geo_file_url = (
                     f"{mission_dir_url}/GEOMETRY/{orbit_dir_name}/{geo_file_name}"
                 )
+                geo_file_path = geo_dir_path / geo_file_name
 
-                geo_file_response = requests.get(geo_file_url)
-
-                # If geometry file (url) does not exist skip downloads
-                if geo_file_response.status_code >= 400:
+                # If geometry file (url) does not exist skip both downloads
+                # Note: Considering the code above, this can happen when an image file
+                # does not have a corresponding geometry file and is therefore not a
+                # critical error.
+                try:
+                    download_file(
+                        geo_file_url,
+                        geo_file_path,
+                        chunk_size=chunk_size,
+                        pbar_indent=2,
+                    )
+                except HTTPError:
                     continue
 
-                img_file_response = requests.get(img_file_url)
+                # If image file (url) does not exist skip download
+                # Note: Unlike in the case of the geometry files this should never
+                # happen as per the code above. However, if for some unforeseen reason
+                # it happens anyway, we do not want to stop the whole download process
+                # and simply warn the user.
+                try:
+                    download_file(
+                        img_file_url,
+                        img_file_path,
+                        chunk_size=chunk_size,
+                        pbar_indent=2,
+                    )
+                except HTTPError:
+                    warnings.warn(
+                        "Error while trying to download image file at url "
+                        f"'{img_file_url}'"
+                    )
 
-                # If image file (url) does not exist skip downloads
-                if img_file_response.status_code >= 400:
-                    continue
 
-                img_file_path = img_file_dir_path / img_file_name
-                geo_file_path = geo_file_dir_path / geo_file_name
+def download_vco_dataset(
+    archive_url: str,
+    img_href_filter: str,
+    geo_href_filter: str,
+    output_dir_path: Path,
+    chunk_size: int,
+) -> None:
+    def download_dirs(
+        href_filter: str, file_type: str, sub_dir: str | None = None
+    ) -> None:
+        archive_url_stripped = archive_url.rstrip("/")
+        url = f"{archive_url_stripped}/{sub_dir or ''}"
+        url_stripped = url.rstrip("/")
 
-                with open(img_file_path, "wb") as img_file:
-                    img_file.write(img_file_response.content)
+        dir_names = [
+            href.rstrip("/")
+            for href in get_hrefs(url, dir_only=True)
+            if href_filter in href
+        ]
 
-                with open(geo_file_path, "wb") as geo_file:
-                    geo_file.write(geo_file_response.content)
+        for dir_name in tqdm(
+            dir_names,
+            desc=f"{file_type.capitalize()} files download progress",
+            leave=False,
+        ):
+            dir_url = f"{url_stripped}/{dir_name}"
+
+            dir_path = output_dir_path / (sub_dir or "") / dir_name
+            dir_path.mkdir(parents=True, exist_ok=True)
+
+            zip_file_names = [
+                href
+                for href in get_hrefs(dir_url)
+                if (".zip" in href or ".tar.gz" in href or ".tar.xz" in href)
+                and "netcdf" not in href
+            ]
+
+            for zip_file_name in tqdm(
+                zip_file_names,
+                desc=f"└ {file_type.capitalize()} file directory '{dir_name}' progress",
+                leave=False,
+            ):
+                zip_file_url = f"{dir_url}/{zip_file_name}"
+                zip_file_path = dir_path / zip_file_name
+
+                # If zip file (url) does not exist skip download
+                # Note: This should never happen as per the code above. However, if for
+                # some unforeseen reason it happens anyway, we do not want to stop the
+                # whole download process and simply warn the user.
+                try:
+                    download_file(
+                        zip_file_url,
+                        zip_file_path,
+                        chunk_size=chunk_size,
+                        pbar_indent=1,
+                    )
+                except HTTPError:
+                    warnings.warn(
+                        f"Error while trying to download {file_type.lower()} zip file "
+                        f"at url '{zip_file_url}'"
+                    )
+
+    download_dirs(img_href_filter, "image")
+    download_dirs(geo_href_filter, "geometry", sub_dir="extras")
 
 
-def download_vco_dataset():
-    ...
-
-
-def get_hrefs(
-    url: str,
-    dir_only: bool = False,
-    positive_filters: list[str] | None = None,
-    negative_filters: list[str] | None = None,
-) -> list[str]:
+def get_hrefs(url: str, dir_only: bool = False) -> list[str]:
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -177,17 +270,34 @@ def get_hrefs(
         if dir_only and href[-1] != "/":
             continue
 
-        if positive_filters is not None and not all(
-            pf in href for pf in positive_filters
-        ):
-            continue
-
-        if negative_filters is not None and any(nf in href for nf in negative_filters):
-            continue
-
         hrefs.append(href)
 
     return hrefs
+
+
+def download_file(file_url: str, file_path: Path, *, chunk_size: int, pbar_indent: int):
+    with requests.get(file_url, stream=True) as file_response:
+        file_response.raise_for_status()
+        file_size = file_response.headers.get("content-length")
+
+        progress_bar = (
+            None
+            if file_size is None
+            else tqdm(
+                total=int(file_size),
+                desc=f"{'  ' * pbar_indent}└ File '{file_path.name}' progress",
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+            )
+        )
+
+        with open(file_path, "wb") as file:
+            for chunk in file_response.iter_content(chunk_size=chunk_size):
+                file.write(chunk)
+
+                if progress_bar is not None:
+                    progress_bar.update(chunk_size)
 
 
 if __name__ == "__main__":

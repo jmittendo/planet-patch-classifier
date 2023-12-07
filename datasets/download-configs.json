@@ -3,8 +3,8 @@
         "vco": {
             "url": "https://data.darts.isas.jaxa.jp/pub/pds3/",
             "filter-patterns": [
-                "vco-v-[identifier]-3-cdr-v[number].[number]/",
-                "vco_[identifier]_v[number].[number]"
+                "vco-v-[identifier]-3-cdr-v",
+                "vco_[identifier]_l3_v"
             ]
         },
         "vex-vmc": {

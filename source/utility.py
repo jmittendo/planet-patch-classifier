@@ -12,7 +12,7 @@ class SatelliteDataset(TypedDict):
 
 class Config:
     def __init__(self, config_path: str) -> None:
-        cfg_parser = ConfigParser()
+        cfg_parser = ConfigParser(inline_comment_prefixes="#")
         cfg_parser.read(config_path)
 
         self.downloads_dir = Path(cfg_parser["Paths"]["downloads_dir"])
@@ -22,6 +22,7 @@ class Config:
         self.satellite_datasets_json_path = Path(
             cfg_parser["Paths"]["satellite_datasets_json"]
         )
+        self.download_chunk_size = cfg_parser["Misc"].getint("download_chunk_size")
         self.json_indent = cfg_parser["Misc"].getint("json_indent")
 
 
