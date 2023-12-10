@@ -1,4 +1,5 @@
 import json
+import shutil
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
@@ -248,6 +249,13 @@ def download_vco_dataset(
                         f"Error while trying to download {file_type.lower()} zip file "
                         f"at url '{zip_file_url}'"
                     )
+                    continue
+
+                # Unpack the zip file with automatic format detection
+                shutil.unpack_archive(zip_file_path, zip_file_path.parent)
+
+                # Delete the zip file after unpacking
+                zip_file_path.unlink(missing_ok=True)
 
     download_dirs(img_href_filter, "image")
     download_dirs(geo_href_filter, "geometry", sub_dir="extras")
