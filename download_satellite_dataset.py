@@ -3,7 +3,7 @@ import shutil
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -24,6 +24,9 @@ class DatasetInfo(TypedDict):
 class DownloadConfigs(TypedDict):
     archives: dict[str, ArchiveInfo]
     datasets: dict[str, DatasetInfo]
+
+
+type SatelliteFileType = Literal["image", "geometry"]
 
 
 def main() -> None:
@@ -196,7 +199,7 @@ def download_vco_dataset(
     chunk_size: int,
 ) -> None:
     def download_dirs(
-        href_filter: str, file_type: str, sub_dir: str | None = None
+        href_filter: str, file_type: SatelliteFileType, sub_dir: str | None = None
     ) -> None:
         archive_url_stripped = archive_url.rstrip("/")
         url = f"{archive_url_stripped}/{sub_dir or ''}"
