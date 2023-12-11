@@ -1,7 +1,7 @@
 planet-patch-classifier
 =======================
 
-**planet-patch-classifier** is a Python tool for generating
+**planet-patch-classifier** will be a Python tool for generating
 and classifying [planet patches](#planet-patches) from
 [satellite imagery](#satellite-datasets) via unsupervised machine learning.
 
@@ -21,7 +21,7 @@ imagery via geometrical projections and interpolation.
 
 Satellite Datasets
 -------------------
-The following satellite image datasets are currently supported:
+The following satellite image datasets will be supported by default:
 1. [Akatsuki / Venus Climate Orbiter (*VCO*)](https://darts.isas.jaxa.jp/planet/project/akatsuki/)
 2. [Venus Express (*VEX*)](https://www.cosmos.esa.int/web/psa/venus-express)
 3. [Juno](https://pds-imaging.jpl.nasa.gov/portal/juno_mission.html)
