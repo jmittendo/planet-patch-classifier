@@ -1,51 +1,82 @@
 {
-    "archives": {
-        "vco": {
-            "url": "https://data.darts.isas.jaxa.jp/pub/pds3/",
-            "filter-patterns": [
-                "vco-v-[identifier]-3-cdr-v",
-                "vco_[identifier]_l3_v"
-            ]
-        },
-        "vex-vmc": {
-            "url": "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/",
-            "filter-patterns": [
-                "VEX-V-VMC-3-RDR"
-            ]
-        }
+    "vco-ir1-097": {
+        "archive": "vco",
+        "instrument": "ir1",
+        "wavelength": "097"
     },
-    "datasets": {
-        "vco-ir1": {
-            "archive": "vco",
-            "identifier": "ir1"
-        },
-        "vco-ir2": {
-            "archive": "vco",
-            "identifier": "ir2"
-        },
-        "vco-lir": {
-            "archive": "vco",
-            "identifier": "lir"
-        },
-        "vco-uvi": {
-            "archive": "vco",
-            "identifier": "uvi"
-        },
-        "vex-vmc-n1": {
-            "archive": "vex-vmc",
-            "identifier": "N12"
-        },
-        "vex-vmc-n2": {
-            "archive": "vex-vmc",
-            "identifier": "N22"
-        },
-        "vex-vmc-uv": {
-            "archive": "vex-vmc",
-            "identifier": "UV2"
-        },
-        "vex-vmc-vi": {
-            "archive": "vex-vmc",
-            "identifier": "VI2"
-        }
+    "vco-ir1-09d": {
+        "archive": "vco",
+        "instrument": "ir1",
+        "wavelength": "09d"
+    },
+    "vco-ir1-09n": {
+        "archive": "vco",
+        "instrument": "ir1",
+        "wavelength": "09n"
+    },
+    "vco-ir1-101": {
+        "archive": "vco",
+        "instrument": "ir1",
+        "wavelength": "101"
+    },
+    "vco-ir2-165": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelength": "165"
+    },
+    "vco-ir2-174": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelength": "174"
+    },
+    "vco-ir2-202": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelength": "202"
+    },
+    "vco-ir2-226": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelength": "226"
+    },
+    "vco-ir2-232": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelength": "232"
+    },
+    "vco-lir": {
+        "archive": "vco",
+        "instrument": "lir",
+        "wavelength": "pic"
+    },
+    "vco-uvi-283": {
+        "archive": "vco",
+        "instrument": "uvi",
+        "wavelength": "283"
+    },
+    "vco-uvi-365": {
+        "archive": "vco",
+        "instrument": "uvi",
+        "wavelength": "365"
+    },
+    "vex-vmc-n1": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelength": "N1"
+    },
+    "vex-vmc-n2": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelength": "N2"
+    },
+    "vex-vmc-uv": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelength": "UV"
+    },
+    "vex-vmc-vi": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelength": "VI"
     }
 }

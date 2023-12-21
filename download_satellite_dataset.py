@@ -1,3 +1,17 @@
+# NOTE:
+# I have attempted to write this script in such a way that as long as the archive
+# structures or naming conventions don't change, it will find newly added files, even if
+# they weren't present at the time of this file's creation.
+#
+# However: As per nature of a script that attempts automatically finding and downloading
+# files from an online archive, the code contains many hardcoded URLs, relative paths
+# and name patterns that are sensitive to change. It is therefore possible that this
+# script will stop working at some point. In that case you may of course try fixing the
+# code yourself, or resort to manually downloading the necessary files. The README.md
+# file should contain instructions on how to structure/format the downloaded archives so
+# that they can be used with the provided scripts.
+
+
 import json
 import shutil
 import warnings
@@ -13,17 +27,11 @@ from tqdm import tqdm
 import source.utility as util
 from source.utility import config
 
-ArchiveInfo = TypedDict("ArchiveInfo", {"url": str, "filter-patterns": list[str]})
 
-
-class DatasetInfo(TypedDict):
+class DownloadConfig(TypedDict):
     archive: str
-    identifier: str
-
-
-class DownloadConfigs(TypedDict):
-    archives: dict[str, ArchiveInfo]
-    datasets: dict[str, DatasetInfo]
+    instrument: str
+    wavelength: str
 
 
 type SatelliteFileType = Literal["image", "geometry"]
@@ -31,7 +39,7 @@ type SatelliteFileType = Literal["image", "geometry"]
 
 def main() -> None:
     with open(config.download_configs_json_path, "r") as json_file:
-        download_configs: DownloadConfigs = json.load(json_file)
+        download_configs: dict[str, DownloadConfig] = json.load(json_file)
 
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
@@ -40,48 +48,38 @@ def main() -> None:
         if util.user_confirm("Display available datasets?"):
             print("\nAvailable datasets:\n-------------------")
 
-            for dataset_name in download_configs["datasets"]:
+            for dataset_name in download_configs:
                 print(dataset_name)
 
             print()
 
         dataset_name = input("Enter dataset name: ")
 
-    dataset_info = download_configs["datasets"][dataset_name]
-    archive_name = dataset_info["archive"]
-    dataset_identifier = dataset_info["identifier"]
-    archive_info = download_configs["archives"][archive_name]
-    archive_url = archive_info["url"]
-    filter_patterns = archive_info["filter-patterns"]
+    download_config = download_configs[dataset_name]
+    dataset_archive = download_config["archive"]
+    dataset_instrument = download_config["instrument"]
+    dataset_wavelength = download_config["wavelength"]
 
-    output_dir_path = config.downloads_dir / dataset_name
+    output_dir_path = config.downloads_dir_path / dataset_name
 
-    match archive_name:
+    match dataset_archive:
         case "vex-vmc":
-            href_filter = filter_patterns[0]
-
             download_vex_vmc_dataset(
-                archive_url,
-                href_filter,
-                dataset_identifier,
+                dataset_wavelength,
                 output_dir_path,
                 config.download_chunk_size,
             )
         case "vco":
-            img_href_filter, geo_href_filter = [
-                fp.replace("[identifier]", dataset_identifier) for fp in filter_patterns
-            ]
-
             download_vco_dataset(
-                archive_url,
-                img_href_filter,
-                geo_href_filter,
+                dataset_instrument,
+                dataset_wavelength,
                 output_dir_path,
                 config.download_chunk_size,
             )
         case _:
             raise ValueError(
-                f"No download script implemented for archive with name '{archive_name}'"
+                "No download script implemented for dataset archive "
+                f"'{dataset_archive}'"
             )
 
 
@@ -97,13 +95,12 @@ def parse_input_args() -> Namespace:
 
 
 def download_vex_vmc_dataset(
-    archive_url: str,
-    href_filter: str,
-    file_name_filter: str,
-    output_dir_path: Path,
-    chunk_size: int,
+    wavelength_filter: str, output_dir_path: Path, chunk_size: int
 ) -> None:
+    archive_url = "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/"
     archive_url_stripped = archive_url.rstrip("/")
+
+    href_filter = "VEX-V-VMC-3-RDR"
 
     mission_dir_names = [
         href.rstrip("/")
@@ -141,7 +138,7 @@ def download_vex_vmc_dataset(
             img_file_names = [
                 href
                 for href in get_hrefs(orbit_dir_url)
-                if file_name_filter in href and ".IMG" in href
+                if wavelength_filter in href and ".IMG" in href
             ]
 
             for img_file_name in tqdm(
@@ -159,7 +156,7 @@ def download_vex_vmc_dataset(
                 geo_file_path = geo_dir_path / geo_file_name
 
                 # If geometry file (url) does not exist skip both downloads
-                # Note: Considering the code above, this can happen when an image file
+                # NOTE: Considering the code above, this can happen when an image file
                 # does not have a corresponding geometry file and is therefore not a
                 # critical error.
                 try:
@@ -173,7 +170,7 @@ def download_vex_vmc_dataset(
                     continue
 
                 # If image file (url) does not exist skip download
-                # Note: Unlike in the case of the geometry files this should never
+                # NOTE: Unlike in the case of the geometry files this should never
                 # happen as per the code above. However, if for some unforeseen reason
                 # it happens anyway, we do not want to stop the whole download process
                 # and simply warn the user.
@@ -192,76 +189,154 @@ def download_vex_vmc_dataset(
 
 
 def download_vco_dataset(
-    archive_url: str,
-    img_href_filter: str,
-    geo_href_filter: str,
+    instrument: str,
+    wavelength_filter: str | None,
     output_dir_path: Path,
     chunk_size: int,
 ) -> None:
-    def download_dirs(
-        href_filter: str, file_type: SatelliteFileType, sub_dir: str | None = None
-    ) -> None:
-        archive_url_stripped = archive_url.rstrip("/")
-        url = f"{archive_url_stripped}/{sub_dir or ''}"
-        url_stripped = url.rstrip("/")
+    archive_url = "https://data.darts.isas.jaxa.jp/pub/pds3/"
+    archive_url_stripped = archive_url.rstrip("/")
 
-        dir_names = [
-            href.rstrip("/")
-            for href in get_hrefs(url, dir_only=True)
-            if href_filter in href
+    img_href_filter = f"vco-v-{instrument}-3-cdr-v"
+
+    img_file_dir_names = [
+        href.rstrip("/")
+        for href in get_hrefs(archive_url_stripped, dir_only=True)
+        if img_href_filter in href
+    ]
+
+    for img_file_dir_name in tqdm(
+        img_file_dir_names, desc="Image files download progress", leave=False
+    ):
+        img_file_dir_version_str = img_file_dir_name.split("-")[5]
+
+        img_file_dir_url = f"{archive_url_stripped}/{img_file_dir_name}"
+
+        img_file_dir_path = output_dir_path / img_file_dir_name
+        img_file_dir_path.mkdir(parents=True, exist_ok=True)
+
+        geo_file_dir_name = f"vco_{instrument}_l3_{img_file_dir_version_str}"
+        geo_file_dir_url = f"{archive_url_stripped}/extras/{geo_file_dir_name}"
+
+        geo_file_dir_path = output_dir_path / "extras" / geo_file_dir_name
+        geo_file_dir_path.mkdir(parents=True, exist_ok=True)
+
+        img_zip_file_names = [
+            href
+            for href in get_hrefs(img_file_dir_url)
+            if (".zip" in href or ".tar.gz" in href or ".tar.xz" in href)
+            and "netcdf" not in href
         ]
 
-        for dir_name in tqdm(
-            dir_names,
-            desc=f"{file_type.capitalize()} files download progress",
+        for img_zip_file_name in tqdm(
+            img_zip_file_names,
+            desc=f"└ Image file directory '{img_file_dir_name}' progress",
             leave=False,
         ):
-            dir_url = f"{url_stripped}/{dir_name}"
+            img_zip_file_url = f"{img_file_dir_url}/{img_zip_file_name}"
+            img_zip_file_path = img_file_dir_path / img_zip_file_name
 
-            dir_path = output_dir_path / (sub_dir or "") / dir_name
-            dir_path.mkdir(parents=True, exist_ok=True)
+            geo_zip_file_name = (
+                f"{img_zip_file_name.replace('_1', '_7').rstrip('.zip')}_l3x_fits.zip"
+            )
+            geo_zip_file_url = f"{geo_file_dir_url}/{geo_zip_file_name}"
+            geo_zip_file_path = geo_file_dir_path / geo_zip_file_name
 
-            zip_file_names = [
-                href
-                for href in get_hrefs(dir_url)
-                if (".zip" in href or ".tar.gz" in href or ".tar.xz" in href)
-                and "netcdf" not in href
-            ]
+            # If geometry zip file (url) does not exist skip both downloads
+            # NOTE: Considering the code above, this can happen when an image zip file
+            # does not have a corresponding geometry zip file and is therefore not a
+            # critical error.
+            try:
+                download_file(
+                    geo_zip_file_url,
+                    geo_zip_file_path,
+                    chunk_size=chunk_size,
+                    pbar_indent=1,
+                )
+            except HTTPError:
+                continue
 
-            for zip_file_name in tqdm(
-                zip_file_names,
-                desc=f"└ {file_type.capitalize()} file directory '{dir_name}' progress",
-                leave=False,
-            ):
-                zip_file_url = f"{dir_url}/{zip_file_name}"
-                zip_file_path = dir_path / zip_file_name
+            # If image zip file (url) does not exist skip download
+            # NOTE: Unlike in the case of the geometry zip files this should never
+            # happen as per the code above. However, if for some unforeseen reason
+            # it happens anyway, we do not want to stop the whole download process
+            # and simply warn the user.
+            try:
+                download_file(
+                    img_zip_file_url,
+                    img_zip_file_path,
+                    chunk_size=chunk_size,
+                    pbar_indent=1,
+                )
+            except HTTPError:
+                warnings.warn(
+                    f"Error while trying to download image zip file at url"
+                    f"'{img_zip_file_url}'"
+                )
+                continue
 
-                # If zip file (url) does not exist skip download
-                # Note: This should never happen as per the code above. However, if for
-                # some unforeseen reason it happens anyway, we do not want to stop the
-                # whole download process and simply warn the user.
-                try:
-                    download_file(
-                        zip_file_url,
-                        zip_file_path,
-                        chunk_size=chunk_size,
-                        pbar_indent=1,
-                    )
-                except HTTPError:
-                    warnings.warn(
-                        f"Error while trying to download {file_type.lower()} zip file "
-                        f"at url '{zip_file_url}'"
-                    )
+            # Unpack the zip files with automatic format detection and delete them after
+            shutil.unpack_archive(img_zip_file_path, img_file_dir_path)
+            img_zip_file_path.unlink(missing_ok=True)
+
+            shutil.unpack_archive(geo_zip_file_path, geo_file_dir_path)
+            geo_zip_file_path.unlink(missing_ok=True)
+
+            unpacked_img_file_dir_name = "_".join(img_zip_file_path.stem.split("_")[:2])
+            unpacked_geo_file_dir_name = "_".join(geo_zip_file_path.stem.split("_")[:2])
+
+            img_file_orbit_dirs_path = (
+                img_file_dir_path / unpacked_img_file_dir_name / "data" / "l2b"
+            )
+            geo_file_orbit_dirs_path = (
+                geo_file_dir_path
+                / unpacked_geo_file_dir_name
+                / "data"
+                / "l3bx"
+                / "fits"
+            )
+
+            for img_file_orbit_dir_path in img_file_orbit_dirs_path.iterdir():
+                if not img_file_orbit_dir_path.is_dir():
                     continue
 
-                # Unpack the zip file with automatic format detection
-                shutil.unpack_archive(zip_file_path, zip_file_path.parent)
+                orbit_dir_name = img_file_orbit_dir_path.name
 
-                # Delete the zip file after unpacking
-                zip_file_path.unlink(missing_ok=True)
+                # Find only the highest version for each file and save its path
+                img_file_highest_version_dict: dict[str, tuple[int, Path]] = {}
 
-    download_dirs(img_href_filter, "image")
-    download_dirs(geo_href_filter, "geometry", sub_dir="extras")
+                for img_file_path in img_file_orbit_dir_path.glob(
+                    f"*{wavelength_filter}*.fit"
+                ):
+                    img_file_stem_components = img_file_dir_path.stem.split("_")
+                    img_file_name_base = "_".join(img_file_stem_components[:5])
+                    img_file_version = int(img_file_stem_components[5].lstrip("v"))
+
+                    current_highest_version_tuple = img_file_highest_version_dict.get(
+                        img_file_name_base
+                    )
+                    current_highest_version = (
+                        current_highest_version_tuple[0]
+                        if current_highest_version_tuple is not None
+                        else 0
+                    )
+
+                    if img_file_version > current_highest_version:
+                        img_file_highest_version_dict[img_file_name_base] = (
+                            img_file_version,
+                            img_file_path,
+                        )
+
+                for img_file_version_tuple in img_file_highest_version_dict.values():
+                    img_file_path = img_file_version_tuple[1]
+
+                    geo_file_name = img_file_path.name.replace("l2b", "l3bx")
+                    geo_file_path = (
+                        geo_file_orbit_dirs_path / orbit_dir_name / geo_file_name
+                    )
+
+                    if not geo_file_path.is_file():
+                        continue
 
 
 def get_hrefs(url: str, dir_only: bool = False) -> list[str]:
