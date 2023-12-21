@@ -31,7 +31,7 @@ from source.utility import config
 class DownloadConfig(TypedDict):
     archive: str
     instrument: str
-    wavelength: str
+    wavelengths: list[str]
 
 
 type SatelliteFileType = Literal["image", "geometry"]
@@ -58,22 +58,22 @@ def main() -> None:
     download_config = download_configs[dataset_name]
     dataset_archive = download_config["archive"]
     dataset_instrument = download_config["instrument"]
-    dataset_wavelength = download_config["wavelength"]
+    dataset_wavelengths = download_config["wavelengths"]
 
     output_dir_path = config.downloads_dir_path / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
             download_vex_vmc_dataset(
-                dataset_wavelength,
+                dataset_wavelengths[0],
                 output_dir_path,
                 config.download_chunk_size,
             )
         case "vco":
             download_vco_dataset(
                 dataset_instrument,
-                dataset_wavelength,
-                output_dir_path,
+                dataset_wavelengths,
+                dataset_name,
                 config.download_chunk_size,
             )
         case _:
@@ -190,12 +190,21 @@ def download_vex_vmc_dataset(
 
 def download_vco_dataset(
     instrument: str,
-    wavelength_filter: str | None,
-    output_dir_path: Path,
+    wavelength_filters: list[str],
+    dataset_name: str,
     chunk_size: int,
 ) -> None:
     archive_url = "https://data.darts.isas.jaxa.jp/pub/pds3/"
     archive_url_stripped = archive_url.rstrip("/")
+
+    temp_output_dir_path = config.downloads_dir_path / dataset_name
+
+    wavelength_output_dir_paths = {
+        wavelength_filter: (
+            config.downloads_dir_path / f"{dataset_name}-{wavelength_filter}"
+        )
+        for wavelength_filter in wavelength_filters
+    }
 
     img_href_filter = f"vco-v-{instrument}-3-cdr-v"
 
@@ -212,13 +221,13 @@ def download_vco_dataset(
 
         img_file_dir_url = f"{archive_url_stripped}/{img_file_dir_name}"
 
-        img_file_dir_path = output_dir_path / img_file_dir_name
+        img_file_dir_path = temp_output_dir_path / img_file_dir_name
         img_file_dir_path.mkdir(parents=True, exist_ok=True)
 
         geo_file_dir_name = f"vco_{instrument}_l3_{img_file_dir_version_str}"
         geo_file_dir_url = f"{archive_url_stripped}/extras/{geo_file_dir_name}"
 
-        geo_file_dir_path = output_dir_path / "extras" / geo_file_dir_name
+        geo_file_dir_path = temp_output_dir_path / "extras" / geo_file_dir_name
         geo_file_dir_path.mkdir(parents=True, exist_ok=True)
 
         img_zip_file_names = [
@@ -302,41 +311,64 @@ def download_vco_dataset(
 
                 orbit_dir_name = img_file_orbit_dir_path.name
 
-                # Find only the highest version for each file and save its path
-                img_file_highest_version_dict: dict[str, tuple[int, Path]] = {}
+                for wavelength_filter in wavelength_filters:
+                    wavelength_output_dir_path = wavelength_output_dir_paths[
+                        wavelength_filter
+                    ]
 
-                for img_file_path in img_file_orbit_dir_path.glob(
-                    f"*{wavelength_filter}*.fit"
-                ):
-                    img_file_stem_components = img_file_dir_path.stem.split("_")
-                    img_file_name_base = "_".join(img_file_stem_components[:5])
-                    img_file_version = int(img_file_stem_components[5].lstrip("v"))
+                    # Find only the highest version for each file and save its path
+                    img_file_highest_version_dict: dict[str, tuple[int, Path]] = {}
 
-                    current_highest_version_tuple = img_file_highest_version_dict.get(
-                        img_file_name_base
-                    )
-                    current_highest_version = (
-                        current_highest_version_tuple[0]
-                        if current_highest_version_tuple is not None
-                        else 0
-                    )
+                    for img_file_path in img_file_orbit_dir_path.glob(
+                        f"*{wavelength_filter}*.fit"
+                    ):
+                        img_file_stem_components = img_file_dir_path.stem.split("_")
+                        img_file_name_base = "_".join(img_file_stem_components[:5])
+                        img_file_version = int(img_file_stem_components[5].lstrip("v"))
 
-                    if img_file_version > current_highest_version:
-                        img_file_highest_version_dict[img_file_name_base] = (
-                            img_file_version,
-                            img_file_path,
+                        current_highest_version_tuple = (
+                            img_file_highest_version_dict.get(img_file_name_base)
+                        )
+                        current_highest_version = (
+                            current_highest_version_tuple[0]
+                            if current_highest_version_tuple is not None
+                            else 0
                         )
 
-                for img_file_version_tuple in img_file_highest_version_dict.values():
-                    img_file_path = img_file_version_tuple[1]
+                        if img_file_version > current_highest_version:
+                            img_file_highest_version_dict[img_file_name_base] = (
+                                img_file_version,
+                                img_file_path,
+                            )
 
-                    geo_file_name = img_file_path.name.replace("l2b", "l3bx")
-                    geo_file_path = (
-                        geo_file_orbit_dirs_path / orbit_dir_name / geo_file_name
-                    )
+                    for (
+                        img_file_version_tuple
+                    ) in img_file_highest_version_dict.values():
+                        img_file_path = img_file_version_tuple[1]
 
-                    if not geo_file_path.is_file():
-                        continue
+                        geo_file_name = img_file_path.name.replace("l2b", "l3bx")
+                        geo_file_path = (
+                            geo_file_orbit_dirs_path / orbit_dir_name / geo_file_name
+                        )
+
+                        if not geo_file_path.is_file():
+                            continue
+
+                        new_img_file_path = (
+                            wavelength_output_dir_path
+                            / img_file_path.relative_to(temp_output_dir_path)
+                        )
+                        new_img_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        new_geo_file_path = (
+                            wavelength_output_dir_path
+                            / geo_file_path.relative_to(temp_output_dir_path)
+                        )
+                        new_geo_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        # Move the files to their final wavelength dataset dirs
+                        img_file_path.rename(new_img_file_path)
+                        geo_file_path.rename(new_geo_file_path)
 
 
 def get_hrefs(url: str, dir_only: bool = False) -> list[str]:

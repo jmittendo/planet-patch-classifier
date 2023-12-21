@@ -1,82 +1,66 @@
 {
-    "vco-ir1-097": {
+    "vco-ir1": {
         "archive": "vco",
         "instrument": "ir1",
-        "wavelength": "097"
+        "wavelengths": [
+            "097",
+            "09d",
+            "09n",
+            "101"
+        ]
     },
-    "vco-ir1-09d": {
-        "archive": "vco",
-        "instrument": "ir1",
-        "wavelength": "09d"
-    },
-    "vco-ir1-09n": {
-        "archive": "vco",
-        "instrument": "ir1",
-        "wavelength": "09n"
-    },
-    "vco-ir1-101": {
-        "archive": "vco",
-        "instrument": "ir1",
-        "wavelength": "101"
-    },
-    "vco-ir2-165": {
+    "vco-ir2": {
         "archive": "vco",
         "instrument": "ir2",
-        "wavelength": "165"
-    },
-    "vco-ir2-174": {
-        "archive": "vco",
-        "instrument": "ir2",
-        "wavelength": "174"
-    },
-    "vco-ir2-202": {
-        "archive": "vco",
-        "instrument": "ir2",
-        "wavelength": "202"
-    },
-    "vco-ir2-226": {
-        "archive": "vco",
-        "instrument": "ir2",
-        "wavelength": "226"
-    },
-    "vco-ir2-232": {
-        "archive": "vco",
-        "instrument": "ir2",
-        "wavelength": "232"
+        "wavelengths": [
+            "165",
+            "174",
+            "202",
+            "226",
+            "232"
+        ]
     },
     "vco-lir": {
         "archive": "vco",
         "instrument": "lir",
-        "wavelength": "pic"
+        "wavelengths": [
+            "pic"
+        ]
     },
-    "vco-uvi-283": {
+    "vco-uvi": {
         "archive": "vco",
         "instrument": "uvi",
-        "wavelength": "283"
-    },
-    "vco-uvi-365": {
-        "archive": "vco",
-        "instrument": "uvi",
-        "wavelength": "365"
+        "wavelengths": [
+            "283",
+            "365"
+        ]
     },
     "vex-vmc-n1": {
         "archive": "vex-vmc",
         "instrument": "vmc",
-        "wavelength": "N1"
+        "wavelengths": [
+            "N1"
+        ]
     },
     "vex-vmc-n2": {
         "archive": "vex-vmc",
         "instrument": "vmc",
-        "wavelength": "N2"
+        "wavelengths": [
+            "N2"
+        ]
     },
     "vex-vmc-uv": {
         "archive": "vex-vmc",
         "instrument": "vmc",
-        "wavelength": "UV"
+        "wavelengths": [
+            "UV"
+        ]
     },
     "vex-vmc-vi": {
         "archive": "vex-vmc",
         "instrument": "vmc",
-        "wavelength": "VI"
+        "wavelengths": [
+            "VI"
+        ]
     }
 }
