@@ -198,7 +198,7 @@ def download_vco_dataset(
     chunk_size: int,
 ) -> None:
     logging.debug(
-        "Starting VCO dataset download with parameters:\n"
+        "Starting VCO dataset download with parameters: "
         f"{instrument = }, {wavelength_filters = }, {dataset_name = }, {chunk_size = }"
     )
 
@@ -482,7 +482,7 @@ def download_vco_dataset(
     shutil.rmtree(temp_output_dir_path)
 
     logging.debug(
-        "Finished VCO dataset download with parameters:\n"
+        "Finished VCO dataset download with parameters: "
         f"{instrument = }, {wavelength_filters = }, {dataset_name = }, {chunk_size = }"
     )
 
