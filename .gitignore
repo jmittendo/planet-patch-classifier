@@ -6,3 +6,5 @@ __pycache__
 /datasets/satellite-datasets/
 !/datasets/satellite-datasets/example-dataset
 !/datasets/satellite-datasets/satellite-datasets.json
+
+/logs/
