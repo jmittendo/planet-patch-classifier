@@ -381,6 +381,9 @@ def download_vco_dataset(
                         img_file_path.rename(new_img_file_path)
                         geo_file_path.rename(new_geo_file_path)
 
+    # Delete temporary download directory once downloads are finished
+    shutil.rmtree(temp_output_dir_path)
+
 
 def get_hrefs(url: str, dir_only: bool = False) -> list[str]:
     response = requests.get(url)
