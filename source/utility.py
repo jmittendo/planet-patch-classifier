@@ -46,6 +46,8 @@ def user_confirm(message: str) -> bool:
 def configure_logging(log_file_name_base: str) -> None:
     current_datetime_str = datetime.now().strftime(config.datetime_format)
 
+    config.logs_dir_path.mkdir(parents=True, exist_ok=True)
+
     logging.basicConfig(
         filename=Path(
             config.logs_dir_path, f"{log_file_name_base}_{current_datetime_str}.log"
