@@ -246,7 +246,7 @@ def download_vco_dataset(
             img_zip_file_path = img_file_dir_path / img_zip_file_name
 
             geo_zip_file_name_stem = (
-                f"{img_zip_file_name.split(".")[0].replace('_1', '_7')}_l3x_fits"
+                f"{img_zip_file_name.split('.')[0].replace('_1', '_7')}_l3x_fits"
             )
 
             # If geometry zip file (url) does not exist skip both downloads
@@ -267,7 +267,7 @@ def download_vco_dataset(
                         chunk_size=chunk_size,
                         pbar_indent=1,
                     )
-                    geo_zip_file_download_successful = True    
+                    geo_zip_file_download_successful = True
                     break
                 except HTTPError:
                     print("Test")
