@@ -245,24 +245,35 @@ def download_vco_dataset(
             img_zip_file_url = f"{img_file_dir_url}/{img_zip_file_name}"
             img_zip_file_path = img_file_dir_path / img_zip_file_name
 
-            geo_zip_file_name = (
-                f"{img_zip_file_name.replace('_1', '_7').rstrip('.zip')}_l3x_fits.zip"
+            geo_zip_file_name_stem = (
+                f"{img_zip_file_name.split(".")[0].replace('_1', '_7')}_l3x_fits"
             )
-            geo_zip_file_url = f"{geo_file_dir_url}/{geo_zip_file_name}"
-            geo_zip_file_path = geo_file_dir_path / geo_zip_file_name
 
             # If geometry zip file (url) does not exist skip both downloads
             # NOTE: Considering the code above, this can happen when an image zip file
             # does not have a corresponding geometry zip file and is therefore not a
             # critical error.
-            try:
-                download_file(
-                    geo_zip_file_url,
-                    geo_zip_file_path,
-                    chunk_size=chunk_size,
-                    pbar_indent=1,
-                )
-            except HTTPError:
+            geo_zip_file_download_successful = False
+
+            for geo_zip_file_suffix in [".zip", ".tar.gz", ".tar.xz"]:
+                geo_zip_file_name = geo_zip_file_name_stem + geo_zip_file_suffix
+                geo_zip_file_url = f"{geo_file_dir_url}/{geo_zip_file_name}"
+                geo_zip_file_path = geo_file_dir_path / geo_zip_file_name
+
+                try:
+                    download_file(
+                        geo_zip_file_url,
+                        geo_zip_file_path,
+                        chunk_size=chunk_size,
+                        pbar_indent=1,
+                    )
+                    geo_zip_file_download_successful = True    
+                    break
+                except HTTPError:
+                    print("Test")
+                    continue
+
+            if not geo_zip_file_download_successful:
                 continue
 
             # If image zip file (url) does not exist skip download
@@ -322,7 +333,7 @@ def download_vco_dataset(
                     for img_file_path in img_file_orbit_dir_path.glob(
                         f"*{wavelength_filter}*.fit"
                     ):
-                        img_file_stem_components = img_file_dir_path.stem.split("_")
+                        img_file_stem_components = img_file_path.stem.split("_")
                         img_file_name_base = "_".join(img_file_stem_components[:5])
                         img_file_version = int(img_file_stem_components[5].lstrip("v"))
 
