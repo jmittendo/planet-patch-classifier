@@ -3,8 +3,10 @@ __pycache__
 .venv
 .vscode
 
-/datasets/satellite-datasets/
-!/datasets/satellite-datasets/example-dataset
-!/datasets/satellite-datasets/satellite-datasets.json
+/datasets/satellite-datasets/*
+!/datasets/satellite-datasets/.gitkeep
+
+/user-configs/*
+!/user-configs/default/
 
 /logs/
