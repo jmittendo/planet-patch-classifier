@@ -18,7 +18,6 @@ import shutil
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Literal, TypedDict
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -26,16 +25,8 @@ from requests import HTTPError
 from tqdm import tqdm
 
 import source.utility as util
+from source.typing import DownloadConfig
 from source.utility import config
-
-
-class DownloadConfig(TypedDict):
-    archive: str
-    instrument: str
-    wavelengths: list[str]
-
-
-type SatelliteFileType = Literal["image", "geometry"]
 
 
 def main() -> None:

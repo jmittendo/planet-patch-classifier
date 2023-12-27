@@ -2,14 +2,8 @@ import logging
 from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
-from typing import TypedDict
 
 CONFIG_PATH = "config.cfg"
-
-
-class SatelliteDataset(TypedDict):
-    path: str
-    archive: str
 
 
 class Config:
