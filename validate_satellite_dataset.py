@@ -28,20 +28,6 @@ def main() -> None:
     dataset_archive = satellite_datasets[dataset_name]["archive"]
     dataset_path = Path(satellite_datasets[dataset_name]["path"])
 
-    match dataset_archive:
-        case "vex-vmc":
-            # validate_vex_vmc_dataset(dataset_path)
-            ...
-        case "vco":
-            validate_vco_dataset(dataset_path)
-        case _:
-            raise ValueError(
-                "No validation script implemented for dataset archive "
-                f"'{dataset_archive}'"
-            )
-
-
-def validate_vco_dataset(dataset_path: Path) -> None:
     print()  # Empty line for better separation
 
     # Dataset path must be a valid directory
@@ -51,6 +37,91 @@ def validate_vco_dataset(dataset_path: Path) -> None:
         )
         return
 
+    match dataset_archive:
+        case "vex-vmc":
+            validate_vex_vmc_dataset(dataset_path)
+        case "vco":
+            validate_vco_dataset(dataset_path)
+        case _:
+            raise ValueError(
+                "No validation script implemented for dataset archive "
+                f"'{dataset_archive}'"
+            )
+
+
+def validate_vex_vmc_dataset(dataset_path: Path) -> None:
+    # Dataset directory must contain mission extension directories
+    # (e.g. "VEX-V-VMC-3-RDR-V3.0" or "VEX-V-VMC-3-RDR-EXT1-V3.0", ...)
+    mission_dir_paths = list(dataset_path.iterdir())
+
+    if not mission_dir_paths:
+        print("Dataset invalid: Dataset directory is empty")
+        return
+
+    for mission_dir_path in mission_dir_paths:
+        if not mission_dir_path.is_dir():
+            print(
+                "Dataset invalid: Illegal file found in dataset directory: "
+                f"'{mission_dir_path.as_posix()}'"
+            )
+            return
+
+        # Mission extension directories must contain a directory with name "DATA" that
+        # holds the image file orbit directories
+        img_file_dir_path = mission_dir_path / "DATA"
+
+        if not img_file_dir_path.is_dir():
+            print(
+                "Dataset invalid: Image file directory "
+                f"'{img_file_dir_path.as_posix()}' not found"
+            )
+            return
+
+        img_file_orbit_dir_paths = list(img_file_dir_path.iterdir())
+
+        if not img_file_orbit_dir_paths:
+            print(
+                "Dataset invalid: Image file directory "
+                f"'{img_file_dir_path.as_posix()}' is empty"
+            )
+            return
+
+        for img_file_orbit_dir_path in img_file_orbit_dir_paths:
+            # Image file orbit directories must contain image files with the extension
+            # ".IMG"
+            img_file_paths = list(img_file_orbit_dir_path.glob("*.IMG"))
+
+            if not img_file_paths:
+                print(
+                    "Dataset invalid: Image file orbit directory "
+                    f"'{img_file_orbit_dir_path.as_posix()}' does not contain '.IMG' "
+                    "files"
+                )
+                return
+
+            for img_file_path in img_file_paths:
+                # Image files must have a corresponding geometry file with the following
+                # name pattern and path
+                geo_file_name = img_file_path.with_suffix(".GEO").name
+                geo_file_path = (
+                    mission_dir_path
+                    / "GEOMETRY"
+                    / img_file_orbit_dir_path.name
+                    / geo_file_name
+                )
+
+                if not geo_file_path.is_file():
+                    print(
+                        f"Dataset invalid: Image file '{img_file_path.as_posix()}' "
+                        "does not have a corresponding geometry file (Expected path: "
+                        f"'{geo_file_path.as_posix()}')"
+                    )
+                    return
+
+    print("Dataset valid: No errors found")
+
+
+def validate_vco_dataset(dataset_path: Path) -> None:
     # Dataset directory must contain an "extras" subdir that holds the geometry file
     # directories
     geo_file_subdir_path = dataset_path / "extras"
@@ -220,7 +291,8 @@ def validate_vco_dataset(dataset_path: Path) -> None:
                 if not img_file_paths:
                     print(
                         "Dataset invalid: Image file orbit directory "
-                        f"'{img_file_orbit_dir_path.as_posix()}' is empty"
+                        f"'{img_file_orbit_dir_path.as_posix()}' does not contain "
+                        "'.fit' files"
                     )
                     return
 
