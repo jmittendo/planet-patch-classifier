@@ -9,7 +9,7 @@ CONFIG_PATH = "config.cfg"
 
 class SatelliteDataset(TypedDict):
     path: str
-    satellite: str
+    archive: str
 
 
 class Config:
