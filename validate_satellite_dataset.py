@@ -88,18 +88,8 @@ def validate_vex_vmc_dataset(dataset_path: Path) -> None:
 
         for img_file_orbit_dir_path in img_file_orbit_dir_paths:
             # Image file orbit directories must contain image files with the extension
-            # ".IMG"
-            img_file_paths = list(img_file_orbit_dir_path.glob("*.IMG"))
-
-            if not img_file_paths:
-                print(
-                    "Dataset invalid: Image file orbit directory "
-                    f"'{img_file_orbit_dir_path.as_posix()}' does not contain '.IMG' "
-                    "files"
-                )
-                return
-
-            for img_file_path in img_file_paths:
+            # ".IMG" (but can also be empty!)
+            for img_file_path in img_file_orbit_dir_path.glob("*.IMG"):
                 # Image files must have a corresponding geometry file with the following
                 # name pattern and path
                 geo_file_name = img_file_path.with_suffix(".GEO").name
@@ -285,21 +275,12 @@ def validate_vco_dataset(dataset_path: Path) -> None:
                     )
                     return
 
-                # Orbit directories must contain .fit image files
-                img_file_paths = list(img_file_orbit_dir_path.glob("*.fit"))
-
-                if not img_file_paths:
-                    print(
-                        "Dataset invalid: Image file orbit directory "
-                        f"'{img_file_orbit_dir_path.as_posix()}' does not contain "
-                        "'.fit' files"
-                    )
-                    return
-
                 # See explanation below
                 img_file_name_base_set: set[str] = set()
 
-                for img_file_path in img_file_paths:
+                # Orbit directories must contain .fit image files
+                # (but can also be empty!)
+                for img_file_path in img_file_orbit_dir_path.glob("*.fit"):
                     # Image files must have a corresponding geometry file with the
                     # following name pattern and path
                     geo_file_name = img_file_path.name.replace("l2b", "l3bx")
