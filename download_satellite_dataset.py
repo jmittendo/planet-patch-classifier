@@ -79,8 +79,10 @@ def main() -> None:
 
 def parse_input_args() -> Namespace:
     arg_parser = ArgumentParser(
-        description="Download a named dataset. Run without arguments to get a list of "
-        "available datasets",
+        description=(
+            "Download a named dataset. Run without arguments to get a list of"
+            "available datasets."
+        ),
     )
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")

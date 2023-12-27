@@ -49,6 +49,19 @@ def main() -> None:
             )
 
 
+def parse_input_args() -> Namespace:
+    arg_parser = ArgumentParser(
+        description=(
+            "Validate the structure of a named dataset. Run without arguments to get a "
+            "list of available datasets."
+        ),
+    )
+
+    arg_parser.add_argument("name", nargs="?", help="name of the dataset")
+
+    return arg_parser.parse_args()
+
+
 def validate_vex_vmc_dataset(dataset_path: Path) -> None:
     # Dataset directory must contain mission extension directories
     # (e.g. "VEX-V-VMC-3-RDR-V3.0" or "VEX-V-VMC-3-RDR-EXT1-V3.0", ...)
@@ -317,16 +330,6 @@ def validate_vco_dataset(dataset_path: Path) -> None:
                     img_file_name_base_set.add(img_file_name_base)
 
     print("Dataset valid: No errors found")
-
-
-def parse_input_args() -> Namespace:
-    arg_parser = ArgumentParser(
-        description="Valid the structure of a named dataset.",
-    )
-
-    arg_parser.add_argument("name", nargs="?", help="name of the dataset")
-
-    return arg_parser.parse_args()
 
 
 if __name__ == "__main__":
