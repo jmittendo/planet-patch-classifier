@@ -4,7 +4,8 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import source.utility as util
-from source.utility import SatelliteDataset, config
+from source.utility import config
+from source.typing import SatelliteDataset
 
 
 def main() -> None:
