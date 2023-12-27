@@ -1,0 +1,66 @@
+{
+    "vco-ir1": {
+        "archive": "vco",
+        "instrument": "ir1",
+        "wavelengths": [
+            "097",
+            "09d",
+            "09n",
+            "101"
+        ]
+    },
+    "vco-ir2": {
+        "archive": "vco",
+        "instrument": "ir2",
+        "wavelengths": [
+            "165",
+            "174",
+            "202",
+            "226",
+            "232"
+        ]
+    },
+    "vco-lir": {
+        "archive": "vco",
+        "instrument": "lir",
+        "wavelengths": [
+            "pic"
+        ]
+    },
+    "vco-uvi": {
+        "archive": "vco",
+        "instrument": "uvi",
+        "wavelengths": [
+            "283",
+            "365"
+        ]
+    },
+    "vex-vmc-n1": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelengths": [
+            "N1"
+        ]
+    },
+    "vex-vmc-n2": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelengths": [
+            "N2"
+        ]
+    },
+    "vex-vmc-uv": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelengths": [
+            "UV"
+        ]
+    },
+    "vex-vmc-vi": {
+        "archive": "vex-vmc",
+        "instrument": "vmc",
+        "wavelengths": [
+            "VI"
+        ]
+    }
+}

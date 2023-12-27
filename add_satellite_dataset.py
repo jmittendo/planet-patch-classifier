@@ -4,13 +4,14 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import source.utility as util
-from source.utility import SatelliteDataset, config
+from source.utility import config
+from source.typing import SatelliteDataset
 
 
 def main() -> None:
     input_args = parse_input_args()
     dataset_dir: str | None = input_args.path
-    satellite_name: str | None = input_args.satellite
+    dataset_archive: str | None = input_args.archive
     dataset_name: str | None = input_args.name
 
     if dataset_dir is None:
@@ -21,13 +22,13 @@ def main() -> None:
     if not dataset_path.is_dir():
         raise FileNotFoundError(f"Directory '{dataset_path.as_posix()}' not found")
 
-    if satellite_name is None:
-        satellite_name = input("Enter satellite name: ")
+    if dataset_archive is None:
+        dataset_archive = input("Enter dataset archive: ")
 
     if dataset_name is None:
         dataset_name = input("Enter dataset name: ")
 
-    add_satellite_dataset(dataset_path, satellite_name, dataset_name)
+    add_satellite_dataset(dataset_path, dataset_archive, dataset_name)
 
 
 def parse_input_args() -> Namespace:
@@ -38,7 +39,7 @@ def parse_input_args() -> Namespace:
     arg_parser.add_argument("path", nargs="?", help="path to the satellite dataset")
 
     arg_parser.add_argument(
-        "satellite", nargs="?", help="the satellite this dataset originates from"
+        "archive", nargs="?", help="the archive this dataset originates from"
     )
 
     arg_parser.add_argument("name", nargs="?", help="name to give to the dataset")
@@ -47,7 +48,7 @@ def parse_input_args() -> Namespace:
 
 
 def add_satellite_dataset(
-    dataset_path: Path, satellite_name: str, dataset_name: str
+    dataset_path: Path, dataset_archive: str, dataset_name: str
 ) -> None:
     satellite_datasets_json_path = config.satellite_datasets_json_path
     satellite_datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,7 +82,7 @@ def add_satellite_dataset(
     with open(satellite_datasets_json_path, "w") as json_file:
         satellite_datasets[dataset_name] = {
             "path": dataset_path.as_posix(),
-            "satellite": satellite_name,
+            "archive": dataset_archive,
         }
 
         json.dump(satellite_datasets, json_file, indent=config.json_indent)
