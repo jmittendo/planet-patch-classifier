@@ -3,7 +3,7 @@ from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
 
-CONFIG_PATH = "config.cfg"
+CONFIG_PATH = "user-configs/config.cfg"
 
 
 class Config:
