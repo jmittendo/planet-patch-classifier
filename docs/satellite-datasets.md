@@ -22,7 +22,7 @@ or *vex-vmc-uv*.
 Both Akatsuki and Venus Express / VMC datasets consist of corresponding pairs of image
 and geometry files that can be linked together via their file names (and also via their
 relative paths inside the dataset directories). It is possible that an image file in the
-online archive does not have a corresponding geometry file. In that case it should be
+online archive does not have a corresponding geometry file. In that case it must be
 removed from the local dataset.
 
 ### 'X' Symbols and '...'
