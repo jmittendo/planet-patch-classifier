@@ -26,6 +26,9 @@ The following satellite image datasets will be supported by default:
 2. [Venus Express (*VEX*)](https://www.cosmos.esa.int/web/psa/venus-express)
 3. [Juno](https://pds-imaging.jpl.nasa.gov/portal/juno_mission.html)
 
+Click [here](docs/satellite-datasets.md) for an explanation of the different dataset
+structures.
+
 Installation
 ------------
 1. Download and install **git** on your system: https://git-scm.com/downloads.
