@@ -35,7 +35,7 @@ dataset-name/
 │   ├── vco_{instrument}_l3_vX.X/  # Geometry file directories, e.g. 'vco_uvi_l3_v1.0'
 │   │   ├── vco{instrument}_7XXX/  # Mission extension directories, e.g. 'vcouvi_7001'
 │   │   │   └── data/l3bx/fits/
-│   │   │       ├── c0000/  # Cruise phase directory
+│   │   │       ├── c0000/  # Cruise phase directory (same substructure as orbit directories)
 │   │   │       ├── rXXXX/  # Orbit directories, e.g. 'r0001'
 │   │   │       │   ├── {instrument}_YYYYMMDD_hhmmss_{wavelength}_l3bx_vXX.fit  # Geometry files, e.g. 'uvi_20151207_172945_365_l3bx_v10.fit'
 │   │   │       │   └── ...
@@ -45,7 +45,7 @@ dataset-name/
 ├── vco-v-{instrument}-3-cdr-vX.X/  # Image file directories, e.g. 'vco-v-uvi-3-cdr-v1.0'
 │   ├── vco{instrument}_1XXX/  # Mission extension directories, e.g. 'vcouvi_1001'
 │   │   └── data/l2b/
-│   │       ├── c0000/  # Cruise phase directory
+│   │       ├── c0000/  # Cruise phase directory (same substructure as orbit directories)
 │   │       ├── rXXXX/  # Orbit directories, e.g. 'r0001'
 │   │       │   ├── {instrument}_YYYYMMDD_hhmmss_{wavelength}_l2b_vXX.fit  # Image files, e.g. 'uvi_20151207_172945_365_l2b_v10.fit'
 │   │       │   └── ...
@@ -57,3 +57,26 @@ dataset-name/
 ### Possible Brace Field Values
 - `{instrument}`: `ir1`, `ir2`, `lir`, `uvi`
 - `{wavelength}`: `283`, `365`
+
+Venus Express (VEX) / Venus Monitoring Camera (VMC) Datasets
+------------------------------------------------------------
+### Directory Structure
+```sh
+dataset-name/
+├── VEX-V-VMC-3-RDR-V3.0/  # Original mission directory (same substructure as mission extension directories)
+├── VEX-V-VMC-3-RDR-EXTX-VX.X/  # Mission extension directories, e.g. 'VEX-V-VMC-3-RDR-EXT1-V3.0'
+│   ├── DATA/
+│   │   ├── XXXX/  # Orbit directories, e.g. '0550'
+│   │   │   ├── VXXXX_XXXX_{wavelength}2.IMG  # Image file, e.g. 'V0550_0001_UV2.IMG'
+│   │   │   └── ...
+│   │   └── ...
+│   └── GEOMETRY/
+│       ├── XXXX/  # Orbit directories, e.g. '0550'
+│       │   ├── VXXXX_XXXX_{wavelength}2.IMG  # Geometry file, e.g. 'V0550_0001_UV2.GEO'
+│       │   └── ...
+│       └── ...
+└── ...
+```
+
+### Possible Brace Field Values
+- `{wavelength}`: `N1`, `N2`, `UV`, `VI`
