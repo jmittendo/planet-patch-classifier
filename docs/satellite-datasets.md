@@ -18,6 +18,13 @@ Dataset names are arbitrary but by convention follow the pattern
 *{satellite}-{instrument}-{wavelength}* with all lowercase letters, e.g. *vco-uvi-365*
 or *vex-vmc-uv*.
 
+### Geometry Files
+Both Akatsuki and Venus Express / VMC datasets consist of corresponding pairs of image
+and geometry files that can be linked together via their file names (and also via their
+relative paths inside the dataset directories). It is possible that an image file in the
+online archive does not have a corresponding geometry file. In that case it should be
+removed from the local dataset.
+
 ### 'X' Symbols and '...'
 An `X` in a directory/file name represents an arbitrary digit from 0 to 9. Usually
 such directories/files are followed by a '...', indicating that they are followed by
@@ -60,6 +67,11 @@ dataset-name/
 ### Possible Brace Field Values
 - `{instrument}`: `ir1`, `ir2`, `lir`, `uvi`
 - `{wavelength}`: `097`, `09d`, `09n`, `101`, `165`, `174`, `202`, `226`, `232`, `pic`, `283`, `365`
+
+### File Versions
+Akatsuki dataset files can exist in multiple versions (noted at the end of the file
+name, e.g. 'v10'). A local dataset must only contain one version for each file (ideally
+the highest version).
 
 Venus Express (VEX) / Venus Monitoring Camera (VMC) Datasets
 ------------------------------------------------------------
