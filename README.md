@@ -12,12 +12,12 @@ geometry (i.e. face-on view of the surface). They are obtained from the raw sate
 imagery via geometrical projections and interpolation.
 
 ### Examples
-| Akatsuki Patch Example                                  | Venus Express Patch Example                        | Juno Patch Example                                    |
-| ------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------   |
-| <img src="docs/patch-example-vco.png" width="256">      | <img src="docs/patch-example-vex.png" width="256"> | <img src="docs/patch-example-juno.png" width="256">   |
-| Scale: 3,000 km                                         | Scale: 25 km                                       | Scale: 25,000 km                                      |
-| Resolution: 128 px                                      | Resolution: 128 px                                 | Resolution: 224 px                                    |
-| Original file: <br /> *uvi_20180502_100446_365_v10.fit* | Original file: <br /> *V1559_0044_UV2.IMG*         | Original file: <br /> *JNCR_2017244_08C00121_V01.IMG* |
+| Akatsuki Patch Example                                    | Venus Express Patch Example                               | Juno Patch Example                                         |
+| --------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------- |
+| <img src="docs/images/patch-example-vco.png" width="256"> | <img src="docs/images/patch-example-vex.png" width="256"> | <img src="docs/images/patch-example-juno.png" width="256"> |
+| Scale: 3,000 km                                           | Scale: 25 km                                              | Scale: 25,000 km                                           |
+| Resolution: 128 px                                        | Resolution: 128 px                                        | Resolution: 224 px                                         |
+| Original file: <br /> *uvi_20180502_100446_365_v10.fit*   | Original file: <br /> *V1559_0044_UV2.IMG*                | Original file: <br /> *JNCR_2017244_08C00121_V01.IMG*      |
 
 Satellite Datasets
 -------------------
