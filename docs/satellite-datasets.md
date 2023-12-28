@@ -1,6 +1,9 @@
 Satellite Datasets
 ==================
 
+Satellite datasets should always contain files belonging to one specific satellite,
+instrument and wavelength only.
+
 This document describes the expected structure for supported satellite datasets which
 are required for passing the validation checks and working with the included patch
 generation script. Datasets downloaded/created using the provided downloader script
@@ -56,7 +59,7 @@ dataset-name/
 
 ### Possible Brace Field Values
 - `{instrument}`: `ir1`, `ir2`, `lir`, `uvi`
-- `{wavelength}`: `283`, `365`
+- `{wavelength}`: `097`, `09d`, `09n`, `101`, `165`, `174`, `202`, `226`, `232`, `pic`, `283`, `365`
 
 Venus Express (VEX) / Venus Monitoring Camera (VMC) Datasets
 ------------------------------------------------------------
