@@ -25,14 +25,14 @@ from requests import HTTPError
 from tqdm import tqdm
 
 import source.utility as util
+import user.config as config
 from source.typing import DownloadConfig
-from source.utility import config
 
 
 def main() -> None:
     util.configure_logging("download")
 
-    with open(config.download_configs_json_path, "r") as json_file:
+    with open(config.DOWNLOAD_CONFIGS_JSON_PATH, "r") as json_file:
         download_configs: dict[str, DownloadConfig] = json.load(json_file)
 
     input_args = parse_input_args()
@@ -54,21 +54,21 @@ def main() -> None:
     dataset_instrument = download_config["instrument"]
     dataset_wavelengths = download_config["wavelengths"]
 
-    output_dir_path = config.downloads_dir_path / dataset_name
+    output_dir_path = config.DOWNLOADS_DIR_PATH / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
             download_vex_vmc_dataset(
                 dataset_wavelengths[0],
                 output_dir_path,
-                config.download_chunk_size,
+                config.DOWNLOAD_CHUNK_SIZE,
             )
         case "vco":
             download_vco_dataset(
                 dataset_instrument,
                 dataset_wavelengths,
                 dataset_name,
-                config.download_chunk_size,
+                config.DOWNLOAD_CHUNK_SIZE,
             )
         case _:
             raise ValueError(
@@ -198,12 +198,12 @@ def download_vco_dataset(
     archive_url = "https://data.darts.isas.jaxa.jp/pub/pds3/"
     archive_url_stripped = archive_url.rstrip("/")
 
-    temp_output_dir_path = config.downloads_dir_path / dataset_name
+    temp_output_dir_path = config.DOWNLOADS_DIR_PATH / dataset_name
     logging.debug(f"{temp_output_dir_path = }")
 
     wavelength_output_dir_paths = {
         wavelength_filter: (
-            config.downloads_dir_path / f"{dataset_name}-{wavelength_filter}"
+            config.DOWNLOADS_DIR_PATH / f"{dataset_name}-{wavelength_filter}"
         )
         for wavelength_filter in wavelength_filters
     }
