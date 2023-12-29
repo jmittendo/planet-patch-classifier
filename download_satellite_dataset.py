@@ -269,7 +269,7 @@ def download_vco_dataset(
             # NOTE: Considering the code above, this can happen when an image zip file
             # does not have a corresponding geometry zip file and is therefore not a
             # critical error.
-            geo_zip_file_download_successful = False
+            geo_zip_file_path: Path | None = None
 
             logging.debug("Looping over possible geometry zip file suffixes")
             for geo_zip_file_suffix in [".zip", ".tar.gz", ".tar.xz"]:
@@ -290,16 +290,16 @@ def download_vco_dataset(
                         chunk_size=chunk_size,
                         pbar_indent=1,
                     )
-                    geo_zip_file_download_successful = True
                     break
                 except HTTPError:
                     logging.debug(
                         f"Download of geometry zip file URL: {geo_zip_file_url}"
                         "failed, continuing loop..."
                     )
+                    geo_zip_file_path = None
                     continue
 
-            if not geo_zip_file_download_successful:
+            if geo_zip_file_path is None:
                 logging.debug("No geometry zip file found, continuing loop...")
                 continue
 
