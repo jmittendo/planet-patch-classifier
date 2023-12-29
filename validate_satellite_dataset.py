@@ -199,8 +199,7 @@ def validate_vco_dataset(dataset_path: Path) -> None:
         if geo_file_dir_path is None:
             print(
                 f"Dataset invalid: Image file directory '{subdir_path.as_posix()}' "
-                "does not have a corresponding geometry file directory (Expected "
-                f"path: '{geo_file_dir_path.as_posix()}')"
+                "does not have a corresponding geometry file directory"
             )
             return
 
