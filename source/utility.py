@@ -1,38 +1,14 @@
 import json
 import logging
-from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
 
+import user.config as config
 from source.typing import SatelliteDataset
-
-CONFIG_PATH = "user-configs/config.cfg"
-
-
-class Config:
-    def __init__(self, config_path: str) -> None:
-        cfg_parser = ConfigParser(inline_comment_prefixes="#", interpolation=None)
-        cfg_parser.read(config_path)
-
-        self.logs_dir_path = Path(cfg_parser["Paths"]["logs_dir"])
-        self.downloads_dir_path = Path(cfg_parser["Paths"]["downloads_dir"])
-        self.download_configs_json_path = Path(
-            cfg_parser["Paths"]["download_configs_json"]
-        )
-        self.satellite_datasets_json_path = Path(
-            cfg_parser["Paths"]["satellite_datasets_json"]
-        )
-        self.download_chunk_size = cfg_parser["Misc"].getint("download_chunk_size")
-        self.datetime_format = cfg_parser["Misc"]["datetime_format"]
-        self.logging_format = cfg_parser["Misc"]["logging_format"]
-        self.json_indent = cfg_parser["Misc"].getint("json_indent")
-
-
-config = Config(CONFIG_PATH)
 
 
 def load_satellite_dataset(dataset_name: str | None = None) -> SatelliteDataset:
-    with open(config.satellite_datasets_json_path, "r") as json_file:
+    with open(config.SATELLITE_DATASETS_JSON_PATH, "r") as json_file:
         satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
 
     if dataset_name is None:
@@ -59,14 +35,14 @@ def user_confirm(message: str) -> bool:
 
 
 def configure_logging(log_file_name_base: str) -> None:
-    current_datetime_str = datetime.now().strftime(config.datetime_format)
+    current_datetime_str = datetime.now().strftime(config.DATETIME_FORMAT)
 
-    config.logs_dir_path.mkdir(parents=True, exist_ok=True)
+    config.LOGS_DIR_PATH.mkdir(parents=True, exist_ok=True)
 
     logging.basicConfig(
         filename=Path(
-            config.logs_dir_path, f"{log_file_name_base}_{current_datetime_str}.log"
+            config.LOGS_DIR_PATH, f"{log_file_name_base}_{current_datetime_str}.log"
         ),
-        format=config.logging_format,
+        format=config.LOGGING_FORMAT,
         level=logging.DEBUG,
     )

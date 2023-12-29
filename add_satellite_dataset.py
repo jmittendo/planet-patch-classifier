@@ -4,7 +4,7 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import source.utility as util
-from source.utility import config
+import user.config as config
 from source.typing import SatelliteDataset
 
 
@@ -50,7 +50,7 @@ def parse_input_args() -> Namespace:
 def add_satellite_dataset(
     dataset_path: Path, dataset_archive: str, dataset_name: str
 ) -> None:
-    satellite_datasets_json_path = config.satellite_datasets_json_path
+    satellite_datasets_json_path = config.SATELLITE_DATASETS_JSON_PATH
     satellite_datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
 
     satellite_datasets: dict[str, SatelliteDataset] = {}
@@ -85,7 +85,7 @@ def add_satellite_dataset(
             "archive": dataset_archive,
         }
 
-        json.dump(satellite_datasets, json_file, indent=config.json_indent)
+        json.dump(satellite_datasets, json_file, indent=config.JSON_INDENT)
 
         print(
             f"Successfully added dataset '{dataset_name}' to "
