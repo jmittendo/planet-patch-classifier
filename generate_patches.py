@@ -1,7 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
+import source.dataset_validation as validation
 import source.utility as util
+from source.exceptions import ValidationError
 
 
 def main():
@@ -11,6 +13,13 @@ def main():
     dataset = util.load_satellite_dataset(dataset_name=dataset_name)
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
+
+    is_valid, message = validation.validate_satellite_dataset(
+        dataset_archive, dataset_path
+    )
+
+    if not is_valid:
+        raise ValidationError(f"Dataset is invalid: {message}")
 
     match dataset_archive:
         case "vex-vmc":

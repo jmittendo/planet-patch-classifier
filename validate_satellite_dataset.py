@@ -14,7 +14,15 @@ def main() -> None:
     dataset_path = Path(dataset["path"])
 
     print()  # Empty line for better separation
-    validation.validate_satellite_dataset(dataset_archive, dataset_path)
+
+    is_valid, message = validation.validate_satellite_dataset(
+        dataset_archive, dataset_path
+    )
+
+    if is_valid:
+        print(f"Dataset is valid: {message}")
+    else:
+        print(f"Dataset is invalid: {message}")
 
 
 def parse_input_args() -> Namespace:
