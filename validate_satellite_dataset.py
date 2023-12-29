@@ -1,32 +1,16 @@
-import json
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import source.utility as util
-from source.typing import SatelliteDataset
-from source.utility import config
 
 
 def main() -> None:
-    with open(config.satellite_datasets_json_path, "r") as json_file:
-        satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
-
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
 
-    if dataset_name is None:
-        if util.user_confirm("Display available datasets?"):
-            print("\nAvailable datasets:\n-------------------")
-
-            for dataset_name in satellite_datasets:
-                print(dataset_name)
-
-            print()
-
-        dataset_name = input("Enter dataset name: ")
-
-    dataset_archive = satellite_datasets[dataset_name]["archive"]
-    dataset_path = Path(satellite_datasets[dataset_name]["path"])
+    dataset = util.load_satellite_dataset(dataset_name=dataset_name)
+    dataset_archive = dataset["archive"]
+    dataset_path = Path(dataset["path"])
 
     print()  # Empty line for better separation
 

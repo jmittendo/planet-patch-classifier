@@ -1,7 +1,10 @@
+import json
 import logging
 from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
+
+from source.typing import SatelliteDataset
 
 CONFIG_PATH = "user-configs/config.cfg"
 
@@ -26,6 +29,24 @@ class Config:
 
 
 config = Config(CONFIG_PATH)
+
+
+def load_satellite_dataset(dataset_name: str | None = None) -> SatelliteDataset:
+    with open(config.satellite_datasets_json_path, "r") as json_file:
+        satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
+
+    if dataset_name is None:
+        if user_confirm("Display available datasets?"):
+            print("\nAvailable datasets:\n-------------------")
+
+            for dataset_name in satellite_datasets:
+                print(dataset_name)
+
+            print()
+
+        dataset_name = input("Enter dataset name: ")
+
+    return satellite_datasets[dataset_name]
 
 
 def user_confirm(message: str) -> bool:
