@@ -9,7 +9,7 @@ def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
 
-    dataset = util.load_satellite_dataset(dataset_name=dataset_name)
+    _, dataset = util.load_satellite_dataset(dataset_name=dataset_name)
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
 

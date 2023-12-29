@@ -7,7 +7,9 @@ import user.config as config
 from source.typing import SatelliteDataset
 
 
-def load_satellite_dataset(dataset_name: str | None = None) -> SatelliteDataset:
+def load_satellite_dataset(
+    dataset_name: str | None = None,
+) -> tuple[str, SatelliteDataset]:
     with open(config.SATELLITE_DATASETS_JSON_PATH, "r") as json_file:
         satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
 
@@ -22,7 +24,7 @@ def load_satellite_dataset(dataset_name: str | None = None) -> SatelliteDataset:
 
         dataset_name = input("Enter dataset name: ")
 
-    return satellite_datasets[dataset_name]
+    return dataset_name, satellite_datasets[dataset_name]
 
 
 def user_confirm(message: str) -> bool:
