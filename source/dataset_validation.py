@@ -1,19 +1,19 @@
 from pathlib import Path
 
 
-def validate_satellite_dataset(dataset_archive: str, dataset_path: Path):
+def validate_satellite_dataset(dataset_archive: str, dataset_path: Path) -> bool:
     # Dataset path must be a valid directory
     if not dataset_path.is_dir():
         print(
             f"Dataset invalid: Dataset directory '{dataset_path.as_posix()}' not found"
         )
-        return
+        return False
 
     match dataset_archive:
         case "vex-vmc":
-            _validate_vex_vmc_dataset(dataset_path)
+            return _validate_vex_vmc_dataset(dataset_path)
         case "vco":
-            _validate_vco_dataset(dataset_path)
+            return _validate_vco_dataset(dataset_path)
         case _:
             raise ValueError(
                 "No validation script implemented for dataset archive "
