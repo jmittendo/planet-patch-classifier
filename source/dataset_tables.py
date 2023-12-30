@@ -1,13 +1,12 @@
 from pathlib import Path
 
-from astropy.io import fits
-from astropy.io.fits import ImageHDU
 from pandas import DataFrame
 from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
 
 import source.constants as constants
 import source.dataset_validation as validation
+import source.utility as util
 from source.exceptions import ValidationError
 
 
@@ -126,22 +125,21 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
                     )
                     file_name_base = "_".join(img_file_path.name.split("_")[:4])
 
-                    with fits.open(img_file_path, memmap=False) as img_file_hdul:
-                        img_hdu: ImageHDU = img_file_hdul[1]  # type: ignore
-                        img_header = img_hdu.header
+                    img_hdu = util.load_fits_hdu_or_hdus(img_file_path, 1)
+                    img_header = img_hdu.header
 
-                        # Distance between center of satellite and center of Venus:
-                        # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_distav
-                        distance_km: float = img_header["S_DISTAV"]  # type: ignore
+                    # Distance between center of satellite and center of Venus:
+                    # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_distav
+                    distance_km: float = img_header["S_DISTAV"]  # type: ignore
 
-                        # FOV of a single pixel in radians:
-                        # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_ifov
-                        pixel_fov_rad: float = img_header["S_IFOV"]  # type: ignore
+                    # FOV of a single pixel in radians:
+                    # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_ifov
+                    pixel_fov_rad: float = img_header["S_IFOV"]  # type: ignore
 
-                        altitude_m = distance_km * 1000 - constants.VENUS_RADIUS_M
+                    altitude_m = distance_km * 1000 - constants.VENUS_RADIUS_M
 
-                        # Approximation of max resolution of a pixel in m/px
-                        max_resolution_mpx = pixel_fov_rad * altitude_m
+                    # Approximation of max resolution of a pixel in m/px
+                    max_resolution_mpx = pixel_fov_rad * altitude_m
 
                     file_name_bases.append(file_name_base)
                     img_file_paths.append(img_file_path)
