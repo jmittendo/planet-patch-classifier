@@ -1,31 +1,37 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-import source.dataset_validation as validation
+import pandas as pd
+from pandas import DataFrame
+
+import source.dataset_tables as tables
 import source.utility as util
-from source.exceptions import ValidationError
+import user.config as config
 
 
 def main():
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
+    regenerate_table: bool = input_args.regenerate_table
 
-    dataset = util.load_satellite_dataset(dataset_name=dataset_name)
+    dataset_name, dataset = util.load_satellite_dataset(dataset_name)
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
 
-    is_valid, message = validation.validate_satellite_dataset(
-        dataset_archive, dataset_path
-    )
+    table_path = config.SATELLITE_DATASET_TABLES_DIR_PATH / f"{dataset_name}.pkl"
 
-    if not is_valid:
-        raise ValidationError(f"Dataset is invalid: {message}")
+    if regenerate_table or not table_path.is_file():
+        tables.generate_satellite_dataset_table(
+            dataset_archive, dataset_path, table_path
+        )
+
+    dataset_table = pd.read_pickle(table_path)
 
     match dataset_archive:
         case "vex-vmc":
-            generate_vex_vmc_patches(dataset_path)
+            generate_vex_vmc_patches(dataset_table)
         case "vco":
-            generate_vco_patches(dataset_path)
+            generate_vco_patches(dataset_table)
         case _:
             raise ValueError(
                 "No patch generation script implemented for dataset archive "
@@ -33,11 +39,11 @@ def main():
             )
 
 
-def generate_vex_vmc_patches(dataset_path: Path):
+def generate_vex_vmc_patches(dataset_table: DataFrame):
     ...
 
 
-def generate_vco_patches(dataset_path: Path):
+def generate_vco_patches(dataset_table: DataFrame):
     ...
 
 
@@ -50,6 +56,13 @@ def parse_input_args() -> Namespace:
     )
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")
+    arg_parser.add_argument(
+        "-t",
+        "--table",
+        action="store_true",
+        dest="regenerate_table",
+        help="regenerate the dataset table file",
+    )
 
     return arg_parser.parse_args()
 
