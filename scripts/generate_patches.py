@@ -28,7 +28,9 @@ def main() -> None:
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
 
-    table_path = config.SATELLITE_DATASET_TABLES_DIR_PATH / f"{dataset_name}.pkl"
+    table_path = (
+        config.OUTPUTS_DIR_PATH / "satellite-dataset-tables" / f"{dataset_name}.pkl"
+    )
 
     if regenerate_table or not table_path.is_file():
         sd_table.generate_satellite_dataset_table(

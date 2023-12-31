@@ -32,7 +32,7 @@ from source.satellite_dataset.typing import DownloadConfig
 def main() -> None:
     util.configure_logging("download")
 
-    with open(config.DOWNLOAD_CONFIGS_JSON_PATH, "r") as json_file:
+    with open(config.SATELLITE_DATASET_DOWNLOADS_JSON_PATH, "r") as json_file:
         download_configs: dict[str, DownloadConfig] = json.load(json_file)
 
     input_args = parse_input_args()
@@ -54,7 +54,7 @@ def main() -> None:
     dataset_instrument = download_config["instrument"]
     dataset_wavelengths = download_config["wavelengths"]
 
-    output_dir_path = config.DOWNLOADS_DIR_PATH / dataset_name
+    output_dir_path = config.OUTPUTS_DIR_PATH / "satellite-datasets" / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
@@ -188,6 +188,7 @@ def download_vco_dataset(
     instrument: str,
     wavelength_filters: list[str],
     dataset_name: str,
+    temp_output_dir_path: Path,
     chunk_size: int,
 ) -> None:
     logging.debug(
@@ -198,12 +199,11 @@ def download_vco_dataset(
     archive_url = "https://data.darts.isas.jaxa.jp/pub/pds3/"
     archive_url_stripped = archive_url.rstrip("/")
 
-    temp_output_dir_path = config.DOWNLOADS_DIR_PATH / dataset_name
     logging.debug(f"{temp_output_dir_path = }")
 
     wavelength_output_dir_paths = {
         wavelength_filter: (
-            config.DOWNLOADS_DIR_PATH / f"{dataset_name}-{wavelength_filter}"
+            temp_output_dir_path.with_name(f"{dataset_name}-{wavelength_filter}")
         )
         for wavelength_filter in wavelength_filters
     }

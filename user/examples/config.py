@@ -1,10 +1,10 @@
 from pathlib import Path
 
 # Paths
-LOGS_DIR_PATH = Path("logs")
-DOWNLOADS_DIR_PATH = Path("datasets/satellite-datasets")
-SATELLITE_DATASET_TABLES_DIR_PATH = Path("datasets/satellite-datasets/tables")
-DOWNLOAD_CONFIGS_JSON_PATH = Path("datasets/download-configs.json")
+OUTPUTS_DIR_PATH = Path(".")
+SATELLITE_DATASET_DOWNLOADS_JSON_PATH = Path(
+    "resources/satellite-dataset-downloads.json"
+)
 SATELLITE_DATASETS_JSON_PATH = Path("user/satellite-datasets.json")
 
 # Patches
