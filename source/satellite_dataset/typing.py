@@ -1,4 +1,5 @@
 from typing import TypedDict
+
 from numpy import ndarray
 
 

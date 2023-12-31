@@ -4,10 +4,10 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
-import source.dataset_tables as tables
-import source.utility as util
+import source.satellite_dataset.table as sd_table
+import source.satellite_dataset.utility as sd_util
 import user.config as config
-from source.typing import ImgGeoDataArrays
+from source.satellite_dataset.typing import ImgGeoDataArrays
 
 
 def main() -> None:
@@ -17,7 +17,7 @@ def main() -> None:
     patch_resolution: int | None = input_args.resolution
     regenerate_table: bool = input_args.table
 
-    dataset_name, dataset = util.load_satellite_dataset(dataset_name)
+    dataset_name, dataset = sd_util.load_satellite_dataset(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))
@@ -31,7 +31,7 @@ def main() -> None:
     table_path = config.SATELLITE_DATASET_TABLES_DIR_PATH / f"{dataset_name}.pkl"
 
     if regenerate_table or not table_path.is_file():
-        tables.generate_satellite_dataset_table(
+        sd_table.generate_satellite_dataset_table(
             dataset_archive, dataset_path, table_path
         )
 
@@ -100,8 +100,8 @@ def load_img_geo_data_arrays(
         case "vex-vmc":
             raise NotImplementedError()
         case "vco":
-            img_hdu = util.load_fits_hdu_or_hdus(img_file_path, 1)
-            lat_hdu, lon_hdu, lt_hdu, ina_hdu, ema_hdu = util.load_fits_hdu_or_hdus(
+            img_hdu = sd_util.load_fits_hdu_or_hdus(img_file_path, 1)
+            lat_hdu, lon_hdu, lt_hdu, ina_hdu, ema_hdu = sd_util.load_fits_hdu_or_hdus(
                 geo_file_path,
                 [
                     "Latitude",

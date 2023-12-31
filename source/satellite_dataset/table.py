@@ -5,15 +5,15 @@ from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
 
 import source.constants as constants
-import source.dataset_validation as validation
-import source.utility as util
+import source.satellite_dataset.utility as sd_util
+import source.satellite_dataset.validation as sd_validation
 from source.exceptions import ValidationError
 
 
 def generate_satellite_dataset_table(
     dataset_archive: str, dataset_path: Path, output_path: Path
 ) -> None:
-    is_valid, message = validation.validate_satellite_dataset(
+    is_valid, message = sd_validation.validate_satellite_dataset(
         dataset_archive, dataset_path
     )
 
@@ -125,7 +125,7 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
                     )
                     file_name_base = "_".join(img_file_path.name.split("_")[:4])
 
-                    img_hdu = util.load_fits_hdu_or_hdus(img_file_path, 1)
+                    img_hdu = sd_util.load_fits_hdu_or_hdus(img_file_path, 1)
                     img_header = img_hdu.header
 
                     # Distance between center of satellite and center of Venus:

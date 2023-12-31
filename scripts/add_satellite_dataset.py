@@ -5,7 +5,7 @@ from pathlib import Path
 
 import source.utility as util
 import user.config as config
-from source.typing import SatelliteDataset
+from source.satellite_dataset.typing import SatelliteDataset
 
 
 def main() -> None:

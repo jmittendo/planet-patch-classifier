@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 import source.utility as util
 import user.config as config
-from source.typing import DownloadConfig
+from source.satellite_dataset.typing import DownloadConfig
 
 
 def main() -> None:
