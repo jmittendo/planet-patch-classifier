@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-import source.satellite_dataset.add as sd_add
+import source.satellite_dataset.adding as sd_adding
 
 
 def main() -> None:
@@ -24,7 +24,7 @@ def main() -> None:
     if dataset_name is None:
         dataset_name = input("Enter dataset name: ")
 
-    sd_add.add_satellite_dataset(dataset_path, dataset_archive, dataset_name)
+    sd_adding.add_satellite_dataset(dataset_path, dataset_archive, dataset_name)
 
 
 def parse_input_args() -> Namespace:
