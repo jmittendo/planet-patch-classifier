@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-import source.patches.generation as p_generation
+import source.satellite_dataset.patches as sd_patches
 import source.satellite_dataset.utility as sd_util
 
 
@@ -19,7 +19,7 @@ def main() -> None:
     if patch_resolution is None:
         patch_resolution = int(input("Enter pixel resolution of patches: "))
 
-    p_generation.generate_patches(
+    sd_patches.generate_patches(
         dataset, dataset_name, patch_scale_km, patch_resolution, regenerate_table
     )
 

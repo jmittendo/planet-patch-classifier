@@ -3,12 +3,11 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
-import source.patches.utility as p_util
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
+import source.satellite_dataset.utility as sd_util
 import user.config as ucfg
-from source.patches.typing import ImgGeoDataArrays
-from source.satellite_dataset.typing import SatelliteDataset
+from source.satellite_dataset.typing import ImgGeoDataArrays, SatelliteDataset
 
 
 def generate_patches(
@@ -68,8 +67,8 @@ def _load_img_geo_data_arrays(
         case "vex-vmc":
             raise NotImplementedError()
         case "vco":
-            img_hdu = p_util.load_fits_hdu_or_hdus(img_file_path, 1)
-            lat_hdu, lon_hdu, lt_hdu, ina_hdu, ema_hdu = p_util.load_fits_hdu_or_hdus(
+            img_hdu = sd_util.load_fits_hdu_or_hdus(img_file_path, 1)
+            lat_hdu, lon_hdu, lt_hdu, ina_hdu, ema_hdu = sd_util.load_fits_hdu_or_hdus(
                 geo_file_path,
                 [
                     "Latitude",
