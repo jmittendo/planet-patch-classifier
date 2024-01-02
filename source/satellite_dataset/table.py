@@ -125,8 +125,7 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
                     )
                     file_name_base = "_".join(img_file_path.name.split("_")[:4])
 
-                    img_hdu = sd_util.load_fits_hdu_or_hdus(img_file_path, 1)
-                    img_header = img_hdu.header
+                    img_header = sd_util.load_fits_header(img_file_path, 1)
 
                     # Distance between center of satellite and center of Venus:
                     # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_distav

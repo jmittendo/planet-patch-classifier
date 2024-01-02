@@ -22,7 +22,7 @@ def generate_patches(
     if regenerate_table or not table_path.is_file():
         sd_table.generate_dataset_table(dataset, table_path)
 
-    dataset_table = pd.read_pickle(table_path)
+    dataset_table: DataFrame = pd.read_pickle(table_path)
 
     # Spatial resolution of a patch in m/px (ignoring projection effects / distortions)
     patch_resolution_mpx = patch_scale_km * 1000 / patch_resolution
@@ -67,8 +67,14 @@ def _load_img_geo_data_arrays(
         case "vex-vmc":
             raise NotImplementedError()
         case "vco":
-            img_hdu = sd_util.load_fits_hdu_or_hdus(img_file_path, 1)
-            lat_hdu, lon_hdu, lt_hdu, ina_hdu, ema_hdu = sd_util.load_fits_hdu_or_hdus(
+            img_array = sd_util.load_fits_data(img_file_path, 1)
+            (
+                lat_array,
+                lon_array,
+                lt_array,
+                ina_array,
+                ema_array,
+            ) = sd_util.load_fits_data(
                 geo_file_path,
                 [
                     "Latitude",
@@ -80,12 +86,12 @@ def _load_img_geo_data_arrays(
             )
 
             data_arrays: ImgGeoDataArrays = {
-                "image": img_hdu.data,
-                "latitude": lat_hdu.data,
-                "longitude": lon_hdu.data,
-                "local_time": lt_hdu.data,
-                "incidence_angle": ina_hdu.data,
-                "emission_angle": ema_hdu,
+                "image": img_array,
+                "latitude": lat_array,
+                "longitude": lon_array,
+                "local_time": lt_array,
+                "incidence_angle": ina_array,
+                "emission_angle": ema_array,
             }  # type: ignore
 
             return data_arrays

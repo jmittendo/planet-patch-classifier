@@ -4,7 +4,8 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from astropy.io import fits
-from astropy.io.fits.hdu.base import _BaseHDU
+from astropy.io.fits import Header
+from numpy import ndarray
 
 import source.satellite_dataset.config as sdcfg
 import source.utility as util
@@ -30,28 +31,33 @@ def load_dataset(dataset_name: str | None = None) -> tuple[str, SatelliteDataset
 
 
 @typing.overload
-def load_fits_hdu_or_hdus(file_path: Path, hdu_key_or_keys: int | str) -> _BaseHDU:
+def load_fits_data(file_path: Path, hdu_key_or_keys: int | str) -> ndarray:
     ...
 
 
 @typing.overload
-def load_fits_hdu_or_hdus(
+def load_fits_data(
     file_path: Path, hdu_key_or_keys: Sequence[int | str]
-) -> list[_BaseHDU]:
+) -> list[ndarray]:
     ...
 
 
-def load_fits_hdu_or_hdus(
+def load_fits_data(
     file_path: Path, hdu_key_or_keys: int | str | Sequence[int | str]
-) -> _BaseHDU | list[_BaseHDU]:
+) -> ndarray | list[ndarray]:
     if isinstance(hdu_key_or_keys, Sequence):
-        hdus: list[_BaseHDU] = []
+        data_list: list[ndarray] = []
 
         with fits.open(file_path, memmap=False) as file_hdulist:
             for hdu_key in hdu_key_or_keys:
-                hdus.append(file_hdulist[hdu_key])  # type: ignore
+                data_list.append(file_hdulist[hdu_key].data)  # type: ignore
 
-        return hdus
+        return data_list
     else:
         with fits.open(file_path, memmap=False) as file_hdulist:
-            return file_hdulist[hdu_key_or_keys]  # type: ignore
+            return file_hdulist[hdu_key_or_keys].data  # type: ignore
+
+
+def load_fits_header(file_path: Path, hdu_key: int | str) -> Header:
+    with fits.open(file_path, memmap=False) as file_hdulist:
+        return file_hdulist[hdu_key].header  # type: ignore
