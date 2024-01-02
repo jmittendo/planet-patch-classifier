@@ -3,8 +3,9 @@ from argparse import ArgumentParser, Namespace
 from json import JSONDecodeError
 from pathlib import Path
 
+import source.satellite_dataset.config as sdcfg
 import source.utility as util
-import user.config as config
+import user.config as ucfg
 from source.satellite_dataset.typing import SatelliteDataset
 
 
@@ -50,7 +51,7 @@ def parse_input_args() -> Namespace:
 def add_satellite_dataset(
     dataset_path: Path, dataset_archive: str, dataset_name: str
 ) -> None:
-    satellite_datasets_json_path = config.SATELLITE_DATASETS_JSON_PATH
+    satellite_datasets_json_path = sdcfg.DATASETS_JSON_PATH
     satellite_datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
 
     satellite_datasets: dict[str, SatelliteDataset] = {}
@@ -85,7 +86,7 @@ def add_satellite_dataset(
             "archive": dataset_archive,
         }
 
-        json.dump(satellite_datasets, json_file, indent=config.JSON_INDENT)
+        json.dump(satellite_datasets, json_file, indent=ucfg.JSON_INDENT)
 
         print(
             f"Successfully added dataset '{dataset_name}' to "

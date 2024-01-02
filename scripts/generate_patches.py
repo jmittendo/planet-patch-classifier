@@ -4,9 +4,10 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
+import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.utility as sd_util
-import user.config as config
+import user.config as ucfg
 from source.satellite_dataset.typing import ImgGeoDataArrays
 
 
@@ -17,7 +18,7 @@ def main() -> None:
     patch_resolution: int | None = input_args.resolution
     regenerate_table: bool = input_args.table
 
-    dataset_name, dataset = sd_util.load_satellite_dataset(dataset_name)
+    dataset_name, dataset = sd_util.load_dataset(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))
@@ -28,14 +29,10 @@ def main() -> None:
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
 
-    table_path = (
-        config.OUTPUTS_DIR_PATH / "satellite-dataset-tables" / f"{dataset_name}.pkl"
-    )
+    table_path = sdcfg.DATASET_TABLES_DIR_PATH / f"{dataset_name}.pkl"
 
     if regenerate_table or not table_path.is_file():
-        sd_table.generate_satellite_dataset_table(
-            dataset_archive, dataset_path, table_path
-        )
+        sd_table.generate_dataset_table(dataset_archive, dataset_path, table_path)
 
     dataset_table = pd.read_pickle(table_path)
 
@@ -134,7 +131,7 @@ def load_img_geo_data_arrays(
 def passes_resolution_threshold(
     img_max_resolution: float, patch_resolution: float
 ) -> bool:
-    return img_max_resolution / patch_resolution < config.PATCH_RESOLUTION_TOLERANCE
+    return img_max_resolution / patch_resolution < ucfg.PATCH_RESOLUTION_TOLERANCE
 
 
 if __name__ == "__main__":

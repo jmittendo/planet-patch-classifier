@@ -9,15 +9,13 @@ def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
 
-    _, dataset = sd_util.load_satellite_dataset(dataset_name=dataset_name)
+    _, dataset = sd_util.load_dataset(dataset_name=dataset_name)
     dataset_archive = dataset["archive"]
     dataset_path = Path(dataset["path"])
 
     print()  # Empty line for better separation
 
-    is_valid, message = sd_validation.validate_satellite_dataset(
-        dataset_archive, dataset_path
-    )
+    is_valid, message = sd_validation.validate_dataset(dataset_archive, dataset_path)
 
     if is_valid:
         print(f"Dataset is valid: {message}")

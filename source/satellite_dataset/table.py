@@ -4,18 +4,16 @@ from pandas import DataFrame
 from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
 
-import source.constants as constants
+import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.utility as sd_util
 import source.satellite_dataset.validation as sd_validation
 from source.exceptions import ValidationError
 
 
-def generate_satellite_dataset_table(
+def generate_dataset_table(
     dataset_archive: str, dataset_path: Path, output_path: Path
 ) -> None:
-    is_valid, message = sd_validation.validate_satellite_dataset(
-        dataset_archive, dataset_path
-    )
+    is_valid, message = sd_validation.validate_dataset(dataset_archive, dataset_path)
 
     if not is_valid:
         raise ValidationError(f"Dataset is invalid: {message}")
@@ -136,7 +134,7 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
                     # https://darts.isas.jaxa.jp/planet/project/akatsuki/doc/fits/vco_fits_dic_v07.html#s_ifov
                     pixel_fov_rad: float = img_header["S_IFOV"]  # type: ignore
 
-                    altitude_m = distance_km * 1000 - constants.VENUS_RADIUS_M
+                    altitude_m = distance_km * 1000 - sdcfg.VENUS_RADIUS_M
 
                     # Approximation of max resolution of a pixel in m/px
                     max_resolution_mpx = pixel_fov_rad * altitude_m

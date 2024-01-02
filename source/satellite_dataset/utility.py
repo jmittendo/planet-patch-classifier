@@ -6,19 +6,17 @@ from pathlib import Path
 from astropy.io import fits
 from astropy.io.fits.hdu.base import _BaseHDU
 
-import user.config as config
+import source.satellite_dataset.config as sdcfg
+import source.utility as util
 from source.satellite_dataset.typing import SatelliteDataset
-from source.utility import user_confirm
 
 
-def load_satellite_dataset(
-    dataset_name: str | None = None,
-) -> tuple[str, SatelliteDataset]:
-    with open(config.SATELLITE_DATASETS_JSON_PATH, "r") as json_file:
+def load_dataset(dataset_name: str | None = None) -> tuple[str, SatelliteDataset]:
+    with open(sdcfg.DATASETS_JSON_PATH, "r") as json_file:
         satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
 
     if dataset_name is None:
-        if user_confirm("Display available datasets?"):
+        if util.user_confirm("Display available datasets?"):
             print("\nAvailable datasets:\n-------------------")
 
             for dataset_name in satellite_datasets:

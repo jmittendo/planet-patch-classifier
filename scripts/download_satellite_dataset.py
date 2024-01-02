@@ -24,15 +24,16 @@ from bs4 import BeautifulSoup, Tag
 from requests import HTTPError
 from tqdm import tqdm
 
+import source.satellite_dataset.config as sdcfg
 import source.utility as util
-import user.config as config
+import user.config as ucfg
 from source.satellite_dataset.typing import DownloadConfig
 
 
 def main() -> None:
     util.configure_logging("download")
 
-    with open(config.SATELLITE_DATASET_DOWNLOADS_JSON_PATH, "r") as json_file:
+    with open(sdcfg.DATASET_DOWNLOADS_JSON_PATH, "r") as json_file:
         download_configs: dict[str, DownloadConfig] = json.load(json_file)
 
     input_args = parse_input_args()
@@ -54,21 +55,22 @@ def main() -> None:
     dataset_instrument = download_config["instrument"]
     dataset_wavelengths = download_config["wavelengths"]
 
-    output_dir_path = config.OUTPUTS_DIR_PATH / "satellite-datasets" / dataset_name
+    output_dir_path = sdcfg.DATASET_DOWNLOADS_DIR_PATH / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
             download_vex_vmc_dataset(
                 dataset_wavelengths[0],
                 output_dir_path,
-                config.DOWNLOAD_CHUNK_SIZE,
+                ucfg.DOWNLOAD_CHUNK_SIZE,
             )
         case "vco":
             download_vco_dataset(
                 dataset_instrument,
                 dataset_wavelengths,
                 dataset_name,
-                config.DOWNLOAD_CHUNK_SIZE,
+                output_dir_path,
+                ucfg.DOWNLOAD_CHUNK_SIZE,
             )
         case _:
             raise ValueError(
