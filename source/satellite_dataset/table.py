@@ -8,15 +8,17 @@ import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.utility as sd_util
 import source.satellite_dataset.validation as sd_validation
 from source.exceptions import ValidationError
+from source.satellite_dataset.typing import SatelliteDataset
 
 
-def generate_dataset_table(
-    dataset_archive: str, dataset_path: Path, output_path: Path
-) -> None:
-    is_valid, message = sd_validation.validate_dataset(dataset_archive, dataset_path)
+def generate_dataset_table(dataset: SatelliteDataset, output_path: Path) -> None:
+    is_valid, message = sd_validation.validate_dataset(dataset)
 
     if not is_valid:
         raise ValidationError(f"Dataset is invalid: {message}")
+
+    dataset_archive = dataset["archive"]
+    dataset_path = Path(dataset["path"])
 
     match dataset_archive:
         case "vex-vmc":

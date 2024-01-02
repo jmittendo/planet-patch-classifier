@@ -1,5 +1,4 @@
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
 
 import source.satellite_dataset.utility as sd_util
 import source.satellite_dataset.validation as sd_validation
@@ -10,12 +9,10 @@ def main() -> None:
     dataset_name: str | None = input_args.name
 
     _, dataset = sd_util.load_dataset(dataset_name=dataset_name)
-    dataset_archive = dataset["archive"]
-    dataset_path = Path(dataset["path"])
 
     print()  # Empty line for better separation
 
-    is_valid, message = sd_validation.validate_dataset(dataset_archive, dataset_path)
+    is_valid, message = sd_validation.validate_dataset(dataset)
 
     if is_valid:
         print(f"Dataset is valid: {message}")

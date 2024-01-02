@@ -1,7 +1,12 @@
 from pathlib import Path
 
+from source.satellite_dataset.typing import SatelliteDataset
 
-def validate_dataset(dataset_archive: str, dataset_path: Path) -> tuple[bool, str]:
+
+def validate_dataset(dataset: SatelliteDataset) -> tuple[bool, str]:
+    dataset_archive = dataset["archive"]
+    dataset_path = Path(dataset["path"])
+
     # Dataset path must be a valid directory
     if not dataset_path.is_dir():
         message = f"Dataset directory '{dataset_path.as_posix()}' not found"
