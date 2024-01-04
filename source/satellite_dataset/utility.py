@@ -3,6 +3,7 @@ import typing
 from collections.abc import Sequence
 from pathlib import Path
 
+import spiceypy as spice
 from astropy.io import fits
 from astropy.io.fits import Header
 from numpy import ndarray
@@ -73,3 +74,15 @@ def load_fits_header(file_path: Path, hdu_key: int | str) -> Header:
 
 def load_pds3_data(file_path: Path) -> ndarray:
     return PDS3Image.open(file_path.as_posix()).data
+
+
+def load_spice_kernels(kernels_dir_path: Path) -> None:
+    for subdir in kernels_dir_path.iterdir():
+        if subdir.is_file() or subdir.name == "mk":
+            continue
+
+        for file_path in subdir.iterdir():
+            if file_path.is_dir() or file_path.suffix == ".txt":
+                continue
+
+            spice.furnsh(file_path.resolve().as_posix())
