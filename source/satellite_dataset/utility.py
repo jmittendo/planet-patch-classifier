@@ -6,6 +6,7 @@ from pathlib import Path
 from astropy.io import fits
 from astropy.io.fits import Header
 from numpy import ndarray
+from planetaryimage import PDS3Image
 
 import source.satellite_dataset.config as sdcfg
 import source.utility as util
@@ -61,3 +62,7 @@ def load_fits_data(
 def load_fits_header(file_path: Path, hdu_key: int | str) -> Header:
     with fits.open(file_path, memmap=False) as file_hdulist:
         return file_hdulist[hdu_key].header  # type: ignore
+
+
+def load_pds3_data(file_path: Path) -> ndarray:
+    return PDS3Image.open(file_path.as_posix()).data

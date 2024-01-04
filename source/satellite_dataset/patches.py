@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
+from planetaryimage import PDS3Image
 
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
@@ -65,15 +66,22 @@ def _load_img_geo_data_arrays(
 ) -> ImgGeoDataArrays:
     match dataset_archive:
         case "vex-vmc":
-            raise NotImplementedError()
+            img_array = sd_util.load_pds3_data(img_file_path)[0]
+            (
+                ina_array,  # Incidence angle data
+                ema_array,  # Emission angle data
+                pha_array,  # Phase angle data (not needed)
+                lat_array,  # Latitude data
+                lon_array,  # Longitude data
+            ) = sd_util.load_pds3_data(geo_file_path)
         case "vco":
             img_array = sd_util.load_fits_data(img_file_path, 1)
             (
-                lat_array,
-                lon_array,
-                lt_array,
-                ina_array,
-                ema_array,
+                lat_array,  # Latitude data
+                lon_array,  # Longitude data
+                lt_array,  # Local time data
+                ina_array,  # Incidence angle data
+                ema_array,  # Emission angle data
             ) = sd_util.load_fits_data(
                 geo_file_path,
                 [
@@ -84,22 +92,22 @@ def _load_img_geo_data_arrays(
                     "Emission angle",
                 ],
             )
-
-            data_arrays: ImgGeoDataArrays = {
-                "image": img_array,
-                "latitude": lat_array,
-                "longitude": lon_array,
-                "local_time": lt_array,
-                "incidence_angle": ina_array,
-                "emission_angle": ema_array,
-            }  # type: ignore
-
-            return data_arrays
         case _:
             raise ValueError(
                 "Can not load data arrays for unknown dataset archive "
                 f"{dataset_archive}"
             )
+
+    data_arrays: ImgGeoDataArrays = {
+        "image": img_array,
+        "latitude": lat_array,
+        "longitude": lon_array,
+        "local_time": lt_array,
+        "incidence_angle": ina_array,
+        "emission_angle": ema_array,
+    }
+
+    return data_arrays
 
 
 def _passes_resolution_threshold(
