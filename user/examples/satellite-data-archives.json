@@ -1,0 +1,17 @@
+{
+    "vex-vmc": {
+        "name": "vex-vmc",
+        "type": "img-geo",
+        "spice": "data/spice-kernels/vex-spice"
+    },
+    "vco": {
+        "name": "vco",
+        "type": "img-geo",
+        "spice": null
+    },
+    "juno-jnc": {
+        "name": "juno-jnc",
+        "type": "img-spice",
+        "spice": "data/spice-kernels/juno-spice"
+    }
+}

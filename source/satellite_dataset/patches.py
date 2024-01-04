@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
-from planetaryimage import PDS3Image
 
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
@@ -13,12 +12,11 @@ from source.satellite_dataset.typing import ImgGeoDataArrays, SatelliteDataset
 
 def generate_patches(
     dataset: SatelliteDataset,
-    dataset_name: str,
     patch_scale_km: float,
     patch_resolution: int,
     regenerate_table: bool,
 ) -> None:
-    table_path = sdcfg.DATASET_TABLES_DIR_PATH / f"{dataset_name}.pkl"
+    table_path = sdcfg.DATASET_TABLES_DIR_PATH / f"{dataset['name']}.pkl"
 
     if regenerate_table or not table_path.is_file():
         sd_table.generate_dataset_table(dataset, table_path)
@@ -30,15 +28,20 @@ def generate_patches(
 
     dataset_archive = dataset["archive"]
 
-    match dataset_archive:
-        case "vex-vmc" | "vco":
+    archive = sd_util.load_archive(dataset_archive)
+    archive_type = archive["type"]
+
+    match archive_type:
+        case "img-geo":
             _generate_img_geo_patches(
                 dataset_archive, dataset_table, patch_resolution_mpx
             )
+        case "img-spice":
+            raise NotImplementedError
         case _:
             raise ValueError(
-                "No patch generation script implemented for dataset archive "
-                f"'{dataset_archive}'"
+                "No patch generation script implemented for archive type "
+                f"'{archive_type}'"
             )
 
 

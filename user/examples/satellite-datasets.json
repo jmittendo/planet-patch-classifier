@@ -1,6 +1,37 @@
 {
+    "vex-vmc-n1": {
+        "name": "vex-vmc-n1",
+        "path": "data/satellite-datasets/vex-vmc-n1",
+        "archive": "vex-vmc"
+    },
+    "vex-vmc-n2": {
+        "name": "vex-vmc-n2",
+        "path": "data/satellite-datasets/vex-vmc-n2",
+        "archive": "vex-vmc"
+    },
+    "vex-vmc-uv": {
+        "name": "vex-vmc-uv",
+        "path": "data/satellite-datasets/vex-vmc-uv",
+        "archive": "vex-vmc"
+    },
+    "vex-vmc-vi": {
+        "name": "vex-vmc-vi",
+        "path": "data/satellite-datasets/vex-vmc-vi",
+        "archive": "vex-vmc"
+    },
     "vco-uvi-283": {
-        "path": "datasets/satellite-datasets/vco-uvi-283",
+        "name": "vco-uvi-283",
+        "path": "data/satellite-datasets/vco-uvi-283",
         "archive": "vco"
+    },
+    "vco-uvi-365": {
+        "name": "vco-uvi-365",
+        "path": "data/satellite-datasets/vco-uvi-365",
+        "archive": "vco"
+    },
+    "juno-jnc": {
+        "name": "juno-jnc",
+        "path": "data/satellite-datasets/juno-jnc",
+        "archive": "juno"
     }
 }

@@ -8,7 +8,7 @@ def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
 
-    _, dataset = sd_util.load_dataset(dataset_name=dataset_name)
+    dataset = sd_util.load_dataset(dataset_name=dataset_name)
 
     print()  # Empty line for better separation
 

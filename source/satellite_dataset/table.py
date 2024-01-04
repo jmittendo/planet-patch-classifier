@@ -25,9 +25,11 @@ def generate_dataset_table(dataset: SatelliteDataset, output_path: Path) -> None
             table = _generate_vex_vmc_table(dataset_path)
         case "vco":
             table = _generate_vco_table(dataset_path)
+        case "juno-jnc":
+            raise NotImplementedError
         case _:
             raise ValueError(
-                "No table generation script implemented for dataset archive "
+                "No table generation script implemented for archive "
                 f"'{dataset_archive}'"
             )
 

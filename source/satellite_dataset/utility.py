@@ -10,12 +10,12 @@ from planetaryimage import PDS3Image
 
 import source.satellite_dataset.config as sdcfg
 import source.utility as util
-from source.satellite_dataset.typing import SatelliteDataset
+from source.satellite_dataset.typing import SatelliteDataArchive, SatelliteDataset
 
 
-def load_dataset(dataset_name: str | None = None) -> tuple[str, SatelliteDataset]:
-    with open(sdcfg.DATASETS_JSON_PATH, "r") as json_file:
-        satellite_datasets: dict[str, SatelliteDataset] = json.load(json_file)
+def load_dataset(dataset_name: str | None = None) -> SatelliteDataset:
+    with open(sdcfg.DATASETS_JSON_PATH, "r") as datasets_json:
+        satellite_datasets: dict[str, SatelliteDataset] = json.load(datasets_json)
 
     if dataset_name is None:
         if util.user_confirm("Display available datasets?"):
@@ -28,7 +28,14 @@ def load_dataset(dataset_name: str | None = None) -> tuple[str, SatelliteDataset
 
         dataset_name = input("Enter dataset name: ")
 
-    return dataset_name, satellite_datasets[dataset_name]
+    return satellite_datasets[dataset_name]
+
+
+def load_archive(archive_name: str) -> SatelliteDataArchive:
+    with open(sdcfg.ARCHIVES_JSON_PATH) as archives_json:
+        archives: dict[str, SatelliteDataArchive] = json.load(archives_json)
+
+    return archives[archive_name]
 
 
 @typing.overload

@@ -17,9 +17,9 @@ def add_satellite_dataset(
     satellite_datasets: dict[str, SatelliteDataset] = {}
 
     if satellite_datasets_json_path.is_file():
-        with open(satellite_datasets_json_path, "r") as json_file:
+        with open(satellite_datasets_json_path, "r") as satellite_datasets_json:
             try:
-                satellite_datasets = json.load(json_file)
+                satellite_datasets = json.load(satellite_datasets_json)
             except JSONDecodeError:
                 print(
                     f"Warning: JSON file '{satellite_datasets_json_path.as_posix()}' "
@@ -40,13 +40,14 @@ def add_satellite_dataset(
             if not util.user_confirm("Continue and overwrite existing dataset?"):
                 return
 
-    with open(satellite_datasets_json_path, "w") as json_file:
+    with open(satellite_datasets_json_path, "w") as satellite_datasets_json:
         satellite_datasets[dataset_name] = {
+            "name": dataset_name,
             "path": dataset_path.as_posix(),
             "archive": dataset_archive,
         }
 
-        json.dump(satellite_datasets, json_file, indent=ucfg.JSON_INDENT)
+        json.dump(satellite_datasets, satellite_datasets_json, indent=ucfg.JSON_INDENT)
 
         print(
             f"Successfully added dataset '{dataset_name}' to "

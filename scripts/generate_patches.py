@@ -11,7 +11,7 @@ def main() -> None:
     patch_resolution: int | None = input_args.resolution
     regenerate_table: bool = input_args.table
 
-    dataset_name, dataset = sd_util.load_dataset(dataset_name)
+    dataset = sd_util.load_dataset(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))
@@ -20,7 +20,7 @@ def main() -> None:
         patch_resolution = int(input("Enter pixel resolution of patches: "))
 
     sd_patches.generate_patches(
-        dataset, dataset_name, patch_scale_km, patch_resolution, regenerate_table
+        dataset, patch_scale_km, patch_resolution, regenerate_table
     )
 
 

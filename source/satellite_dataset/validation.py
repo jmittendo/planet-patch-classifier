@@ -17,10 +17,11 @@ def validate_dataset(dataset: SatelliteDataset) -> tuple[bool, str]:
             return _validate_vex_vmc_dataset(dataset_path)
         case "vco":
             return _validate_vco_dataset(dataset_path)
+        case "juno-jnc":
+            raise NotImplementedError
         case _:
             raise ValueError(
-                "No validation script implemented for dataset archive "
-                f"'{dataset_archive}'"
+                f"No validation script implemented for archive '{dataset_archive}'"
             )
 
 
