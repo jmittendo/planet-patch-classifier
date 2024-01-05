@@ -17,6 +17,11 @@ from source.satellite_dataset.typing import SatelliteDataArchive, SatelliteDatas
 def generate_dataset_table(
     dataset: SatelliteDataset, archive: SatelliteDataArchive, output_path: Path
 ) -> None:
+    print(
+        "Generating dataset table...\n"
+        "This may take multiple hours depending on the dataset\n"
+    )
+
     is_valid, message = sd_validation.validate_dataset(dataset)
 
     if not is_valid:
