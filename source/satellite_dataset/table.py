@@ -182,6 +182,7 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
 
                     # Planetocentric longitude of the sun in degrees east
                     solar_longitude_deg: float = img_header["S_SOLLON"]  # type: ignore
+                    solar_longitude_deg = sd_util.fix_360_longitude(solar_longitude_deg)
 
                     altitude_m = distance_km * 1000 - sdcfg.VENUS_RADIUS_M
 

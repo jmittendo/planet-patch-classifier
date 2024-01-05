@@ -97,6 +97,9 @@ def _load_img_geo_data_arrays(
                     "Emission angle",
                 ],
             )
+
+            lon_array = sd_util.fix_360_longitude(lon_array)
+
         case _:
             raise ValueError(
                 "Can not load data arrays for unknown dataset archive "

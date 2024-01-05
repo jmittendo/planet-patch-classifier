@@ -86,3 +86,19 @@ def load_spice_kernels(kernels_dir_path: Path) -> None:
                 continue
 
             spice.furnsh(file_path.resolve().as_posix())
+
+
+@typing.overload
+def fix_360_longitude(longitude: float) -> float:
+    ...
+
+
+@typing.overload
+def fix_360_longitude(longitude: ndarray) -> ndarray:
+    ...
+
+
+def fix_360_longitude(longitude: float | ndarray) -> float | ndarray:
+    # Convert longitudes from range [0°, 360°] to range [-180°, 180°]
+
+    return (longitude + 180) % 360 - 180
