@@ -85,15 +85,15 @@ def _generate_vex_vmc_table(dataset_path: Path, spice_kernels_path: Path) -> Dat
 
                 # Date and time of middle of image acquisition in UTC format
                 # "YYYY-MM-DDTHH:MM:SS.MMMZ"
-                img_time_str: str = img_pds3_label["IMAGE_TIME"]  # type: ignore
+                img_datetime: datetime = img_pds3_label["IMAGE_TIME"]  # type: ignore
 
-                img_time_str = " ".join(img_time_str.rstrip("Z").split("T"))
+                img_time_str = img_datetime.strftime(r"%Y-%m-%d %H:%M:%S.%f")
                 img_time_et: float = spice.str2et(img_time_str)  # type: ignore
 
                 # https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/FORTRAN/spicelib/subslr.html
                 sub_solar_point = spice.subslr(
                     "INTERCEPT/ELLIPSOID",
-                    "SUN",
+                    "VENUS",
                     img_time_et,
                     "IAU_VENUS",
                     "LT+S",
