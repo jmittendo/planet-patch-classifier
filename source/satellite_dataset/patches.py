@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from numpy.ma import MaskedArray
 from pandas import DataFrame
 
 import source.satellite_dataset.config as sdcfg
@@ -81,25 +83,50 @@ def _load_img_geo_data_arrays(
                 lat_array,  # Latitude data
                 lon_array,  # Longitude data
             ) = sd_util.load_pds3_data(geo_file_path)
+
+            # The invalidity comparison values could be done more "exact" but this
+            # should work
+            invalid_mask = img_array < 0
+
+            for geo_array in [ina_array, ema_array, lat_array, lon_array]:
+                invalid_mask |= geo_array < -1e10
+
+            masked_img_array = MaskedArray(data=img_array, mask=invalid_mask)
+            masked_ina_array = MaskedArray(data=ina_array, mask=invalid_mask)
+            masked_ema_array = MaskedArray(data=ema_array, mask=invalid_mask)
+            masked_lat_array = MaskedArray(data=lat_array, mask=invalid_mask)
+            masked_lon_array = MaskedArray(data=lon_array, mask=invalid_mask)
         case "vco":
             img_array = sd_util.load_fits_data(img_file_path, 1)
             (
-                lat_array,  # Latitude data
-                lon_array,  # Longitude data
                 ina_array,  # Incidence angle data
                 ema_array,  # Emission angle data
+                lat_array,  # Latitude data
+                lon_array,  # Longitude data
             ) = sd_util.load_fits_data(
                 geo_file_path,
                 [
-                    "Latitude",
-                    "Longitude",
                     "Incidence angle",
                     "Emission angle",
+                    "Latitude",
+                    "Longitude",
                 ],
             )
 
             lon_array = sd_util.fix_360_longitude(lon_array)
 
+            # The invalidity comparison values could be done more "exact" but this
+            # should work
+            invalid_mask = img_array < -1e38
+
+            for geo_array in [ina_array, ema_array, lat_array, lon_array]:
+                invalid_mask |= ~np.isfinite(geo_array)
+
+            masked_img_array = MaskedArray(data=img_array, mask=invalid_mask)
+            masked_ina_array = MaskedArray(data=ina_array, mask=invalid_mask)
+            masked_ema_array = MaskedArray(data=ema_array, mask=invalid_mask)
+            masked_lat_array = MaskedArray(data=lat_array, mask=invalid_mask)
+            masked_lon_array = MaskedArray(data=lon_array, mask=invalid_mask)
         case _:
             raise ValueError(
                 "Can not load data arrays for unknown dataset archive "
@@ -107,11 +134,11 @@ def _load_img_geo_data_arrays(
             )
 
     data_arrays: ImgGeoDataArrays = {
-        "image": img_array,
-        "latitude": lat_array,
-        "longitude": lon_array,
-        "incidence_angle": ina_array,
-        "emission_angle": ema_array,
+        "image": masked_img_array,
+        "latitude": masked_lat_array,
+        "longitude": masked_lon_array,
+        "incidence_angle": masked_ina_array,
+        "emission_angle": masked_ema_array,
     }
 
     return data_arrays

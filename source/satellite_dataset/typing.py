@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from numpy import ndarray
+from numpy.ma import MaskedArray
 
 
 class SatelliteDataArchive(TypedDict):
@@ -22,8 +22,8 @@ class SatelliteDataset(TypedDict):
 
 
 class ImgGeoDataArrays(TypedDict):
-    image: ndarray
-    latitude: ndarray
-    longitude: ndarray
-    incidence_angle: ndarray
-    emission_angle: ndarray
+    image: MaskedArray
+    latitude: MaskedArray
+    longitude: MaskedArray
+    incidence_angle: MaskedArray
+    emission_angle: MaskedArray
