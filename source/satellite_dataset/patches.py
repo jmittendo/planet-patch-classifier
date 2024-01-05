@@ -83,19 +83,6 @@ def _load_img_geo_data_arrays(
                 lat_array,  # Latitude data
                 lon_array,  # Longitude data
             ) = sd_util.load_pds3_data(geo_file_path)
-
-            # The invalidity comparison values could be done more "exact" but this
-            # should work
-            invalid_mask = img_array < 0
-
-            for geo_array in [ina_array, ema_array, lat_array, lon_array]:
-                invalid_mask |= geo_array < -1e10
-
-            masked_img_array = MaskedArray(data=img_array, mask=invalid_mask)
-            masked_ina_array = MaskedArray(data=ina_array, mask=invalid_mask)
-            masked_ema_array = MaskedArray(data=ema_array, mask=invalid_mask)
-            masked_lat_array = MaskedArray(data=lat_array, mask=invalid_mask)
-            masked_lon_array = MaskedArray(data=lon_array, mask=invalid_mask)
         case "vco":
             img_array = sd_util.load_fits_data(img_file_path, 1)
             (
@@ -114,34 +101,60 @@ def _load_img_geo_data_arrays(
             )
 
             lon_array = sd_util.fix_360_longitude(lon_array)
-
-            # The invalidity comparison values could be done more "exact" but this
-            # should work
-            invalid_mask = img_array < -1e38
-
-            for geo_array in [ina_array, ema_array, lat_array, lon_array]:
-                invalid_mask |= ~np.isfinite(geo_array)
-
-            masked_img_array = MaskedArray(data=img_array, mask=invalid_mask)
-            masked_ina_array = MaskedArray(data=ina_array, mask=invalid_mask)
-            masked_ema_array = MaskedArray(data=ema_array, mask=invalid_mask)
-            masked_lat_array = MaskedArray(data=lat_array, mask=invalid_mask)
-            masked_lon_array = MaskedArray(data=lon_array, mask=invalid_mask)
         case _:
             raise ValueError(
-                "Can not load data arrays for unknown dataset archive "
-                f"{archive_name}"
+                f"Can not load data arrays for unknown archive {archive_name}"
             )
 
     data_arrays: ImgGeoDataArrays = {
-        "image": masked_img_array,
-        "latitude": masked_lat_array,
-        "longitude": masked_lon_array,
-        "incidence_angle": masked_ina_array,
-        "emission_angle": masked_ema_array,
+        "image": MaskedArray(data=img_array),
+        "incidence_angle": MaskedArray(data=ina_array),
+        "emission_angle": MaskedArray(data=ema_array),
+        "latitude": MaskedArray(data=lat_array),
+        "longitude": MaskedArray(data=lon_array),
     }
 
+    _apply_invalid_mask(archive, data_arrays)
+
     return data_arrays
+
+
+def _apply_invalid_mask(
+    archive: SatelliteDataArchive, data_arrays: ImgGeoDataArrays
+) -> None:
+    archive_name = archive["name"]
+
+    match archive_name:
+        case "vex-vmc":
+            # The invalidity comparison values could be done more "exact" but this
+            # should work
+            invalid_mask = data_arrays["image"] < 0
+
+            array: MaskedArray
+            for array_name, array in data_arrays.items():  # type: ignore
+                if array_name == "image":
+                    continue
+
+                invalid_mask |= array < -1e10
+        case "vco":
+            # The invalidity comparison values could be done more "exact" but this
+            # should work
+            invalid_mask = data_arrays["image"] < -1e38
+
+            array: MaskedArray
+            for array_name, array in data_arrays.items():  # type: ignore
+                if array_name == "image":
+                    continue
+
+                invalid_mask |= ~np.isfinite(array)
+        case _:
+            raise ValueError(
+                f"No invalid-mask code implemented for archive '{archive_name}'"
+            )
+
+    array: MaskedArray
+    for array in data_arrays.values():  # type: ignore
+        array.mask = invalid_mask
 
 
 def _passes_resolution_threshold(
