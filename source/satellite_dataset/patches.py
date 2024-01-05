@@ -2,8 +2,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from numpy import ndarray
 from numpy.ma import MaskedArray
 from pandas import DataFrame
+from scipy import ndimage, stats
 
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
@@ -115,6 +117,9 @@ def _load_img_geo_data_arrays(
     }
 
     _apply_invalid_mask(archive, data_arrays)
+    _apply_background_mask(data_arrays, ucfg.PATCH_BACKGROUND_ANGLE)
+    _apply_outlier_mask(data_arrays, ucfg.PATCH_OUTLIER_SIGMA)
+    _normalize_img_intensity(data_arrays)
 
     return data_arrays
 
@@ -152,9 +157,76 @@ def _apply_invalid_mask(
                 f"No invalid-mask code implemented for archive '{archive_name}'"
             )
 
+    _apply_img_geo_arrays_mask(data_arrays, invalid_mask)
+
+
+def _apply_background_mask(
+    data_arrays: ImgGeoDataArrays, threshold_angle_deg: float
+) -> None:
+    unilluminated_mask = data_arrays["incidence_angle"] > threshold_angle_deg
+    observation_mask = data_arrays["emission_angle"] > threshold_angle_deg
+    background_mask = unilluminated_mask | observation_mask
+
+    _apply_img_geo_arrays_mask(data_arrays, background_mask)
+
+
+def _apply_outlier_mask(data_arrays: ImgGeoDataArrays, sigma_threshold: float) -> None:
+    img_array = data_arrays["image"]
+    filled_img_array = img_array.filled(img_array.min())
+
+    filtered_img_array = ndimage.median_filter(filled_img_array, size=3)
+    diff_array = filtered_img_array - filled_img_array
+    outlier_mask = np.abs(diff_array) > sigma_threshold * diff_array.std()
+
+    _apply_img_geo_arrays_mask(data_arrays, outlier_mask)
+
+
+def _apply_img_geo_arrays_mask(data_arrays: ImgGeoDataArrays, mask: ndarray) -> None:
     array: MaskedArray
     for array in data_arrays.values():  # type: ignore
-        array.mask = invalid_mask
+        array.mask |= mask
+
+
+def _normalize_img_intensity(data_arrays: ImgGeoDataArrays) -> None:
+    # Normalization using Minnaert's law
+
+    img_array = data_arrays["image"]
+    ina_array = data_arrays["incidence_angle"]
+    ema_array = data_arrays["emission_angle"]
+
+    valid_mask = img_array.mask
+
+    if not valid_mask.any():
+        return
+
+    cos_ina_array = np.cos(np.deg2rad(ina_array))
+    cos_ema_array = np.cos(np.deg2rad(ema_array))
+
+    img_values = img_array[valid_mask]
+    cos_ina_values = cos_ina_array[valid_mask]
+    cos_ema_values = cos_ema_array[valid_mask]
+
+    linreg_x = np.log(cos_ina_values * cos_ema_values)
+    linreg_y = np.log(img_values * cos_ema_values)
+
+    finite_mask = np.isfinite(linreg_x) & np.isfinite(linreg_y)
+
+    if not finite_mask.any():
+        return
+
+    linreg_x = linreg_x[finite_mask]
+    linreg_y = linreg_y[finite_mask]
+
+    if not np.any(linreg_x != linreg_x[0]):
+        return
+
+    linreg_result = stats.linregress(linreg_x, linreg_y)
+    slope = linreg_result.slope  # type: ignore
+
+    if np.isnan(slope):
+        return
+
+    img_array[...] = img_array / (cos_ema_array ** (slope - 1) * cos_ina_array**slope)
 
 
 def _passes_resolution_threshold(

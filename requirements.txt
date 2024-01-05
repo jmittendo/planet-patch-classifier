@@ -8,3 +8,4 @@ astropy
 planetaryimage
 pvl
 spiceypy
+scipy
