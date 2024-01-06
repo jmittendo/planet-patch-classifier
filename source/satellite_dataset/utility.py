@@ -3,6 +3,7 @@ import typing
 from collections.abc import Sequence
 from pathlib import Path
 
+import numpy as np
 import spiceypy as spice
 from astropy.io import fits
 from astropy.io.fits import Header
@@ -102,3 +103,28 @@ def fix_360_longitude(longitude: float | ndarray) -> float | ndarray:
     # Convert longitudes from range [0°, 360°] to range [-180°, 180°]
 
     return (longitude + 180) % 360 - 180
+
+
+def get_zy_rotation_matrix(z_angle: float, y_angle: float) -> ndarray:
+    sin_z_angle = np.sin(z_angle)
+    cos_z_angle = np.cos(z_angle)
+    sin_y_angle = np.sin(y_angle)
+    cos_y_angle = np.cos(y_angle)
+
+    z_rot_matrix = np.asarray(
+        [
+            [cos_z_angle, -sin_z_angle, 0],
+            [sin_z_angle, cos_z_angle, 0],
+            [0, 0, 1],
+        ]
+    )
+
+    y_rot_matrix = np.asarray(
+        [
+            [cos_y_angle, 0, sin_y_angle],
+            [0, 1, 0],
+            [-sin_y_angle, 0, cos_y_angle],
+        ]
+    )
+
+    return np.dot(y_rot_matrix, z_rot_matrix)

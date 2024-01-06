@@ -15,6 +15,7 @@ from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     SatelliteDataArchive,
     SatelliteDataset,
+    SphericalDataValues,
 )
 
 
@@ -72,8 +73,15 @@ def _generate_img_geo_patches(
         _normalize_img_intensity(data_arrays)
         _apply_outlier_mask(data_arrays, ucfg.PATCH_OUTLIER_SIGMA)
 
-        output_file_dir_path = Path("test-images")
-        output_file_dir_path.mkdir(parents=True, exist_ok=True)
+        img_array = data_arrays["image"]
+        lon_array = data_arrays["longitude"]
+        lat_array = data_arrays["latitude"]
+
+        img_values = img_array[~img_array.mask]
+        lon_values = lon_array[~lon_array.mask]
+        lat_values = lat_array[~lat_array.mask]
+
+        spherical_data = _get_spherical_data(img_values, lon_values, lat_values)
 
 
 def _load_img_geo_data_arrays(
@@ -233,3 +241,46 @@ def _passes_resolution_threshold(
     img_max_resolution: float, patch_resolution: float
 ) -> bool:
     return img_max_resolution / patch_resolution < ucfg.PATCH_RESOLUTION_TOLERANCE
+
+
+def _get_spherical_data(
+    img_values: ndarray, longitude_values: ndarray, latitude_values: ndarray
+) -> SphericalDataValues:
+    phi_values = np.deg2rad(longitude_values % 360)
+    theta_values = np.deg2rad(90 - latitude_values)
+
+    sin_phi_values = np.sin(phi_values)
+    cos_phi_values = np.cos(phi_values)
+    sin_theta_values = np.sin(theta_values)
+    cos_theta_values = np.cos(theta_values)
+
+    x_values = sin_theta_values * cos_phi_values
+    y_values = sin_theta_values * sin_phi_values
+    z_values = cos_theta_values
+
+    # Find the approximate center of the points on the sphere and shift it to phi = 0
+    # and theta = 0 as this should lead to better spacing between the patches
+    xyz_array = np.row_stack([x_values, y_values, z_values])
+    xyz_median = np.median(xyz_array, axis=1)
+
+    median_x, median_y, median_z = xyz_median / np.linalg.norm(xyz_median)
+
+    median_phi = np.sign(median_y) * np.arccos(
+        median_x / np.sqrt(median_x**2 + median_y**2)
+    )
+    median_theta = np.arccos(median_z)
+
+    y_rotation_angle = np.pi / 2 - median_theta
+    z_rotation_angle = -median_phi
+
+    rotation_matrix = sd_util.get_zy_rotation_matrix(z_rotation_angle, y_rotation_angle)
+    xyz_array = np.dot(rotation_matrix, xyz_array)
+
+    spherical_data_values: SphericalDataValues = {
+        "image": img_values,
+        "x": xyz_array[0],
+        "y": xyz_array[1],
+        "z": xyz_array[2],
+    }
+
+    return spherical_data_values
