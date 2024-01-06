@@ -70,6 +70,12 @@ class PatchGenerator:
     def _get_patch_coordinates(
         self, spherical_data: SphericalData, half_patch_size: float
     ) -> list[PatchCoordinate]:
+        y_values = spherical_data["y_values"]
+        z_values = spherical_data["z_values"]
+
+        if y_values.size == 0:
+            return []
+
         phi_patches_angle = 2 * np.arcsin(0.5 * half_patch_size)
 
         # Offsets so that first and last phi angles are on the negative x-axis (because
@@ -85,13 +91,6 @@ class PatchGenerator:
 
         phi_grid, theta_grid = np.meshgrid(phi_coords, theta_coords)
 
-        y_values = spherical_data["y_values"]
-        z_values = spherical_data["z_values"]
-
-        # Factor 1.01 because of float comparison problems
-        range_y = (y_values.min() * 1.01, y_values.max() * 1.01)
-        range_z = (z_values.min() * 1.01, z_values.max() * 1.01)
-
         patch_coords_phi = phi_grid.flatten()
         patch_coords_theta = theta_grid.flatten()
 
@@ -103,6 +102,10 @@ class PatchGenerator:
         patch_coords_x = cos_coords_phi * sin_coords_theta
         patch_coords_y = sin_coords_phi * sin_coords_theta
         patch_coords_z = cos_coords_theta
+
+        # Factor 1.01 because of float comparison problems
+        range_y = (y_values.min() * 1.01, y_values.max() * 1.01)
+        range_z = (z_values.min() * 1.01, z_values.max() * 1.01)
 
         invalid_coords_mask = (
             (patch_coords_x < 0)
@@ -394,16 +397,18 @@ def _generate_img_geo_patches(
         _normalize_img_intensity(data_arrays)
         _apply_outlier_mask(data_arrays, ucfg.PATCH_OUTLIER_SIGMA)
 
-        img_array = data_arrays["image"]
-        lon_array = data_arrays["longitude"]
-        lat_array = data_arrays["latitude"]
+        img_values = data_arrays["image"].compressed()
+        lon_values = data_arrays["longitude"].compressed()
+        lat_values = data_arrays["latitude"].compressed()
 
-        img_values = img_array[~img_array.mask]
-        lon_values = lon_array[~lon_array.mask]
-        lat_values = lat_array[~lat_array.mask]
+        if img_values.size == 0:
+            return
 
         spherical_data = _get_spherical_data(
-            img_values, lon_values, lat_values, archive["planet_radius_km"]
+            img_values,
+            lon_values,
+            lat_values,
+            archive["planet_radius_km"],
         )
 
         output_file_path_base = output_dir_path / row_data["file_name_base"]
