@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from numpy import ndarray
@@ -75,10 +74,6 @@ def _generate_img_geo_patches(
 
         output_file_dir_path = Path("test-images")
         output_file_dir_path.mkdir(parents=True, exist_ok=True)
-
-        plot_img_geo_data_arrays(
-            data_arrays, output_file_dir_path / f"{row_data['file_name_base']}.png"
-        )
 
 
 def _load_img_geo_data_arrays(
@@ -238,23 +233,3 @@ def _passes_resolution_threshold(
     img_max_resolution: float, patch_resolution: float
 ) -> bool:
     return img_max_resolution / patch_resolution < ucfg.PATCH_RESOLUTION_TOLERANCE
-
-
-def plot_img_geo_data_arrays(
-    img_geo_data_arrays: ImgGeoDataArrays, output_file_path: Path
-) -> None:
-    plt.ioff()
-    plt.style.use("dark_background")
-
-    fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-
-    for (array_name, array), ax in zip(img_geo_data_arrays.items(), axes.flatten()):
-        ax.imshow(array, cmap="gray")
-        ax.set_title(array_name)
-
-    for ax in axes.flatten():
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-    fig.savefig(output_file_path, bbox_inches="tight")
-    plt.close()
