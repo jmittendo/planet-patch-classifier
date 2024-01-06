@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from numpy import ndarray
@@ -65,8 +66,18 @@ def _generate_img_geo_patches(
         img_file_path = Path(row_data["img_file_path"])
         geo_file_path = Path(row_data["geo_file_path"])
 
-        img_geo_data_arrays = _load_img_geo_data_arrays(
-            archive, img_file_path, geo_file_path
+        data_arrays = _load_img_geo_data_arrays(archive, img_file_path, geo_file_path)
+
+        _apply_invalid_mask(archive, data_arrays)
+        _apply_background_mask(data_arrays, ucfg.PATCH_BACKGROUND_ANGLE)
+        _normalize_img_intensity(data_arrays)
+        _apply_outlier_mask(data_arrays, ucfg.PATCH_OUTLIER_SIGMA)
+
+        output_file_dir_path = Path("test-images")
+        output_file_dir_path.mkdir(parents=True, exist_ok=True)
+
+        plot_img_geo_data_arrays(
+            data_arrays, output_file_dir_path / f"{row_data['file_name_base']}.png"
         )
 
 
@@ -115,11 +126,6 @@ def _load_img_geo_data_arrays(
         "latitude": MaskedArray(data=lat_array),
         "longitude": MaskedArray(data=lon_array),
     }
-
-    _apply_invalid_mask(archive, data_arrays)
-    _apply_background_mask(data_arrays, ucfg.PATCH_BACKGROUND_ANGLE)
-    _apply_outlier_mask(data_arrays, ucfg.PATCH_OUTLIER_SIGMA)
-    _normalize_img_intensity(data_arrays)
 
     return data_arrays
 
@@ -172,10 +178,9 @@ def _apply_background_mask(
 
 def _apply_outlier_mask(data_arrays: ImgGeoDataArrays, sigma_threshold: float) -> None:
     img_array = data_arrays["image"]
-    filled_img_array = img_array.filled(img_array.min())
 
-    filtered_img_array = ndimage.median_filter(filled_img_array, size=3)
-    diff_array = filtered_img_array - filled_img_array
+    filtered_img_array = ndimage.median_filter(img_array, size=3)
+    diff_array = filtered_img_array - img_array
     outlier_mask = np.abs(diff_array) > sigma_threshold * diff_array.std()
 
     _apply_img_geo_arrays_mask(data_arrays, outlier_mask)
@@ -233,3 +238,23 @@ def _passes_resolution_threshold(
     img_max_resolution: float, patch_resolution: float
 ) -> bool:
     return img_max_resolution / patch_resolution < ucfg.PATCH_RESOLUTION_TOLERANCE
+
+
+def plot_img_geo_data_arrays(
+    img_geo_data_arrays: ImgGeoDataArrays, output_file_path: Path
+) -> None:
+    plt.ioff()
+    plt.style.use("dark_background")
+
+    fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+    for (array_name, array), ax in zip(img_geo_data_arrays.items(), axes.flatten()):
+        ax.imshow(array, cmap="gray")
+        ax.set_title(array_name)
+
+    for ax in axes.flatten():
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    fig.savefig(output_file_path, bbox_inches="tight")
+    plt.close()
