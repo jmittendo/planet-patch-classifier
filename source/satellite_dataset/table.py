@@ -7,7 +7,6 @@ from pandas import DataFrame
 from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
 
-import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.utility as sd_util
 import source.satellite_dataset.validation as sd_validation
 from source.exceptions import ValidationError
@@ -42,7 +41,7 @@ def generate_dataset_table(
             spice_kernels_path = Path(spice_kernels_path_str)
             table = _generate_vex_vmc_table(dataset_path, spice_kernels_path)
         case "vco":
-            table = _generate_vco_table(dataset_path)
+            table = _generate_vco_table(dataset_path, archive["planet_radius_km"])
         case "juno-jnc":
             raise NotImplementedError
         case _:
@@ -190,7 +189,7 @@ def _generate_vco_table(dataset_path: Path) -> DataFrame:
                     solar_longitude_deg: float = img_header["S_SOLLON"]  # type: ignore
                     solar_longitude_deg = sd_util.fix_360_longitude(solar_longitude_deg)
 
-                    altitude_m = distance_km * 1000 - sdcfg.VENUS_RADIUS_M
+                    altitude_m = (distance_km - venus_radius_km) * 1000
 
                     # Approximation of max resolution of a pixel in m/px
                     max_resolution_mpx = pixel_fov_rad * altitude_m
