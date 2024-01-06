@@ -128,3 +128,10 @@ def get_zy_rotation_matrix(z_angle: float, y_angle: float) -> ndarray:
     )
 
     return np.dot(y_rot_matrix, z_rot_matrix)
+
+
+def get_normalized_img(img: ndarray) -> ndarray:
+    img_min = img.min()
+    img_max = img.max()
+
+    return (img - img_min) / (img_max - img_min)

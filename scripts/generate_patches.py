@@ -9,6 +9,7 @@ def main() -> None:
     dataset_name: str | None = input_args.name
     patch_scale_km: float | None = input_args.scale
     patch_resolution: int | None = input_args.resolution
+    patch_normalization: str | None = input_args.normalization
     regenerate_table: bool = input_args.table
 
     dataset = sd_util.load_dataset(dataset_name)
@@ -19,8 +20,13 @@ def main() -> None:
     if patch_resolution is None:
         patch_resolution = int(input("Enter pixel resolution of patches: "))
 
+    if patch_normalization is None:
+        patch_normalization = input(
+            "Enter patch normalization mode ('local', 'global', 'both'): "
+        )
+
     sd_patches.generate_patches(
-        dataset, patch_scale_km, patch_resolution, regenerate_table
+        dataset, patch_scale_km, patch_resolution, patch_normalization, regenerate_table  # type: ignore
     )
 
 
@@ -38,6 +44,11 @@ def parse_input_args() -> Namespace:
     )
     arg_parser.add_argument(
         "resolution", nargs="?", type=int, help="pixel resolution of the patches"
+    )
+    arg_parser.add_argument(
+        "normalization",
+        nargs="?",
+        help="patch normalization mode ('local', 'global', 'both')",
     )
     arg_parser.add_argument(
         "-t", "--table", action="store_true", help="regenerate the dataset table file"
