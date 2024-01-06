@@ -120,11 +120,11 @@ def _load_img_geo_data_arrays(
             )
 
     data_arrays: ImgGeoDataArrays = {
-        "image": MaskedArray(data=img_array),
-        "incidence_angle": MaskedArray(data=ina_array),
-        "emission_angle": MaskedArray(data=ema_array),
-        "latitude": MaskedArray(data=lat_array),
-        "longitude": MaskedArray(data=lon_array),
+        "image": MaskedArray(data=img_array.astype(float)),
+        "incidence_angle": MaskedArray(data=ina_array.astype(float)),
+        "emission_angle": MaskedArray(data=ema_array.astype(float)),
+        "latitude": MaskedArray(data=lat_array.astype(float)),
+        "longitude": MaskedArray(data=lon_array.astype(float)),
     }
 
     return data_arrays
@@ -211,16 +211,16 @@ def _normalize_img_intensity(data_arrays: ImgGeoDataArrays) -> None:
     cos_ina_values = cos_ina_array[valid_mask]
     cos_ema_values = cos_ema_array[valid_mask]
 
-    linreg_x = np.log(cos_ina_values * cos_ema_values)
-    linreg_y = np.log(img_values * cos_ema_values)
+    linreg_x_arg = cos_ina_values * cos_ema_values
+    linreg_y_arg = img_values * cos_ema_values
 
-    finite_mask = np.isfinite(linreg_x) & np.isfinite(linreg_y)
+    positive_mask = (linreg_x_arg > 0) & (linreg_y_arg > 0)
 
-    if not finite_mask.any():
+    if not positive_mask.any():
         return
 
-    linreg_x = linreg_x[finite_mask]
-    linreg_y = linreg_y[finite_mask]
+    linreg_x = np.log(linreg_x_arg[positive_mask])
+    linreg_y = np.log(linreg_y_arg[positive_mask])
 
     if not np.any(linreg_x != linreg_x[0]):
         return
