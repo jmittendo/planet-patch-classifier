@@ -45,7 +45,7 @@ class PatchGenerator:
     def generate(
         self,
         spherical_data: SphericalData,
-        output_dir_path: Path,
+        output_file_path_base: Path,
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
     ) -> None:
@@ -61,7 +61,7 @@ class PatchGenerator:
 
         self._save_patch_images(
             patch_images,
-            output_dir_path,
+            output_file_path_base,
             patch_img_format,
             patch_normalization,
             spherical_data,
@@ -266,12 +266,12 @@ class PatchGenerator:
     def _save_patch_images(
         self,
         patch_images: list[ndarray],
-        output_dir_path: Path,
+        output_file_path_base: Path,
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
         full_spherical_data: SphericalData,
     ):
-        output_dir_path.mkdir(parents=True, exist_ok=True)
+        output_file_path_base.parent.mkdir(parents=True, exist_ok=True)
 
         for i, patch_img in enumerate(patch_images):
             normalized_patch_images = []
@@ -305,8 +305,12 @@ class PatchGenerator:
             ):
                 normalization_str = "ln" if normalization_mode == "local" else "gn"
 
-                output_file_name = f"patch_{i}_{normalization_str}.{patch_img_format}"
-                output_file_path = output_dir_path / output_file_name
+                output_file_name_base = output_file_path_base.name
+                output_file_name = (
+                    f"{output_file_name_base}_patch_{i}_{normalization_str}"
+                    f".{patch_img_format}"
+                )
+                output_file_path = output_file_path_base.with_name(output_file_name)
 
                 match patch_img_format:
                     case "png" | "jpg":
@@ -402,6 +406,8 @@ def _generate_img_geo_patches(
             img_values, lon_values, lat_values, archive["planet_radius_km"]
         )
 
+        output_file_path_base = output_dir_path / row_data["file_name_base"]
+
         patch_generator = PatchGenerator(
             patch_scale_km,
             patch_resolution,
@@ -412,7 +418,7 @@ def _generate_img_geo_patches(
         )
         patch_generator.generate(
             spherical_data,
-            output_dir_path,
+            output_file_path_base,
             ucfg.PATCH_IMAGE_FORMAT,
             patch_normalization,
         )
