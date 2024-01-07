@@ -50,10 +50,10 @@ class ImgGeoPatchProjection(TypedDict):
     y_values: ndarray
 
 
-type ImgGeoPatchInterpolation = Literal["nearest"] | Literal["linear"] | Literal[
-    "cubic"
-]
-type PatchImageFormat = Literal["png"] | Literal["jpg"] | Literal["npy"] | Literal[
-    "txt"
-]
+type ImgGeoPatchInterpolation = (
+    Literal["nearest"] | Literal["linear"] | Literal["cubic"]
+)
+type PatchImageFormat = (
+    Literal["png"] | Literal["jpg"] | Literal["npy"] | Literal["txt"]
+)
 type PatchNormalization = Literal["local"] | Literal["global"] | Literal["both"]
