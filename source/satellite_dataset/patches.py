@@ -443,8 +443,7 @@ def generate_patches(
 
     output_dir_path = (
         sdcfg.PATCHES_DIR_PATH
-        / dataset["name"]
-        / f"s{patch_scale_km:g}-r{patch_resolution}"
+        / f"{dataset['name']}_s{patch_scale_km:g}-r{patch_resolution}"
     )
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
