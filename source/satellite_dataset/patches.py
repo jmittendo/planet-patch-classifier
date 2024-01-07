@@ -394,17 +394,18 @@ class ImgGeoPatchGenerator:
                 normalized_patch_images.append(normalized_patch_img)
                 normalization_modes.append("global")
 
+            output_dir_path = output_file_path_base.parent
+            output_file_name_base = output_file_path_base.name
+            output_file_name = f"{output_file_name_base}-patch-{i}.{patch_img_format}"
+
             for patch_img, normalization_mode in zip(
                 normalized_patch_images, normalization_modes
             ):
-                normalization_str = "ln" if normalization_mode == "local" else "gn"
+                normalization_dir_name = f"{normalization_mode}-normalization"
+                normalization_dir_path = output_dir_path / normalization_dir_name
+                normalization_dir_path.mkdir(parents=True, exist_ok=True)
 
-                output_file_name_base = output_file_path_base.name
-                output_file_name = (
-                    f"{output_file_name_base}_patch_{i}_{normalization_str}"
-                    f".{patch_img_format}"
-                )
-                output_file_path = output_file_path_base.with_name(output_file_name)
+                output_file_path = normalization_dir_path / output_file_name
 
                 match patch_img_format:
                     case "png" | "jpg":
@@ -419,7 +420,7 @@ class ImgGeoPatchGenerator:
                             f"'{patch_img_format}' is not a valid patch image format"
                         )
 
-                img_file_names.append(output_file_name)
+            img_file_names.append(output_file_name)
 
         return img_file_names
 
