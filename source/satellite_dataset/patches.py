@@ -20,7 +20,6 @@ from source.satellite_dataset.typing import (
     ImgGeoPatchInterpolation,
     ImgGeoPatchProjection,
     PatchCoordinate,
-    PatchImageFormat,
     PatchNormalization,
     SatelliteDataArchive,
     SatelliteDataset,
@@ -50,7 +49,6 @@ class ImgGeoPatchGenerator:
         spherical_data: SphericalData,
         output_dir_path: Path,
         output_file_name_base: str,
-        patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
     ) -> tuple[list[str], list[PatchCoordinate]]:
         spherical_data, back_rotation_matrix = self._center_spherical_data(
@@ -72,7 +70,6 @@ class ImgGeoPatchGenerator:
             patch_images,
             output_dir_path,
             output_file_name_base,
-            patch_img_format,
             patch_normalization,
             spherical_data,
         )
@@ -367,7 +364,6 @@ class ImgGeoPatchGenerator:
         patch_images: list[ndarray],
         output_dir_path: Path,
         output_file_name_base: str,
-        patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
         full_spherical_data: SphericalData,
     ) -> list[str]:
@@ -402,7 +398,7 @@ class ImgGeoPatchGenerator:
                 normalized_patch_images.append(normalized_patch_img)
                 normalization_modes.append("global")
 
-            output_file_name = f"{output_file_name_base}-patch-{i}.{patch_img_format}"
+            output_file_name = f"{output_file_name_base}-patch-{i}.png"
 
             for patch_img, normalization_mode in zip(
                 normalized_patch_images, normalization_modes
@@ -413,18 +409,9 @@ class ImgGeoPatchGenerator:
 
                 output_file_path = normalization_dir_path / output_file_name
 
-                match patch_img_format:
-                    case "png" | "jpg":
-                        int_image_array = (patch_img * 255).astype(np.uint8)
-                        Image.fromarray(int_image_array).save(output_file_path)
-                    case "txt":
-                        np.savetxt(output_file_path, patch_img)
-                    case "npy":
-                        np.save(output_file_path, patch_img)
-                    case _:
-                        raise ValueError(
-                            f"'{patch_img_format}' is not a valid patch image format"
-                        )
+                int_image_array = (patch_img * 255).astype(np.uint8)
+
+                Image.fromarray(int_image_array).save(output_file_path)
 
             img_file_names.append(output_file_name)
 
@@ -539,7 +526,6 @@ def _generate_img_geo_patches(
             spherical_data,
             output_dir_path,
             row_data["file_name_base"],
-            ucfg.PATCH_IMAGE_FORMAT,
             patch_normalization,
         )
 
