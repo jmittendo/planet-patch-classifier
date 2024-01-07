@@ -48,18 +48,23 @@ class ImgGeoPatchGenerator:
         output_file_path_base: Path,
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
-    ) -> None:
+    ) -> tuple[list[str], list[PatchCoordinate]]:
+        spherical_data, back_rotation_matrix = self._center_spherical_data(
+            spherical_data
+        )
         half_patch_size = self._patch_scale_km / spherical_data["radius_km"]
-        patch_coordinates = self._get_patch_coordinates(spherical_data, half_patch_size)
+        patch_coordinates = self._get_patch_coordinates(
+            spherical_data, half_patch_size, back_rotation_matrix
+        )
         patch_xy_range = (-half_patch_size, half_patch_size)
-        patch_projections = self._get_patch_projections(
+        patch_projections, projection_coordinates = self._get_patch_projections(
             spherical_data, patch_coordinates, patch_xy_range
         )
-        patch_images = self._get_interpolated_patch_images(
-            patch_projections, patch_xy_range
+        patch_images, img_coordinates = self._get_interpolated_patch_images(
+            patch_projections, projection_coordinates, patch_xy_range
         )
 
-        self._save_patch_images(
+        img_file_names = self._save_patch_images(
             patch_images,
             output_file_path_base,
             patch_img_format,
@@ -67,8 +72,52 @@ class ImgGeoPatchGenerator:
             spherical_data,
         )
 
+        return img_file_names, img_coordinates
+
+    def _center_spherical_data(
+        self, spherical_data: SphericalData
+    ) -> tuple[SphericalData, ndarray]:
+        # Find the approximate center of the points on the sphere and shift it to
+        # phi = 0 and theta = 0 as this should lead to better spacing between the
+        # patches
+        x_values = spherical_data["x_values"]
+        y_values = spherical_data["y_values"]
+        z_values = spherical_data["z_values"]
+
+        xyz_array = np.row_stack([x_values, y_values, z_values])
+        xyz_median = np.median(xyz_array, axis=1)
+
+        median_x, median_y, median_z = xyz_median / np.linalg.norm(xyz_median)
+
+        median_phi = np.sign(median_y) * np.arccos(
+            median_x / np.sqrt(median_x**2 + median_y**2)
+        )
+        median_theta = np.arccos(median_z)
+
+        y_rotation_angle = np.pi / 2 - median_theta
+        z_rotation_angle = -median_phi
+
+        rotation_matrix = sd_util.get_zy_rotation_matrix(
+            z_rotation_angle, y_rotation_angle
+        )
+        xyz_array = np.dot(rotation_matrix, xyz_array)
+
+        centered_spherical_data: SphericalData = {
+            "img_values": spherical_data["img_values"],
+            "x_values": xyz_array[0],
+            "y_values": xyz_array[1],
+            "z_values": xyz_array[2],
+            "radius_km": spherical_data["radius_km"],
+            "solar_longitude": spherical_data["solar_longitude"],
+        }
+
+        return centered_spherical_data, np.linalg.inv(rotation_matrix)
+
     def _get_patch_coordinates(
-        self, spherical_data: SphericalData, half_patch_size: float
+        self,
+        spherical_data: SphericalData,
+        half_patch_size: float,
+        back_rotation_matrix: ndarray,
     ) -> list[PatchCoordinate]:
         y_values = spherical_data["y_values"]
         z_values = spherical_data["z_values"]
@@ -118,9 +167,41 @@ class ImgGeoPatchGenerator:
         patch_coords_phi = patch_coords_phi[~invalid_coords_mask]
         patch_coords_theta = patch_coords_theta[~invalid_coords_mask]
 
+        # Use back rotation matrix from spherical data centering to get original patch
+        # coordinates
+        solar_longitude = spherical_data["solar_longitude"]
+
+        original_coords_x, original_coords_y, original_coords_z = np.dot(
+            back_rotation_matrix,
+            np.row_stack([patch_coords_x, patch_coords_y, patch_coords_z]),
+        )
+
+        original_coords_phi = np.arctan2(original_coords_y, original_coords_x) % (
+            2 * np.pi
+        )
+        original_coords_theta = np.arccos(original_coords_z) % np.pi
+
+        original_longitudes = sd_util.fix_360_longitude(np.rad2deg(original_coords_phi))
+        original_latitudes = 90 - np.rad2deg(original_coords_theta)
+        original_local_times = sd_util.longitude_to_local_time(
+            original_longitudes, solar_longitude
+        )
+
         patch_coordinates: list[PatchCoordinate] = [
-            {"phi": phi, "theta": theta}
-            for phi, theta in zip(patch_coords_phi, patch_coords_theta)
+            {
+                "phi": phi,
+                "theta": theta,
+                "longitude": lon,
+                "latitude": lat,
+                "local_time": lt,
+            }
+            for phi, theta, lon, lat, lt, in zip(
+                patch_coords_phi,
+                patch_coords_theta,
+                original_longitudes,
+                original_latitudes,
+                original_local_times,
+            )
         ]
 
         return patch_coordinates
@@ -130,10 +211,11 @@ class ImgGeoPatchGenerator:
         spherical_data: SphericalData,
         patch_coordinates: list[PatchCoordinate],
         patch_xy_range: tuple[float, float],
-    ) -> list[ImgGeoPatchProjection]:
+    ) -> tuple[list[ImgGeoPatchProjection], list[PatchCoordinate]]:
         img_values = spherical_data["img_values"]
 
         projections: list[ImgGeoPatchProjection] = []
+        projection_coordinates: list[PatchCoordinate] = []
 
         for patch_coordinate in patch_coordinates:
             # Note that the projection will occur in x-direction and therefore the x-
@@ -164,8 +246,9 @@ class ImgGeoPatchGenerator:
             }
 
             projections.append(projection)
+            projection_coordinates.append(patch_coordinate)
 
-        return projections
+        return projections, projection_coordinates
 
     def _get_rotated_sphere_points(
         self, spherical_data: SphericalData, patch_coordinate: PatchCoordinate
@@ -234,14 +317,18 @@ class ImgGeoPatchGenerator:
     def _get_interpolated_patch_images(
         self,
         patch_projections: list[ImgGeoPatchProjection],
+        projection_coordinates: list[PatchCoordinate],
         patch_xy_range: tuple[float, float],
-    ) -> list[ndarray]:
+    ) -> tuple[list[ndarray], list[PatchCoordinate]]:
         pixel_xy_values = np.linspace(*patch_xy_range, self._patch_resolution)
         pixel_x_grid, pixel_y_grid = np.meshgrid(pixel_xy_values, pixel_xy_values)
 
         patch_images: list[ndarray] = []
+        img_coordinates: list[PatchCoordinate] = []
 
-        for projection in patch_projections:
+        for projection_coordinate, projection in zip(
+            projection_coordinates, patch_projections
+        ):
             projection_img_values = projection["img_values"]
             projection_x_values = projection["x_values"]
             projection_y_values = projection["y_values"]
@@ -263,8 +350,9 @@ class ImgGeoPatchGenerator:
             patch_img = np.flip(interpolated_projection, axis=0)
 
             patch_images.append(patch_img)
+            img_coordinates.append(projection_coordinate)
 
-        return patch_images
+        return patch_images, img_coordinates
 
     def _save_patch_images(
         self,
@@ -273,8 +361,10 @@ class ImgGeoPatchGenerator:
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
         full_spherical_data: SphericalData,
-    ):
+    ) -> list[str]:
         output_file_path_base.parent.mkdir(parents=True, exist_ok=True)
+
+        img_file_names: list[str] = []
 
         for i, patch_img in enumerate(patch_images):
             normalized_patch_images = []
@@ -328,6 +418,10 @@ class ImgGeoPatchGenerator:
                             f"'{patch_img_format}' is not a valid patch image format"
                         )
 
+                img_file_names.append(output_file_name)
+
+        return img_file_names
+
 
 def generate_patches(
     dataset: SatelliteDataset,
@@ -351,7 +445,7 @@ def generate_patches(
 
     match archive_type:
         case "img-geo":
-            _generate_img_geo_patches(
+            patch_info_table = _generate_img_geo_patches(
                 dataset_archive,
                 dataset_table,
                 patch_scale_km,
@@ -367,6 +461,8 @@ def generate_patches(
                 f"'{archive_type}'"
             )
 
+    patch_info_table.to_pickle(output_dir_path / "patch-info.pkl")
+
 
 def _generate_img_geo_patches(
     archive: SatelliteDataArchive,
@@ -375,9 +471,14 @@ def _generate_img_geo_patches(
     patch_resolution: int,
     patch_normalization: PatchNormalization,
     output_dir_path: Path,
-) -> None:
+) -> DataFrame:
     # Spatial resolution of a patch in m/px (ignoring projection effects / distortions)
     patch_resolution_mpx = patch_scale_km * 1000 / patch_resolution
+
+    patch_file_names: list[str] = []
+    patch_longitudes: list[float] = []
+    patch_latitudes: list[float] = []
+    patch_local_times: list[float] = []
 
     for row_index, row_data in dataset_table.iterrows():
         img_max_resolution_mpx: float = row_data["max_resolution_mpx"]
@@ -402,13 +503,16 @@ def _generate_img_geo_patches(
         lat_values = data_arrays["latitude"].compressed()
 
         if img_values.size == 0:
-            return
+            continue
+
+        solar_longitude = row_data["solar_longitude_deg"]
 
         spherical_data = _get_spherical_data(
             img_values,
             lon_values,
             lat_values,
             archive["planet_radius_km"],
+            solar_longitude,
         )
 
         output_file_path_base = output_dir_path / row_data["file_name_base"]
@@ -421,12 +525,28 @@ def _generate_img_geo_patches(
             ucfg.MIN_PATCH_BIN_DENSITY,
             ucfg.PATCH_INTERPOLATION_METHOD,
         )
-        patch_generator.generate(
+        img_file_names, patch_coordinates = patch_generator.generate(
             spherical_data,
             output_file_path_base,
             ucfg.PATCH_IMAGE_FORMAT,
             patch_normalization,
         )
+
+        patch_file_names += img_file_names
+
+        for patch_coordinate in patch_coordinates:
+            patch_longitudes.append(patch_coordinate["longitude"])
+            patch_latitudes.append(patch_coordinate["latitude"])
+            patch_local_times.append(patch_coordinate["local_time"])
+
+    patch_info_table_dict = {
+        "file_name": patch_file_names,
+        "longitude": patch_longitudes,
+        "latitude": patch_latitudes,
+        "local_time": patch_local_times,
+    }
+
+    return DataFrame(data=patch_info_table_dict)
 
 
 def _load_img_geo_data_arrays(
@@ -593,6 +713,7 @@ def _get_spherical_data(
     longitude_values: ndarray,
     latitude_values: ndarray,
     planet_radius_km: float,
+    solar_longitude: float,
 ) -> SphericalData:
     phi_values = np.deg2rad(longitude_values % 360)
     theta_values = np.deg2rad(90 - latitude_values)
@@ -606,30 +727,13 @@ def _get_spherical_data(
     y_values = sin_theta_values * sin_phi_values
     z_values = cos_theta_values
 
-    # Find the approximate center of the points on the sphere and shift it to phi = 0
-    # and theta = 0 as this should lead to better spacing between the patches
-    xyz_array = np.row_stack([x_values, y_values, z_values])
-    xyz_median = np.median(xyz_array, axis=1)
-
-    median_x, median_y, median_z = xyz_median / np.linalg.norm(xyz_median)
-
-    median_phi = np.sign(median_y) * np.arccos(
-        median_x / np.sqrt(median_x**2 + median_y**2)
-    )
-    median_theta = np.arccos(median_z)
-
-    y_rotation_angle = np.pi / 2 - median_theta
-    z_rotation_angle = -median_phi
-
-    rotation_matrix = sd_util.get_zy_rotation_matrix(z_rotation_angle, y_rotation_angle)
-    xyz_array = np.dot(rotation_matrix, xyz_array)
-
     spherical_data_values: SphericalData = {
         "img_values": img_values,
-        "x_values": xyz_array[0],
-        "y_values": xyz_array[1],
-        "z_values": xyz_array[2],
+        "x_values": x_values,
+        "y_values": y_values,
+        "z_values": z_values,
         "radius_km": planet_radius_km,
+        "solar_longitude": solar_longitude,
     }
 
     return spherical_data_values

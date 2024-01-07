@@ -135,3 +135,21 @@ def get_normalized_img(img: ndarray) -> ndarray:
     img_max = img.max()
 
     return (img - img_min) / (img_max - img_min)
+
+
+@typing.overload
+def longitude_to_local_time(longitude: float, solar_longitude: float) -> float:
+    ...
+
+
+@typing.overload
+def longitude_to_local_time(longitude: ndarray, solar_longitude: float) -> ndarray:
+    ...
+
+
+def longitude_to_local_time(
+    longitude: float | ndarray, solar_longitude: float
+) -> float | ndarray:
+    # NOTE: Might need a parameter for planet rotation direction if not Venus
+
+    return (solar_longitude - longitude + 180) % 360 / 360 * 24

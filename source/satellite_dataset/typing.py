@@ -37,11 +37,15 @@ class SphericalData(TypedDict):
     y_values: ndarray
     z_values: ndarray
     radius_km: float
+    solar_longitude: float
 
 
 class PatchCoordinate(TypedDict):
     phi: float
     theta: float
+    longitude: float
+    latitude: float
+    local_time: float
 
 
 class ImgGeoPatchProjection(TypedDict):
