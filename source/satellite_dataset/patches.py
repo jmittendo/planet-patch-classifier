@@ -46,7 +46,8 @@ class ImgGeoPatchGenerator:
     def generate(
         self,
         spherical_data: SphericalData,
-        output_file_path_base: Path,
+        output_dir_path: Path,
+        output_file_name_base: str,
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
     ) -> tuple[list[str], list[PatchCoordinate]]:
@@ -67,7 +68,8 @@ class ImgGeoPatchGenerator:
 
         img_file_names = self._save_patch_images(
             patch_images,
-            output_file_path_base,
+            output_dir_path,
+            output_file_name_base,
             patch_img_format,
             patch_normalization,
             spherical_data,
@@ -358,12 +360,13 @@ class ImgGeoPatchGenerator:
     def _save_patch_images(
         self,
         patch_images: list[ndarray],
-        output_file_path_base: Path,
+        output_dir_path: Path,
+        output_file_name_base: str,
         patch_img_format: PatchImageFormat,
         patch_normalization: PatchNormalization,
         full_spherical_data: SphericalData,
     ) -> list[str]:
-        output_file_path_base.parent.mkdir(parents=True, exist_ok=True)
+        output_dir_path.mkdir(parents=True, exist_ok=True)
 
         img_file_names: list[str] = []
 
@@ -394,8 +397,6 @@ class ImgGeoPatchGenerator:
                 normalized_patch_images.append(normalized_patch_img)
                 normalization_modes.append("global")
 
-            output_dir_path = output_file_path_base.parent
-            output_file_name_base = output_file_path_base.name
             output_file_name = f"{output_file_name_base}-patch-{i}.{patch_img_format}"
 
             for patch_img, normalization_mode in zip(
@@ -440,7 +441,11 @@ def generate_patches(
 
     dataset_table: DataFrame = pd.read_pickle(table_path)
 
-    output_dir_path = sdcfg.PATCHES_DIR_PATH / dataset["name"]
+    output_dir_path = (
+        sdcfg.PATCHES_DIR_PATH
+        / dataset["name"]
+        / f"s{patch_scale_km}-r{patch_resolution}"
+    )
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     archive_type = dataset_archive["type"]
@@ -519,8 +524,6 @@ def _generate_img_geo_patches(
             solar_longitude,
         )
 
-        output_file_path_base = output_dir_path / row_data["file_name_base"]
-
         patch_generator = ImgGeoPatchGenerator(
             patch_scale_km,
             patch_resolution,
@@ -531,7 +534,8 @@ def _generate_img_geo_patches(
         )
         img_file_names, patch_coordinates = patch_generator.generate(
             spherical_data,
-            output_file_path_base,
+            output_dir_path,
+            row_data["file_name_base"],
             ucfg.PATCH_IMAGE_FORMAT,
             patch_normalization,
         )
