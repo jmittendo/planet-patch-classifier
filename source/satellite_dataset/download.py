@@ -1,22 +1,6 @@
-# NOTE:
-# I have attempted to write this script in such a way that as long as the archive
-# structures or naming conventions don't change, it will find newly added files, even if
-# they weren't present at the time of this file's creation.
-#
-# However: As per nature of a script that attempts automatically finding and downloading
-# files from an online archive, the code contains many hardcoded URLs, relative paths
-# and name patterns that are sensitive to change. It is therefore possible that this
-# script will stop working at some point. In that case you may of course try fixing the
-# code yourself, or resort to manually downloading the necessary files. The README.md
-# file should contain instructions on how to structure/format the downloaded archives so
-# that they can be used with the provided scripts.
-
-
-import json
 import logging
 import shutil
 import warnings
-from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import requests
@@ -24,51 +8,32 @@ from bs4 import BeautifulSoup, Tag
 from requests import HTTPError
 from tqdm import tqdm
 
-import source.utility as util
-from source.typing import DownloadConfig
-from source.utility import config
+import source.satellite_dataset.config as sdcfg
+import user.config as ucfg
+from source.satellite_dataset.typing import DownloadConfig
 
 
-def main() -> None:
-    util.configure_logging("download")
-
-    with open(config.download_configs_json_path, "r") as json_file:
-        download_configs: dict[str, DownloadConfig] = json.load(json_file)
-
-    input_args = parse_input_args()
-    dataset_name: str | None = input_args.name
-
-    if dataset_name is None:
-        if util.user_confirm("Display available datasets?"):
-            print("\nAvailable datasets:\n-------------------")
-
-            for dataset_name in download_configs:
-                print(dataset_name)
-
-            print()
-
-        dataset_name = input("Enter dataset name: ")
-
-    download_config = download_configs[dataset_name]
+def download_dataset(download_config: DownloadConfig, dataset_name: str) -> None:
     dataset_archive = download_config["archive"]
     dataset_instrument = download_config["instrument"]
     dataset_wavelengths = download_config["wavelengths"]
 
-    output_dir_path = config.downloads_dir_path / dataset_name
+    output_dir_path = sdcfg.DATASET_DOWNLOADS_DIR_PATH / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
-            download_vex_vmc_dataset(
+            _download_vex_vmc_dataset(
                 dataset_wavelengths[0],
                 output_dir_path,
-                config.download_chunk_size,
+                ucfg.DOWNLOAD_CHUNK_SIZE,
             )
         case "vco":
-            download_vco_dataset(
+            _download_vco_dataset(
                 dataset_instrument,
                 dataset_wavelengths,
                 dataset_name,
-                config.download_chunk_size,
+                output_dir_path,
+                ucfg.DOWNLOAD_CHUNK_SIZE,
             )
         case _:
             raise ValueError(
@@ -77,20 +42,7 @@ def main() -> None:
             )
 
 
-def parse_input_args() -> Namespace:
-    arg_parser = ArgumentParser(
-        description=(
-            "Download a named dataset. Run without arguments to get a list of"
-            "available datasets."
-        ),
-    )
-
-    arg_parser.add_argument("name", nargs="?", help="name of the dataset")
-
-    return arg_parser.parse_args()
-
-
-def download_vex_vmc_dataset(
+def _download_vex_vmc_dataset(
     wavelength_filter: str, output_dir_path: Path, chunk_size: int
 ) -> None:
     archive_url = "https://archives.esac.esa.int/psa/ftp/VENUS-EXPRESS/VMC/"
@@ -100,7 +52,7 @@ def download_vex_vmc_dataset(
 
     mission_dir_names = [
         href.rstrip("/")
-        for href in get_hrefs(archive_url, dir_only=True)
+        for href in _get_hrefs(archive_url, dir_only=True)
         if href_filter in href
     ]
 
@@ -114,7 +66,7 @@ def download_vex_vmc_dataset(
 
         orbit_dir_names = [
             href.rstrip("/")
-            for href in get_hrefs(img_dir_url, dir_only=True)
+            for href in _get_hrefs(img_dir_url, dir_only=True)
             if mission_dir_name not in href
         ]
 
@@ -133,7 +85,7 @@ def download_vex_vmc_dataset(
 
             img_file_names = [
                 href
-                for href in get_hrefs(orbit_dir_url)
+                for href in _get_hrefs(orbit_dir_url)
                 if wavelength_filter in href and ".IMG" in href
             ]
 
@@ -156,7 +108,7 @@ def download_vex_vmc_dataset(
                 # does not have a corresponding geometry file and is therefore not a
                 # critical error.
                 try:
-                    download_file(
+                    _download_file(
                         geo_file_url,
                         geo_file_path,
                         chunk_size=chunk_size,
@@ -171,7 +123,7 @@ def download_vex_vmc_dataset(
                 # it happens anyway, we do not want to stop the whole download process
                 # and simply warn the user.
                 try:
-                    download_file(
+                    _download_file(
                         img_file_url,
                         img_file_path,
                         chunk_size=chunk_size,
@@ -184,10 +136,11 @@ def download_vex_vmc_dataset(
                     )
 
 
-def download_vco_dataset(
+def _download_vco_dataset(
     instrument: str,
     wavelength_filters: list[str],
     dataset_name: str,
+    temp_output_dir_path: Path,
     chunk_size: int,
 ) -> None:
     logging.debug(
@@ -198,12 +151,11 @@ def download_vco_dataset(
     archive_url = "https://data.darts.isas.jaxa.jp/pub/pds3/"
     archive_url_stripped = archive_url.rstrip("/")
 
-    temp_output_dir_path = config.downloads_dir_path / dataset_name
     logging.debug(f"{temp_output_dir_path = }")
 
     wavelength_output_dir_paths = {
         wavelength_filter: (
-            config.downloads_dir_path / f"{dataset_name}-{wavelength_filter}"
+            temp_output_dir_path.with_name(f"{dataset_name}-{wavelength_filter}")
         )
         for wavelength_filter in wavelength_filters
     }
@@ -212,7 +164,7 @@ def download_vco_dataset(
 
     img_file_dir_names = [
         href.rstrip("/")
-        for href in get_hrefs(archive_url_stripped, dir_only=True)
+        for href in _get_hrefs(archive_url_stripped, dir_only=True)
         if img_href_filter in href
     ]
 
@@ -241,7 +193,7 @@ def download_vco_dataset(
 
         img_zip_file_names = [
             href
-            for href in get_hrefs(img_file_dir_url)
+            for href in _get_hrefs(img_file_dir_url)
             if (".zip" in href or ".tar.gz" in href or ".tar.xz" in href)
             and "netcdf" not in href
         ]
@@ -284,7 +236,7 @@ def download_vco_dataset(
                         "Attempting download of geometry zip file URL: "
                         f"'{geo_zip_file_url}' to path '{geo_zip_file_path}'"
                     )
-                    download_file(
+                    _download_file(
                         geo_zip_file_url,
                         geo_zip_file_path,
                         chunk_size=chunk_size,
@@ -313,7 +265,7 @@ def download_vco_dataset(
                     "Attempting download of image zip file URL: "
                     f"'{img_zip_file_url}' to path: '{img_zip_file_path}'"
                 )
-                download_file(
+                _download_file(
                     img_zip_file_url,
                     img_zip_file_path,
                     chunk_size=chunk_size,
@@ -480,7 +432,7 @@ def download_vco_dataset(
     )
 
 
-def get_hrefs(url: str, dir_only: bool = False) -> list[str]:
+def _get_hrefs(url: str, dir_only: bool = False) -> list[str]:
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -502,7 +454,9 @@ def get_hrefs(url: str, dir_only: bool = False) -> list[str]:
     return hrefs
 
 
-def download_file(file_url: str, file_path: Path, *, chunk_size: int, pbar_indent: int):
+def _download_file(
+    file_url: str, file_path: Path, *, chunk_size: int, pbar_indent: int
+):
     with requests.get(file_url, stream=True) as file_response:
         file_response.raise_for_status()
         file_size = file_response.headers.get("content-length")
@@ -525,7 +479,3 @@ def download_file(file_url: str, file_path: Path, *, chunk_size: int, pbar_inden
 
                 if progress_bar is not None:
                     progress_bar.update(chunk_size)
-
-
-if __name__ == "__main__":
-    main()

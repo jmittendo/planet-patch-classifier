@@ -6,7 +6,9 @@ __pycache__
 /datasets/satellite-datasets/*
 !/datasets/satellite-datasets/.gitkeep
 
-/user-configs/*
-!/user-configs/default/
+/user/*
+!/user/examples/
 
 /logs/
+
+*.egg-info
