@@ -44,12 +44,16 @@ class PatchCoordinate(TypedDict):
     theta: float
 
 
-class PatchProjection(TypedDict):
+class ImgGeoPatchProjection(TypedDict):
     img_values: ndarray
     x_values: ndarray
     y_values: ndarray
 
 
-type PatchInterpolation = Literal["nearest"] | Literal["linear"] | Literal["cubic"]
-type PatchImageFormat = Literal["png"] | Literal["jpg"] | Literal["npy"] | Literal["txt"]
+type ImgGeoPatchInterpolation = Literal["nearest"] | Literal["linear"] | Literal[
+    "cubic"
+]
+type PatchImageFormat = Literal["png"] | Literal["jpg"] | Literal["npy"] | Literal[
+    "txt"
+]
 type PatchNormalization = Literal["local"] | Literal["global"] | Literal["both"]

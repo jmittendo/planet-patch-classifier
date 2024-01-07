@@ -16,16 +16,16 @@ from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     PatchCoordinate,
     PatchImageFormat,
-    PatchInterpolation,
+    ImgGeoPatchInterpolation,
     PatchNormalization,
-    PatchProjection,
+    ImgGeoPatchProjection,
     SatelliteDataArchive,
     SatelliteDataset,
     SphericalData,
 )
 
 
-class PatchGenerator:
+class ImgGeoPatchGenerator:
     def __init__(
         self,
         patch_scale_km: float,
@@ -33,7 +33,7 @@ class PatchGenerator:
         min_patch_density: float,
         num_density_bins: int,
         min_bin_density: float,
-        interpolation_method: PatchInterpolation,
+        interpolation_method: ImgGeoPatchInterpolation,
     ) -> None:
         self._patch_scale_km = patch_scale_km
         self._patch_resolution = patch_resolution
@@ -130,10 +130,10 @@ class PatchGenerator:
         spherical_data: SphericalData,
         patch_coordinates: list[PatchCoordinate],
         patch_xy_range: tuple[float, float],
-    ) -> list[PatchProjection]:
+    ) -> list[ImgGeoPatchProjection]:
         img_values = spherical_data["img_values"]
 
-        projections: list[PatchProjection] = []
+        projections: list[ImgGeoPatchProjection] = []
 
         for patch_coordinate in patch_coordinates:
             # Note that the projection will occur in x-direction and therefore the x-
@@ -157,7 +157,7 @@ class PatchGenerator:
 
             patch_img_values = img_values[visible_points_mask]
 
-            projection: PatchProjection = {
+            projection: ImgGeoPatchProjection = {
                 "img_values": patch_img_values,
                 "x_values": patch_points[0],
                 "y_values": patch_points[1],
@@ -233,7 +233,7 @@ class PatchGenerator:
 
     def _get_interpolated_patch_images(
         self,
-        patch_projections: list[PatchProjection],
+        patch_projections: list[ImgGeoPatchProjection],
         patch_xy_range: tuple[float, float],
     ) -> list[ndarray]:
         pixel_xy_values = np.linspace(*patch_xy_range, self._patch_resolution)
@@ -413,7 +413,7 @@ def _generate_img_geo_patches(
 
         output_file_path_base = output_dir_path / row_data["file_name_base"]
 
-        patch_generator = PatchGenerator(
+        patch_generator = ImgGeoPatchGenerator(
             patch_scale_km,
             patch_resolution,
             ucfg.MIN_PATCH_DENSITY,
