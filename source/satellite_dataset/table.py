@@ -120,13 +120,13 @@ def _generate_vex_vmc_table(dataset_path: Path, spice_kernels_path: Path) -> Dat
         "img_file_path": img_file_paths,
         "geo_file_path": geo_file_paths,
         "max_resolution_mpx": max_resolutions_mpx,
-        "solar_longitudes_deg": solar_longitudes_deg,
+        "solar_longitude_deg": solar_longitudes_deg,
     }
 
     return DataFrame(data=table_dict)
 
 
-def _generate_vco_table(dataset_path: Path) -> DataFrame:
+def _generate_vco_table(dataset_path: Path, venus_radius_km: float) -> DataFrame:
     # Dataset should be validated before calling this function
 
     file_name_bases: list[str] = []
