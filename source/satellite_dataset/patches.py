@@ -167,6 +167,9 @@ class ImgGeoPatchGenerator:
             | (patch_coords_z < range_z[0])
         )
 
+        patch_coords_x = patch_coords_x[~invalid_coords_mask]
+        patch_coords_y = patch_coords_y[~invalid_coords_mask]
+        patch_coords_z = patch_coords_z[~invalid_coords_mask]
         patch_coords_phi = patch_coords_phi[~invalid_coords_mask]
         patch_coords_theta = patch_coords_theta[~invalid_coords_mask]
 
