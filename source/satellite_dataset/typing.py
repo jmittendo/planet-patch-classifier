@@ -57,4 +57,3 @@ class ImgGeoPatchProjection(TypedDict):
 type ImgGeoPatchInterpolation = (
     Literal["nearest"] | Literal["linear"] | Literal["cubic"]
 )
-type PatchNormalization = Literal["local"] | Literal["global"] | Literal["both"]

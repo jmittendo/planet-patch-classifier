@@ -15,12 +15,12 @@ import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.utility as sd_util
 import user.config as ucfg
+from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     ImgGeoPatchInterpolation,
     ImgGeoPatchProjection,
     PatchCoordinate,
-    PatchNormalization,
     SatelliteDataArchive,
     SatelliteDataset,
     SphericalData,

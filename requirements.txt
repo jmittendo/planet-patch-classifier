@@ -10,3 +10,4 @@ pvl
 spiceypy
 scipy
 pillow
+matplotlib
