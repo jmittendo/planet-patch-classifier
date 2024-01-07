@@ -9,6 +9,8 @@ from PIL import Image
 from scipy import interpolate, ndimage, stats
 from tqdm import tqdm
 
+import source.patch_dataset.adding as pd_adding
+import source.patch_dataset.config as pdcfg
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.utility as sd_util
@@ -444,10 +446,8 @@ def generate_patches(
 
     dataset_table: DataFrame = pd.read_pickle(table_path)
 
-    output_dir_path = (
-        sdcfg.PATCHES_DIR_PATH
-        / f"{dataset['name']}_s{patch_scale_km:g}-r{patch_resolution}"
-    )
+    output_dir_name = f"{dataset['name']}_s{patch_scale_km:g}-r{patch_resolution}"
+    output_dir_path = pdcfg.DATASETS_DIR_PATH / output_dir_name
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     archive_type = dataset_archive["type"]
@@ -471,6 +471,7 @@ def generate_patches(
             )
 
     patch_info_table.to_pickle(output_dir_path / "patch-info.pkl")
+    pd_adding.add_patch_dataset(output_dir_path, output_dir_name)
 
 
 def _generate_img_geo_patches(
