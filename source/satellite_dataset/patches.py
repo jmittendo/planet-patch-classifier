@@ -7,6 +7,7 @@ from numpy.ma import MaskedArray
 from pandas import DataFrame
 from PIL import Image
 from scipy import interpolate, ndimage, stats
+from tqdm import tqdm
 
 import source.satellite_dataset.config as sdcfg
 import source.satellite_dataset.table as sd_table
@@ -14,11 +15,11 @@ import source.satellite_dataset.utility as sd_util
 import user.config as ucfg
 from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
+    ImgGeoPatchInterpolation,
+    ImgGeoPatchProjection,
     PatchCoordinate,
     PatchImageFormat,
-    ImgGeoPatchInterpolation,
     PatchNormalization,
-    ImgGeoPatchProjection,
     SatelliteDataArchive,
     SatelliteDataset,
     SphericalData,
@@ -480,7 +481,9 @@ def _generate_img_geo_patches(
     patch_latitudes: list[float] = []
     patch_local_times: list[float] = []
 
-    for row_index, row_data in dataset_table.iterrows():
+    for row_index, row_data in tqdm(
+        dataset_table.iterrows(), desc="Generating patches", total=len(dataset_table)
+    ):
         img_max_resolution_mpx: float = row_data["max_resolution_mpx"]
 
         if not _passes_resolution_threshold(
