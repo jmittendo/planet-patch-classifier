@@ -11,13 +11,14 @@ class _PlanetDict(TypedDict):
     rotation: str
 
 
-class PlanetRotation(StrEnum):
-    PROGRADE = "prograde"
-    RETROGRADE = "retrograde"
-
-
 class Planet:
-    def __init__(self, name: str, radius_km: float, rotation: PlanetRotation) -> None:
+    class Rotation(StrEnum):
+        PROGRADE = "prograde"
+        RETROGRADE = "retrograde"
+
+    def __init__(
+        self, name: str, radius_km: float, rotation: "Planet.Rotation"
+    ) -> None:
         self.name = name
         self.radius_km = radius_km
         self.rotation = rotation
@@ -26,7 +27,7 @@ class Planet:
     def from_dict(cls, planet_dict: _PlanetDict) -> "Planet":
         name = planet_dict["name"]
         radius_km = planet_dict["radius_km"]
-        rotation = PlanetRotation(planet_dict["rotation"])
+        rotation = Planet.Rotation(planet_dict["rotation"])
 
         return cls(name, radius_km, rotation)
 
