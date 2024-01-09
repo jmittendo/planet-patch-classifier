@@ -2,14 +2,14 @@ import json
 from json import JSONDecodeError
 from pathlib import Path
 
-import source.patch_dataset.config as pdcfg
+import source.patch_dataset.config as pd_config
 import source.utility as util
-import user.config as ucfg
+import user.config as user_config
 from source.patch_dataset.typing import PatchDataset
 
 
 def add_patch_dataset(dataset_path: Path, dataset_name: str) -> None:
-    patch_datasets_json_path = pdcfg.DATASETS_JSON_PATH
+    patch_datasets_json_path = pd_config.DATASETS_JSON_PATH
     patch_datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
 
     patch_datasets: dict[str, PatchDataset] = {}
@@ -44,7 +44,7 @@ def add_patch_dataset(dataset_path: Path, dataset_name: str) -> None:
             "path": dataset_path.as_posix(),
         }
 
-        json.dump(patch_datasets, patch_datasets_json, indent=ucfg.JSON_INDENT)
+        json.dump(patch_datasets, patch_datasets_json, indent=user_config.JSON_INDENT)
 
         print(
             f"Successfully added dataset '{dataset_name}' to "

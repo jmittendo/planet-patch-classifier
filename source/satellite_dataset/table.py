@@ -10,12 +10,10 @@ from pvl import PVLModule, Quantity
 import source.satellite_dataset.utility as sd_util
 import source.satellite_dataset.validation as sd_validation
 from source.exceptions import ValidationError
-from source.satellite_dataset.typing import SatelliteDataArchive, SatelliteDataset
+from source.satellite_dataset.dataset import Dataset
 
 
-def generate_dataset_table(
-    dataset: SatelliteDataset, archive: SatelliteDataArchive, output_path: Path
-) -> None:
+def generate_dataset_table(dataset: Dataset, output_path: Path) -> None:
     print(
         "Generating dataset table...\n"
         "This may take multiple hours depending on the dataset\n"
@@ -26,28 +24,24 @@ def generate_dataset_table(
     if not is_valid:
         raise ValidationError(f"Dataset is invalid: {message}")
 
-    dataset_path = Path(dataset["path"])
-    archive_name = archive["name"]
+    archive = dataset.archive
 
-    match archive_name:
+    match archive.name:
         case "vex-vmc":
-            spice_kernels_path_str = archive["spice"]
-
-            if spice_kernels_path_str is None:
+            if archive.spice_path is None:
                 raise ValueError(
-                    f"Spice value must not be 'null' for archive {archive_name}"
+                    f"Spice path must not be 'null' for archive {archive.name}"
                 )
 
-            spice_kernels_path = Path(spice_kernels_path_str)
-            table = _generate_vex_vmc_table(dataset_path, spice_kernels_path)
+            table = _generate_vex_vmc_table(dataset.path, archive.spice_path)
         case "vco":
-            table = _generate_vco_table(dataset_path, archive["planet_radius_km"])
+            table = _generate_vco_table(dataset.path, archive.planet.radius_km)
         case "juno-jnc":
             raise NotImplementedError
         case _:
             raise ValueError(
                 "No table generation script implemented for archive "
-                f"'{archive_name}'"
+                f"'{archive.name}'"
             )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

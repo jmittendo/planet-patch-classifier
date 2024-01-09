@@ -2,19 +2,19 @@
     "vex-vmc": {
         "name": "vex-vmc",
         "type": "img-geo",
-        "spice": "data/spice-kernels/vex-spice",
-        "planet_radius_km": 6051.8
+        "spice_path": "data/spice-kernels/vex-spice",
+        "planet": "venus"
     },
     "vco": {
         "name": "vco",
         "type": "img-geo",
-        "spice": null,
-        "planet_radius_km": 6051.8
+        "spice_path": null,
+        "planet": "venus"
     },
     "juno-jnc": {
         "name": "juno-jnc",
         "type": "img-spice",
-        "spice": "data/spice-kernels/juno-spice",
-        "planet_radius_km": 71492
+        "spice_path": "data/spice-kernels/juno-spice",
+        "planet_radius_km": "jupiter"
     }
 }

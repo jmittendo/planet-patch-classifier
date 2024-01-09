@@ -4,23 +4,10 @@ from numpy import ndarray
 from numpy.ma import MaskedArray
 
 
-class SatelliteDataArchive(TypedDict):
-    name: str
-    type: str
-    spice: str | None
-    planet_radius_km: float
-
-
 class DownloadConfig(TypedDict):
     archive: str
     instrument: str
     wavelengths: list[str]
-
-
-class SatelliteDataset(TypedDict):
-    name: str
-    path: str
-    archive: str
 
 
 class ImgGeoDataArrays(TypedDict):

@@ -1,0 +1,12 @@
+{
+    "venus": {
+        "name": "venus",
+        "radius_km": 6051.8,
+        "rotation": "retrograde"
+    },
+    "jupiter": {
+        "name": "jupiter",
+        "radius_km": 71492,
+        "rotation": "prograde"
+    }
+}

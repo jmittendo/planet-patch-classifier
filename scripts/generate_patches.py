@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 
+import source.satellite_dataset.dataset as sd_dataset
 import source.satellite_dataset.patches as sd_patches
-import source.satellite_dataset.utility as sd_util
 
 
 def main() -> None:
@@ -10,9 +10,8 @@ def main() -> None:
     patch_scale_km: float | None = input_args.scale
     patch_resolution: int | None = input_args.resolution
     patch_normalization: str | None = input_args.normalization
-    regenerate_table: bool = input_args.table
 
-    dataset = sd_util.load_dataset(dataset_name)
+    dataset = sd_dataset.load(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))
@@ -26,7 +25,7 @@ def main() -> None:
         )
 
     sd_patches.generate_patches(
-        dataset, patch_scale_km, patch_resolution, patch_normalization, regenerate_table  # type: ignore
+        dataset, patch_scale_km, patch_resolution, patch_normalization  # type: ignore
     )
 
 
@@ -49,9 +48,6 @@ def parse_input_args() -> Namespace:
         "normalization",
         nargs="?",
         help="patch normalization mode ('local', 'global', 'both')",
-    )
-    arg_parser.add_argument(
-        "-t", "--table", action="store_true", help="regenerate the dataset table file"
     )
 
     return arg_parser.parse_args()

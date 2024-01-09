@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup, Tag
 from requests import HTTPError
 from tqdm import tqdm
 
-import source.satellite_dataset.config as sdcfg
-import user.config as ucfg
+import source.satellite_dataset.config as sd_config
+import user.config as user_config
 from source.satellite_dataset.typing import DownloadConfig
 
 
@@ -18,14 +18,14 @@ def download_dataset(download_config: DownloadConfig, dataset_name: str) -> None
     dataset_instrument = download_config["instrument"]
     dataset_wavelengths = download_config["wavelengths"]
 
-    output_dir_path = sdcfg.DATASET_DOWNLOADS_DIR_PATH / dataset_name
+    output_dir_path = sd_config.DATASET_DOWNLOADS_DIR_PATH / dataset_name
 
     match dataset_archive:
         case "vex-vmc":
             _download_vex_vmc_dataset(
                 dataset_wavelengths[0],
                 output_dir_path,
-                ucfg.DOWNLOAD_CHUNK_SIZE,
+                user_config.DOWNLOAD_CHUNK_SIZE,
             )
         case "vco":
             _download_vco_dataset(
@@ -33,7 +33,7 @@ def download_dataset(download_config: DownloadConfig, dataset_name: str) -> None
                 dataset_wavelengths,
                 dataset_name,
                 output_dir_path,
-                ucfg.DOWNLOAD_CHUNK_SIZE,
+                user_config.DOWNLOAD_CHUNK_SIZE,
             )
         case _:
             raise ValueError(

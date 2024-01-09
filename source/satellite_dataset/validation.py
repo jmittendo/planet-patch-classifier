@@ -1,27 +1,26 @@
 from pathlib import Path
 
-from source.satellite_dataset.typing import SatelliteDataset
+from source.satellite_dataset.dataset import Dataset
 
 
-def validate_dataset(dataset: SatelliteDataset) -> tuple[bool, str]:
-    dataset_archive = dataset["archive"]
-    dataset_path = Path(dataset["path"])
-
+def validate_dataset(dataset: Dataset) -> tuple[bool, str]:
     # Dataset path must be a valid directory
-    if not dataset_path.is_dir():
-        message = f"Dataset directory '{dataset_path.as_posix()}' not found"
+    if not dataset.path.is_dir():
+        message = f"Dataset directory '{dataset.path.as_posix()}' not found"
         return False, message
 
-    match dataset_archive:
+    archive_name = dataset.archive.name
+
+    match archive_name:
         case "vex-vmc":
-            return _validate_vex_vmc_dataset(dataset_path)
+            return _validate_vex_vmc_dataset(dataset.path)
         case "vco":
-            return _validate_vco_dataset(dataset_path)
+            return _validate_vco_dataset(dataset.path)
         case "juno-jnc":
             raise NotImplementedError
         case _:
             raise ValueError(
-                f"No validation script implemented for archive '{dataset_archive}'"
+                f"No validation script implemented for archive '{archive_name}'"
             )
 
 

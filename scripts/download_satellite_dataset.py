@@ -15,7 +15,7 @@
 import json
 from argparse import ArgumentParser, Namespace
 
-import source.satellite_dataset.config as sdcfg
+import source.satellite_dataset.config as sd_config
 import source.satellite_dataset.download as sd_download
 import source.utility as util
 from source.satellite_dataset.typing import DownloadConfig
@@ -24,7 +24,7 @@ from source.satellite_dataset.typing import DownloadConfig
 def main() -> None:
     util.configure_logging("download")
 
-    with open(sdcfg.DATASET_DOWNLOADS_JSON_PATH, "r") as json_file:
+    with open(sd_config.DATASET_DOWNLOADS_JSON_PATH, "r") as json_file:
         download_configs: dict[str, DownloadConfig] = json.load(json_file)
 
     input_args = parse_input_args()

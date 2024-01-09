@@ -1,12 +1,12 @@
 import json
 
-import source.patch_dataset.config as pdcfg
+import source.patch_dataset.config as pd_config
 import source.utility as util
 from source.patch_dataset.typing import PatchDataset
 
 
 def load_dataset(dataset_name: str | None = None) -> PatchDataset:
-    with open(pdcfg.DATASETS_JSON_PATH, "r") as datasets_json:
+    with open(pd_config.DATASETS_JSON_PATH, "r") as datasets_json:
         patch_datasets: dict[str, PatchDataset] = json.load(datasets_json)
 
     if dataset_name is None:
