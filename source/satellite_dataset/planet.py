@@ -26,7 +26,7 @@ class Planet:
     def from_dict(cls, planet_dict: _PlanetDict) -> "Planet":
         name = planet_dict["name"]
         radius_km = planet_dict["radius_km"]
-        rotation = PlanetRotation[planet_dict["rotation"]]
+        rotation = PlanetRotation(planet_dict["rotation"])
 
         return cls(name, radius_km, rotation)
 
