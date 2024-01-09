@@ -8,10 +8,10 @@ from pandas import DataFrame
 
 import source.satellite_dataset.archive as sd_archive
 import source.satellite_dataset.config as sd_config
-import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.validation as sd_validation
 import source.utility as util
 import user.config as user_config
+from source.exceptions import ValidationError
 from source.satellite_dataset.archive import Archive
 
 
@@ -27,10 +27,13 @@ class Dataset:
         self.path = path
         self.archive = archive
 
-        sd_validation.validate_dataset(self)
+        self.is_valid, validation_message = sd_validation.validate_dataset(self)
 
-        table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
-        self.table = self._load_table(table_path)
+        if not self.is_valid:
+            raise ValidationError(f"Dataset is invalid: {validation_message}")
+
+        self.table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
+        self.table = self._load_table()
 
         self.num_files = len(self.table)
 
@@ -42,14 +45,17 @@ class Dataset:
 
         return cls(name, path, archive)
 
-    def _load_table(self, path: Path) -> DataFrame:
-        if not path.is_file():
-            self._generate_table(path)
+    def _load_table(self) -> DataFrame:
+        if not self.table_path.is_file():
+            self._generate_table()
 
-        return pd.read_pickle(path)
+        return pd.read_pickle(self.table_path)
 
-    def _generate_table(self, path: Path) -> None:
-        sd_table.generate_dataset_table(self, path)
+    def _generate_table(self) -> None:
+        table = self.archive.generate_dataset_table(self)
+
+        self.table_path.parent.mkdir(parents=True, exist_ok=True)
+        table.to_pickle(self.table_path)
 
 
 def load(name: str | None) -> Dataset:
