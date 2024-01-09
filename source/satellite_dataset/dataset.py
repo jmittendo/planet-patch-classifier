@@ -8,7 +8,6 @@ from pandas import DataFrame
 
 import source.satellite_dataset.archive as sd_archive
 import source.satellite_dataset.config as sd_config
-import source.satellite_dataset.validation as sd_validation
 import source.utility as util
 import user.config as user_config
 from source.exceptions import ValidationError
@@ -27,7 +26,7 @@ class Dataset:
         self.path = path
         self.archive = archive
 
-        self.is_valid, validation_message = sd_validation.validate_dataset(self)
+        self.is_valid, validation_message = archive.validate_dataset(self)
 
         if not self.is_valid:
             raise ValidationError(f"Dataset is invalid: {validation_message}")
