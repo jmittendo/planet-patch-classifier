@@ -40,7 +40,7 @@ class Dataset:
     def from_dict(cls, dataset_dict: _DatasetDict) -> "Dataset":
         name = dataset_dict["name"]
         path = Path(dataset_dict["path"])
-        archive = sd_archive.load(dataset_dict["name"])
+        archive = sd_archive.get(dataset_dict["name"])
 
         return cls(name, path, archive)
 

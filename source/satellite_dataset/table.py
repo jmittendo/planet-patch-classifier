@@ -1,3 +1,4 @@
+import typing
 from datetime import datetime
 from pathlib import Path
 
@@ -9,10 +10,12 @@ from pvl import PVLModule, Quantity
 
 import source.satellite_dataset.utility as sd_util
 from source.exceptions import ValidationError
-from source.satellite_dataset.dataset import Dataset
+
+if typing.TYPE_CHECKING:
+    from source.satellite_dataset.dataset import Dataset
 
 
-def generate_vex_vmc_dataset_table(dataset: Dataset, spice_path: Path) -> DataFrame:
+def generate_vex_vmc_dataset_table(dataset: "Dataset", spice_path: Path) -> DataFrame:
     if not dataset.is_valid:
         raise ValidationError("Dataset is invalid")
 
@@ -85,7 +88,7 @@ def generate_vex_vmc_dataset_table(dataset: Dataset, spice_path: Path) -> DataFr
     return DataFrame(data=table_dict)
 
 
-def generate_vco_dataset_table(dataset: Dataset, venus_radius_km: float) -> DataFrame:
+def generate_vco_dataset_table(dataset: "Dataset", venus_radius_km: float) -> DataFrame:
     if not dataset.is_valid:
         raise ValidationError("Dataset is invalid")
 
