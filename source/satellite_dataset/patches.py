@@ -428,7 +428,7 @@ def generate_patches(
     archive_type = dataset.archive.type
 
     match archive_type:
-        case "img-geo":
+        case Archive.Type.IMG_GEO:
             patch_info_table = _generate_img_geo_patches(
                 dataset.archive,
                 dataset.table,
@@ -437,7 +437,7 @@ def generate_patches(
                 patch_normalization,
                 output_dir_path,
             )
-        case "img-spice":
+        case Archive.Type.IMG_SPICE:
             raise NotImplementedError
         case _:
             raise ValueError(

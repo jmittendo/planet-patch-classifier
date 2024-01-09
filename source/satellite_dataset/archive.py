@@ -16,11 +16,6 @@ from source.satellite_dataset.dataset import Dataset
 from source.satellite_dataset.planet import Planet
 
 
-class ArchiveType(StrEnum):
-    IMG_GEO = "img-geo"
-    IMG_SPICE = "img-spice"
-
-
 class _ArchiveDict(TypedDict):
     name: str
     type: str
@@ -29,8 +24,12 @@ class _ArchiveDict(TypedDict):
 
 
 class Archive(ABC):
+    class Type(StrEnum):
+        IMG_GEO = "img-geo"
+        IMG_SPICE = "img-spice"
+
     def __init__(
-        self, name: str, type: ArchiveType, planet: Planet, spice_path: Path | None
+        self, name: str, type: "Archive.Type", planet: Planet, spice_path: Path | None
     ) -> None:
         self.name = name
         self.type = type
@@ -40,7 +39,7 @@ class Archive(ABC):
     @classmethod
     def from_dict(cls, archive_dict: _ArchiveDict) -> "Archive":
         name = archive_dict["name"]
-        type = ArchiveType[archive_dict["type"]]
+        type = Archive.Type[archive_dict["type"]]
         planet = sd_planet.load(archive_dict["planet"])
 
         spice_path_str = archive_dict["spice_path"]
