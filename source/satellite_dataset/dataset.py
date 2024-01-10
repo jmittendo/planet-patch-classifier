@@ -27,8 +27,8 @@ class SatelliteDataset:
         self.path = path
         self.archive = archive
 
-        self._table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
-        self._table = self._load_table()
+        table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
+        self._table = self._load_table(table_path)
 
     def __iter__(self) -> Iterator[Series]:
         for index, data in self._table.iterrows():
@@ -50,22 +50,22 @@ class SatelliteDataset:
     ) -> None:
         self.archive.generate_dataset_patches(self, scale_km, resolution, normalization)
 
-    def _load_table(self) -> DataFrame:
-        if not self._table_path.is_file():
+    def _load_table(self, table_path: Path) -> DataFrame:
+        if not table_path.is_file():
             is_valid, validation_message = self.archive.validate_dataset(self)
 
             if not is_valid:
                 raise ValidationError(f"Dataset is invalid: {validation_message}")
 
-            self._generate_table()
+            self._generate_table(table_path)
 
-        return pd.read_pickle(self._table_path)
+        return pd.read_pickle(table_path)
 
-    def _generate_table(self) -> None:
+    def _generate_table(self, table_path: Path) -> None:
         table = self.archive.generate_dataset_table(self)
 
-        self._table_path.parent.mkdir(parents=True, exist_ok=True)
-        table.to_pickle(self._table_path)
+        table_path.parent.mkdir(parents=True, exist_ok=True)
+        table.to_pickle(table_path)
 
 
 def _build_dataset_registry() -> dict[str, SatelliteDataset]:
