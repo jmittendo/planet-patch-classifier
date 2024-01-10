@@ -15,6 +15,6 @@
         "name": "juno-jnc",
         "type": "img-spice",
         "spice_path": "data/spice-kernels/juno-spice",
-        "planet_radius_km": "jupiter"
+        "planet": "jupiter"
     }
 ]
