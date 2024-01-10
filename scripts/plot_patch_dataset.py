@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-import source.patch_dataset.plotting as pd_plotting
-import source.patch_dataset.utility as pd_util
+import source.patch_dataset.dataset as pd_dataset
 
 
 def main() -> None:
@@ -10,16 +9,14 @@ def main() -> None:
     patch_normalization: str | None = input_args.normalization
     num_patches: int | None = input_args.number
 
-    dataset = pd_util.load_dataset(dataset_name=dataset_name)
+    dataset = pd_dataset.get(dataset_name)
 
     if patch_normalization is None:
         patch_normalization = input(
             "Enter patch normalization mode ('local', 'global'): "
         )
 
-    pd_plotting.plot_patch_dataset(
-        dataset, patch_normalization, num_patches=num_patches  # type: ignore / why doesn't it complain in generate_patches.py??
-    )
+    dataset.plot(patch_normalization, num_patches=num_patches)  # type: ignore
 
 
 def parse_input_args() -> Namespace:

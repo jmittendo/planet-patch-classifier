@@ -1,9 +1,3 @@
-from typing import Literal, TypedDict
-
-
-class PatchDataset(TypedDict):
-    name: str
-    path: str
-
+from typing import Literal
 
 type PatchNormalization = Literal["local"] | Literal["global"] | Literal["both"]

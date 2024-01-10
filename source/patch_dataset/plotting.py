@@ -1,4 +1,4 @@
-from pathlib import Path
+import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,19 +7,20 @@ from numpy import ndarray
 from pandas import DataFrame
 from PIL import Image
 
-import source.patch_dataset.config as pdconfig
+import source.patch_dataset.config as pd_config
 import source.plotting as plotting
-from source.patch_dataset.typing import PatchDataset, PatchNormalization
+from source.patch_dataset.typing import PatchNormalization
+
+if typing.TYPE_CHECKING:
+    from source.patch_dataset.dataset import PatchDataset
 
 
-def plot_patch_dataset(
-    dataset: PatchDataset,
+def plot_dataset(
+    dataset: "PatchDataset",
     patch_normalization: PatchNormalization,
     num_patches: int | None = None,
 ) -> None:
-    dataset_path = Path(dataset["path"])
-
-    patch_info_table_path = dataset_path / "patch-info.pkl"
+    patch_info_table_path = dataset.path / "patch-info.pkl"
     patch_info_table: DataFrame = pd.read_pickle(patch_info_table_path)
 
     num_patches = len(patch_info_table) if num_patches is None else num_patches
@@ -29,7 +30,7 @@ def plot_patch_dataset(
     patch_latitudes = random_rows["latitude"].to_numpy()
     patch_local_times = random_rows["local_time"].to_numpy()
 
-    patch_images_dir_path = dataset_path / f"{patch_normalization}-normalization"
+    patch_images_dir_path = dataset.path / f"{patch_normalization}-normalization"
 
     if not patch_images_dir_path.is_dir():
         raise FileNotFoundError(
@@ -67,9 +68,7 @@ def plot_patch_dataset(
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    output_file_path = (
-        pdconfig.DATASET_PLOTS_DIR_PATH / f"{dataset['name']}_scatter.png"
-    )
+    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / f"{dataset.name}_scatter.png"
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig.savefig(output_file_path, bbox_inches="tight")

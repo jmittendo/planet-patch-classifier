@@ -9,8 +9,8 @@ from PIL import Image
 from scipy import interpolate, ndimage, stats
 from tqdm import tqdm
 
-import source.patch_dataset.adding as pd_adding
 import source.patch_dataset.config as pd_config
+import source.patch_dataset.dataset as pd_dataset
 import source.satellite_dataset.utility as sd_util
 import user.config as user_config
 from source.patch_dataset.typing import PatchNormalization
@@ -504,7 +504,9 @@ def generate_img_geo_patches(
     patch_info_table = DataFrame(data=patch_info_table_dict)
     patch_info_table.to_pickle(output_dir_path / "patch-info.pkl")
 
-    pd_adding.add_patch_dataset(output_dir_path, output_dir_name)
+    pd_dataset.add(
+        output_dir_name, output_dir_path, dataset.name, patch_scale_km, patch_resolution
+    )
 
 
 def load_vex_vmx_data_arrays(
