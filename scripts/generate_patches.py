@@ -10,7 +10,7 @@ def main() -> None:
     patch_resolution: int | None = input_args.resolution
     patch_normalization: str | None = input_args.normalization
 
-    dataset = sd_dataset.load(dataset_name)
+    dataset = sd_dataset.get(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))

@@ -68,22 +68,35 @@ class Dataset:
         table.to_pickle(self.table_path)
 
 
-def load(name: str | None) -> Dataset:
-    with open(sd_config.DATASETS_JSON_PATH) as datasets_json:
-        datasets_dict: dict[str, _DatasetDict] = json.load(datasets_json)
+def _build_dataset_registry() -> dict[str, Dataset]:
+    dataset_registry: dict[str, Dataset] = {}
 
+    with open(sd_config.DATASETS_JSON_PATH) as datasets_json:
+        dataset_dicts: list[_DatasetDict] = json.load(datasets_json)
+
+        for dataset_dict in dataset_dicts:
+            dataset_name = dataset_dict["name"]
+            dataset_registry[dataset_name] = Dataset.from_dict(dataset_dict)
+
+    return dataset_registry
+
+
+_dataset_registry = _build_dataset_registry()
+
+
+def get(name: str | None) -> Dataset:
     if name is None:
         if util.user_confirm("Display available datasets?"):
             print("\nAvailable datasets:\n-------------------")
 
-            for dataset_name in datasets_dict:
+            for dataset_name in _dataset_registry:
                 print(dataset_name)
 
             print()
 
         name = input("Enter dataset name: ")
 
-    return Dataset.from_dict(datasets_dict[name])
+    return _dataset_registry[name]
 
 
 def add(name: str, path: Path, archive: Archive) -> None:
