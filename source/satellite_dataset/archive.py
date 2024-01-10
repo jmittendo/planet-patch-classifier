@@ -44,10 +44,6 @@ class Archive(ABC):
         cls._subclass_registry[name] = cls
 
     @classmethod
-    def get_subclass_by_name(cls, name: str) -> type["Archive"]:
-        return cls._subclass_registry[name]
-
-    @classmethod
     def from_dict(cls, archive_dict: _ArchiveDict) -> "Archive":
         name = archive_dict["name"]
         type = Archive.Type(archive_dict["type"])
@@ -56,7 +52,9 @@ class Archive(ABC):
         spice_path_str = archive_dict["spice_path"]
         spice_path = None if spice_path_str is None else Path(spice_path_str)
 
-        return cls(name, type, planet, spice_path)
+        archive_subclass = cls._subclass_registry[name]
+
+        return archive_subclass(name, type, planet, spice_path)
 
     @abc.abstractmethod
     def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
@@ -100,18 +98,20 @@ class JunoJncArchive(Archive, name="juno-jnc"):
         ...
 
 
-_archive_registry: dict[str, Archive] = {}
+def _build_archive_registry() -> dict[str, Archive]:
+    archive_registry: dict[str, Archive] = {}
 
-with open(sd_config.ARCHIVES_JSON_PATH) as archives_json:
-    _archive_dicts: list[_ArchiveDict] = json.load(archives_json)
+    with open(sd_config.ARCHIVES_JSON_PATH) as archives_json:
+        archive_dicts: list[_ArchiveDict] = json.load(archives_json)
 
-    print(_archive_dicts)
+        for archive_dict in archive_dicts:
+            archive_name = archive_dict["name"]
+            archive_registry[archive_name] = Archive.from_dict(archive_dict)
 
-for _archive_dict in _archive_dicts:
-    _archive_name = _archive_dict["name"]
+    return archive_registry
 
-    _archive_subclass = Archive.get_subclass_by_name(_archive_name)
-    _archive_registry[_archive_name] = _archive_subclass.from_dict(_archive_dict)
+
+_archive_registry = _build_archive_registry()
 
 
 def get(name: str) -> Archive:
