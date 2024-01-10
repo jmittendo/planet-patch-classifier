@@ -3,6 +3,9 @@ from json import JSONDecodeError
 from pathlib import Path
 from typing import TypedDict
 
+import pandas as pd
+from pandas import DataFrame
+
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.plotting as pd_plotting
 import source.utility as util
@@ -33,6 +36,12 @@ class PatchDataset:
         self.scale_km = scale_km
         self.resolution = resolution
 
+        table_path = self.path / "patch-info.pkl"
+        self._table: DataFrame = pd.read_pickle(table_path)
+
+    def __len__(self) -> int:
+        return len(self._table)
+
     @classmethod
     def from_dict(cls, dataset_dict: _PatchDatasetDict) -> "PatchDataset":
         name = dataset_dict["name"]
@@ -42,6 +51,19 @@ class PatchDataset:
         resolution = dataset_dict["resolution"]
 
         return cls(name, path, satellite_dataset_name, scale_km, resolution)
+
+    def random_sample(self, num_patches: int) -> DataFrame:
+        return self._table.sample(n=num_patches)
+
+    def get_img_dir_path(self, patch_normalization: PatchNormalization) -> Path:
+        img_dir_path = self.path / f"{patch_normalization}-normalization"
+
+        if not img_dir_path.is_dir():
+            raise FileNotFoundError(
+                f"Could not find patch dataset directory '{img_dir_path.as_posix()}'"
+            )
+
+        return img_dir_path
 
     def plot(
         self,

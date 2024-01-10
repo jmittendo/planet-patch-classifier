@@ -2,9 +2,7 @@ import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numpy import ndarray
-from pandas import DataFrame
 from PIL import Image
 
 import source.patch_dataset.config as pd_config
@@ -20,22 +18,14 @@ def plot_dataset(
     patch_normalization: PatchNormalization,
     num_patches: int | None = None,
 ) -> None:
-    patch_info_table_path = dataset.path / "patch-info.pkl"
-    patch_info_table: DataFrame = pd.read_pickle(patch_info_table_path)
-
-    num_patches = len(patch_info_table) if num_patches is None else num_patches
-    random_rows = patch_info_table.sample(n=num_patches)
+    num_patches = len(dataset) if num_patches is None else num_patches
+    random_rows = dataset.random_sample(num_patches)
 
     patch_longitudes = random_rows["longitude"].to_numpy()
     patch_latitudes = random_rows["latitude"].to_numpy()
     patch_local_times = random_rows["local_time"].to_numpy()
 
-    patch_images_dir_path = dataset.path / f"{patch_normalization}-normalization"
-
-    if not patch_images_dir_path.is_dir():
-        raise FileNotFoundError(
-            f"Could not find patch dataset '{patch_images_dir_path.as_posix()}'"
-        )
+    patch_images_dir_path = dataset.get_img_dir_path(patch_normalization)
 
     patch_images: list[ndarray] = []
 
