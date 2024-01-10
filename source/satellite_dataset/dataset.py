@@ -102,14 +102,12 @@ def add(name: str, path: Path, archive: Archive) -> None:
     datasets_json_path = sd_config.DATASETS_JSON_PATH
     datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
 
-    datasets_dict: dict[str, _SatelliteDatasetDict] = {}
+    dataset_dicts: list[_SatelliteDatasetDict] = []
 
     if datasets_json_path.is_file():
         with open(datasets_json_path, "r") as datasets_json:
             try:
-                datasets_dict: dict[str, _SatelliteDatasetDict] = json.load(
-                    datasets_json
-                )
+                dataset_dicts: list[_SatelliteDatasetDict] = json.load(datasets_json)
             except JSONDecodeError:
                 print(
                     f"Warning: JSON file '{datasets_json_path.as_posix()}' "
@@ -121,7 +119,9 @@ def add(name: str, path: Path, archive: Archive) -> None:
                 ):
                     return
 
-        if name in datasets_dict:
+        dataset_names = [dataset_dict["name"] for dataset_dict in dataset_dicts]
+
+        if name in dataset_names:
             print(
                 f"Warning: '{datasets_json_path.as_posix()}' already "
                 f"contains a dataset with the name '{name}'."
@@ -131,13 +131,15 @@ def add(name: str, path: Path, archive: Archive) -> None:
                 return
 
     with open(datasets_json_path, "w") as datasets_json:
-        datasets_dict[name] = {
-            "name": name,
-            "path": path.as_posix(),
-            "archive": archive.name,
-        }
+        dataset_dicts.append(
+            {
+                "name": name,
+                "path": path.as_posix(),
+                "archive": archive.name,
+            }
+        )
 
-        json.dump(datasets_dict, datasets_json, indent=user_config.JSON_INDENT)
+        json.dump(dataset_dicts, datasets_json, indent=user_config.JSON_INDENT)
 
         print(
             f"Successfully added dataset '{name}' to {datasets_json_path.as_posix()}."
