@@ -26,15 +26,16 @@ class SatelliteDataset:
         self.name = name
         self.path = path
         self.archive = archive
-        self.table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
-        self.table = self._load_table()
+
+        self._table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
+        self._table = self._load_table()
 
     def __iter__(self) -> Iterator[Series]:
-        for index, data in self.table.iterrows():
+        for index, data in self._table.iterrows():
             yield data
 
     def __len__(self) -> int:
-        return len(self.table)
+        return len(self._table)
 
     @classmethod
     def from_dict(cls, dataset_dict: _SatelliteDatasetDict) -> "SatelliteDataset":
@@ -50,7 +51,7 @@ class SatelliteDataset:
         self.archive.generate_dataset_patches(self, scale_km, resolution, normalization)
 
     def _load_table(self) -> DataFrame:
-        if not self.table_path.is_file():
+        if not self._table_path.is_file():
             is_valid, validation_message = self.archive.validate_dataset(self)
 
             if not is_valid:
@@ -58,13 +59,13 @@ class SatelliteDataset:
 
             self._generate_table()
 
-        return pd.read_pickle(self.table_path)
+        return pd.read_pickle(self._table_path)
 
     def _generate_table(self) -> None:
         table = self.archive.generate_dataset_table(self)
 
-        self.table_path.parent.mkdir(parents=True, exist_ok=True)
-        table.to_pickle(self.table_path)
+        self._table_path.parent.mkdir(parents=True, exist_ok=True)
+        table.to_pickle(self._table_path)
 
 
 def _build_dataset_registry() -> dict[str, SatelliteDataset]:
