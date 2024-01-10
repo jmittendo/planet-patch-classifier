@@ -9,16 +9,12 @@ from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
 
 import source.satellite_dataset.utility as sd_util
-from source.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
     from source.satellite_dataset.dataset import Dataset
 
 
 def generate_vex_vmc_dataset_table(dataset: "Dataset", spice_path: Path) -> DataFrame:
-    if not dataset.is_valid:
-        raise ValidationError("Dataset is invalid")
-
     sd_util.load_spice_kernels(spice_path)
 
     file_name_bases: list[str] = []
@@ -89,9 +85,6 @@ def generate_vex_vmc_dataset_table(dataset: "Dataset", spice_path: Path) -> Data
 
 
 def generate_vco_dataset_table(dataset: "Dataset", venus_radius_km: float) -> DataFrame:
-    if not dataset.is_valid:
-        raise ValidationError("Dataset is invalid")
-
     file_name_bases: list[str] = []
     img_file_paths: list[Path] = []
     geo_file_paths: list[Path] = []

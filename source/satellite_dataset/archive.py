@@ -1,6 +1,7 @@
 import abc
 import json
 import typing
+import warnings
 from abc import ABC
 from pathlib import Path
 from typing import TypedDict
@@ -34,10 +35,6 @@ class Archive(ABC):
         self.planet = planet
         self.spice_path = spice_path
 
-    @abc.abstractmethod
-    def __init_subclass__(cls, name: str) -> None:
-        raise NotImplementedError
-
     @classmethod
     def from_dict(cls, archive_dict: _ArchiveDict) -> "Archive":
         name = archive_dict["name"]
@@ -70,7 +67,6 @@ class Archive(ABC):
 
 
 class ImgGeoArchive(Archive):
-    @typing.override
     def __init_subclass__(cls, name: str) -> None:
         cls._subclass_registry[name] = cls
 
@@ -94,7 +90,6 @@ class ImgGeoArchive(Archive):
 
 
 class ImgSpiceArchive(Archive):
-    @typing.override
     def __init_subclass__(cls, name: str) -> None:
         cls._subclass_registry[name] = cls
 
@@ -106,7 +101,10 @@ class ImgSpiceArchive(Archive):
         patch_resolution: int,
         patch_normalization: PatchNormalization,
     ) -> None:
-        ...
+        warnings.warn(
+            "'generate_dataset_patches' method not yet implemented for "
+            "'ImgSpiceArchive'"
+        )
 
 
 class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
@@ -147,11 +145,17 @@ class VcoArchive(ImgGeoArchive, name="vco"):
 class JunoJncArchive(ImgSpiceArchive, name="juno-jnc"):
     @typing.override
     def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
-        ...
+        warnings.warn(
+            "'validate_dataset' method not yet implemented for 'ImgSpiceArchive'"
+        )
+        return True, ""  # TEMPORARY
 
     @typing.override
     def generate_dataset_table(self, dataset: "Dataset") -> DataFrame:
-        ...
+        warnings.warn(
+            "'generate_dataset_table' method not yet implemented for 'ImgSpiceArchive'"
+        )
+        return DataFrame()  # TEMPORARY
 
 
 def _build_archive_registry() -> dict[str, Archive]:

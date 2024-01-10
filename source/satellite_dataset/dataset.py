@@ -26,12 +26,6 @@ class Dataset:
         self.name = name
         self.path = path
         self.archive = archive
-
-        self.is_valid, validation_message = archive.validate_dataset(self)
-
-        if not self.is_valid:
-            raise ValidationError(f"Dataset is invalid: {validation_message}")
-
         self.table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
         self.table = self._load_table()
 
@@ -46,7 +40,7 @@ class Dataset:
     def from_dict(cls, dataset_dict: _DatasetDict) -> "Dataset":
         name = dataset_dict["name"]
         path = Path(dataset_dict["path"])
-        archive = sd_archive.get(dataset_dict["name"])
+        archive = sd_archive.get(dataset_dict["archive"])
 
         return cls(name, path, archive)
 
@@ -57,6 +51,11 @@ class Dataset:
 
     def _load_table(self) -> DataFrame:
         if not self.table_path.is_file():
+            is_valid, validation_message = self.archive.validate_dataset(self)
+
+            if not is_valid:
+                raise ValidationError(f"Dataset is invalid: {validation_message}")
+
             self._generate_table()
 
         return pd.read_pickle(self.table_path)

@@ -1,3 +1,4 @@
+import typing
 from pathlib import Path
 
 import numpy as np
@@ -13,8 +14,6 @@ import source.patch_dataset.config as pd_config
 import source.satellite_dataset.utility as sd_util
 import user.config as user_config
 from source.patch_dataset.typing import PatchNormalization
-from source.satellite_dataset.archive import Archive, ImgGeoArchive
-from source.satellite_dataset.dataset import Dataset
 from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     ImgGeoPatchInterpolation,
@@ -22,6 +21,10 @@ from source.satellite_dataset.typing import (
     PatchCoordinate,
     SphericalData,
 )
+
+if typing.TYPE_CHECKING:
+    from source.satellite_dataset.archive import Archive, ImgGeoArchive
+    from source.satellite_dataset.dataset import Dataset
 
 
 class ImgGeoPatchGenerator:
@@ -416,8 +419,8 @@ class ImgGeoPatchGenerator:
 
 
 def generate_img_geo_patches(
-    archive: ImgGeoArchive,
-    dataset: Dataset,
+    archive: "ImgGeoArchive",
+    dataset: "Dataset",
     patch_scale_km: float,
     patch_resolution: int,
     patch_normalization: PatchNormalization,
@@ -548,7 +551,7 @@ def load_vco_data_arrays(img_file_path: Path, geo_file_path: Path) -> ImgGeoData
 
 
 def _apply_img_geo_invalid_mask(
-    archive: Archive, data_arrays: ImgGeoDataArrays
+    archive: "Archive", data_arrays: ImgGeoDataArrays
 ) -> None:
     match archive.name:
         case "vex-vmc":
