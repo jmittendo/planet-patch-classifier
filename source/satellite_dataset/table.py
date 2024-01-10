@@ -11,10 +11,12 @@ from pvl import PVLModule, Quantity
 import source.satellite_dataset.utility as sd_util
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import Dataset
+    from source.satellite_dataset.dataset import SatelliteDataset
 
 
-def generate_vex_vmc_dataset_table(dataset: "Dataset", spice_path: Path) -> DataFrame:
+def generate_vex_vmc_dataset_table(
+    dataset: "SatelliteDataset", spice_path: Path
+) -> DataFrame:
     sd_util.load_spice_kernels(spice_path)
 
     file_name_bases: list[str] = []
@@ -84,7 +86,9 @@ def generate_vex_vmc_dataset_table(dataset: "Dataset", spice_path: Path) -> Data
     return DataFrame(data=table_dict)
 
 
-def generate_vco_dataset_table(dataset: "Dataset", venus_radius_km: float) -> DataFrame:
+def generate_vco_dataset_table(
+    dataset: "SatelliteDataset", venus_radius_km: float
+) -> DataFrame:
     file_name_bases: list[str] = []
     img_file_paths: list[Path] = []
     geo_file_paths: list[Path] = []

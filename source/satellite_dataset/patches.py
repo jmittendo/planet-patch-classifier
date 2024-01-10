@@ -24,7 +24,7 @@ from source.satellite_dataset.typing import (
 
 if typing.TYPE_CHECKING:
     from source.satellite_dataset.archive import Archive, ImgGeoArchive
-    from source.satellite_dataset.dataset import Dataset
+    from source.satellite_dataset.dataset import SatelliteDataset
 
 
 class ImgGeoPatchGenerator:
@@ -420,7 +420,7 @@ class ImgGeoPatchGenerator:
 
 def generate_img_geo_patches(
     archive: "ImgGeoArchive",
-    dataset: "Dataset",
+    dataset: "SatelliteDataset",
     patch_scale_km: float,
     patch_resolution: int,
     patch_normalization: PatchNormalization,

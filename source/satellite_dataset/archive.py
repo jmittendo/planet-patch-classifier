@@ -18,7 +18,7 @@ from source.satellite_dataset.planet import Planet
 from source.satellite_dataset.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import Dataset
+    from source.satellite_dataset.dataset import SatelliteDataset
 
 
 class _ArchiveDict(TypedDict):
@@ -48,17 +48,17 @@ class Archive(ABC):
         return archive_subclass(name, planet, spice_path)
 
     @abc.abstractmethod
-    def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
+    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def generate_dataset_table(self, dataset: "Dataset") -> DataFrame:
+    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         raise NotImplementedError
 
     @abc.abstractmethod
     def generate_dataset_patches(
         self,
-        dataset: "Dataset",
+        dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
         patch_normalization: PatchNormalization,
@@ -73,7 +73,7 @@ class ImgGeoArchive(Archive):
     @typing.override
     def generate_dataset_patches(
         self,
-        dataset: "Dataset",
+        dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
         patch_normalization: PatchNormalization,
@@ -96,7 +96,7 @@ class ImgSpiceArchive(Archive):
     @typing.override
     def generate_dataset_patches(
         self,
-        dataset: "Dataset",
+        dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
         patch_normalization: PatchNormalization,
@@ -109,11 +109,11 @@ class ImgSpiceArchive(Archive):
 
 class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
     @typing.override
-    def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
+    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vex_vmc_dataset(dataset)
 
     @typing.override
-    def generate_dataset_table(self, dataset: "Dataset") -> DataFrame:
+    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         if self.spice_path is None:
             raise ValueError(f"Spice path must not be 'null' for archive {self.name}")
 
@@ -128,11 +128,11 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
 
 class VcoArchive(ImgGeoArchive, name="vco"):
     @typing.override
-    def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
+    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vco_dataset(dataset)
 
     @typing.override
-    def generate_dataset_table(self, dataset: "Dataset") -> DataFrame:
+    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         return sd_table.generate_vco_dataset_table(dataset, self.planet.radius_km)
 
     @typing.override
@@ -144,14 +144,14 @@ class VcoArchive(ImgGeoArchive, name="vco"):
 
 class JunoJncArchive(ImgSpiceArchive, name="juno-jnc"):
     @typing.override
-    def validate_dataset(self, dataset: "Dataset") -> tuple[bool, str]:
+    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         warnings.warn(
             "'validate_dataset' method not yet implemented for 'ImgSpiceArchive'"
         )
         return True, ""  # TEMPORARY
 
     @typing.override
-    def generate_dataset_table(self, dataset: "Dataset") -> DataFrame:
+    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         warnings.warn(
             "'generate_dataset_table' method not yet implemented for 'ImgSpiceArchive'"
         )

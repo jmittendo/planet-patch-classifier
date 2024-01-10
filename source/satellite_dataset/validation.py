@@ -2,10 +2,10 @@ import typing
 from pathlib import Path
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import Dataset
+    from source.satellite_dataset.dataset import SatelliteDataset
 
 
-def validate_vex_vmc_dataset(dataset: "Dataset") -> tuple[bool, str]:
+def validate_vex_vmc_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
     # Dataset path must be a valid directory
     if not dataset.path.is_dir():
         message = f"Dataset directory '{dataset.path.as_posix()}' not found"
@@ -67,7 +67,7 @@ def validate_vex_vmc_dataset(dataset: "Dataset") -> tuple[bool, str]:
     return True, message
 
 
-def validate_vco_dataset(dataset: "Dataset") -> tuple[bool, str]:
+def validate_vco_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
     # Dataset path must be a valid directory
     if not dataset.path.is_dir():
         message = f"Dataset directory '{dataset.path.as_posix()}' not found"

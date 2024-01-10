@@ -15,13 +15,13 @@ from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.archive import Archive
 
 
-class _DatasetDict(TypedDict):
+class _SatelliteDatasetDict(TypedDict):
     name: str
     path: str
     archive: str
 
 
-class Dataset:
+class SatelliteDataset:
     def __init__(self, name: str, path: Path, archive: Archive) -> None:
         self.name = name
         self.path = path
@@ -37,7 +37,7 @@ class Dataset:
         return len(self.table)
 
     @classmethod
-    def from_dict(cls, dataset_dict: _DatasetDict) -> "Dataset":
+    def from_dict(cls, dataset_dict: _SatelliteDatasetDict) -> "SatelliteDataset":
         name = dataset_dict["name"]
         path = Path(dataset_dict["path"])
         archive = sd_archive.get(dataset_dict["archive"])
@@ -67,15 +67,15 @@ class Dataset:
         table.to_pickle(self.table_path)
 
 
-def _build_dataset_registry() -> dict[str, Dataset]:
-    dataset_registry: dict[str, Dataset] = {}
+def _build_dataset_registry() -> dict[str, SatelliteDataset]:
+    dataset_registry: dict[str, SatelliteDataset] = {}
 
     with open(sd_config.DATASETS_JSON_PATH) as datasets_json:
-        dataset_dicts: list[_DatasetDict] = json.load(datasets_json)
+        dataset_dicts: list[_SatelliteDatasetDict] = json.load(datasets_json)
 
         for dataset_dict in dataset_dicts:
             dataset_name = dataset_dict["name"]
-            dataset_registry[dataset_name] = Dataset.from_dict(dataset_dict)
+            dataset_registry[dataset_name] = SatelliteDataset.from_dict(dataset_dict)
 
     return dataset_registry
 
@@ -83,7 +83,7 @@ def _build_dataset_registry() -> dict[str, Dataset]:
 _dataset_registry = _build_dataset_registry()
 
 
-def get(name: str | None) -> Dataset:
+def get(name: str | None) -> SatelliteDataset:
     if name is None:
         if util.user_confirm("Display available datasets?"):
             print("\nAvailable datasets:\n-------------------")
@@ -102,12 +102,14 @@ def add(name: str, path: Path, archive: Archive) -> None:
     datasets_json_path = sd_config.DATASETS_JSON_PATH
     datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
 
-    datasets_dict: dict[str, _DatasetDict] = {}
+    datasets_dict: dict[str, _SatelliteDatasetDict] = {}
 
     if datasets_json_path.is_file():
         with open(datasets_json_path, "r") as datasets_json:
             try:
-                datasets_dict: dict[str, _DatasetDict] = json.load(datasets_json)
+                datasets_dict: dict[str, _SatelliteDatasetDict] = json.load(
+                    datasets_json
+                )
             except JSONDecodeError:
                 print(
                     f"Warning: JSON file '{datasets_json_path.as_posix()}' "
