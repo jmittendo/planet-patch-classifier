@@ -1,16 +1,17 @@
 import json
 from json import JSONDecodeError
 from pathlib import Path
-from typing import TypedDict
+from typing import Iterator, TypedDict
 
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 import source.satellite_dataset.archive as sd_archive
 import source.satellite_dataset.config as sd_config
 import source.utility as util
 import user.config as user_config
 from source.exceptions import ValidationError
+from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.archive import Archive
 
 
@@ -34,7 +35,12 @@ class Dataset:
         self.table_path = sd_config.DATASET_TABLES_DIR_PATH / f"{self.name}.pkl"
         self.table = self._load_table()
 
-        self.num_files = len(self.table)
+    def __iter__(self) -> Iterator[Series]:
+        for index, data in self.table.iterrows():
+            yield data
+
+    def __len__(self) -> int:
+        return len(self.table)
 
     @classmethod
     def from_dict(cls, dataset_dict: _DatasetDict) -> "Dataset":
@@ -43,6 +49,11 @@ class Dataset:
         archive = sd_archive.get(dataset_dict["name"])
 
         return cls(name, path, archive)
+
+    def generate_patches(
+        self, scale_km: float, resolution: int, normalization: PatchNormalization
+    ) -> None:
+        self.archive.generate_dataset_patches(self, scale_km, resolution, normalization)
 
     def _load_table(self) -> DataFrame:
         if not self.table_path.is_file():

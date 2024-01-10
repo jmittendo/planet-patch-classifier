@@ -1,19 +1,16 @@
 [
     {
         "name": "vex-vmc",
-        "type": "img-geo",
         "spice_path": "data/spice-kernels/vex-spice",
         "planet": "venus"
     },
     {
         "name": "vco",
-        "type": "img-geo",
         "spice_path": null,
         "planet": "venus"
     },
     {
         "name": "juno-jnc",
-        "type": "img-spice",
         "spice_path": "data/spice-kernels/juno-spice",
         "planet": "jupiter"
     }

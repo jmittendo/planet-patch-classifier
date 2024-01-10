@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
 import source.satellite_dataset.dataset as sd_dataset
-import source.satellite_dataset.patches as sd_patches
 
 
 def main() -> None:
@@ -24,9 +23,7 @@ def main() -> None:
             "Enter patch normalization mode ('local', 'global', 'both'): "
         )
 
-    sd_patches.generate_patches(
-        dataset, patch_scale_km, patch_resolution, patch_normalization  # type: ignore
-    )
+    dataset.generate_patches(patch_scale_km, patch_resolution, patch_normalization)  # type: ignore
 
 
 def parse_input_args() -> Namespace:

@@ -9,7 +9,7 @@ def main() -> None:
 
     dataset = sd_dataset.load(dataset_name)
 
-    print(f"\nNumber of files in the dataset: {dataset.num_files}")
+    print(f"\nNumber of files in the dataset: {len(dataset)}")
 
 
 def parse_input_args() -> Namespace:
