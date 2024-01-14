@@ -621,7 +621,7 @@ def _normalize_img_geo_intensity(data_arrays: ImgGeoDataArrays) -> None:
     ina_array = data_arrays["incidence_angle"]
     ema_array = data_arrays["emission_angle"]
 
-    valid_mask = img_array.mask
+    valid_mask = ~img_array.mask
 
     if not valid_mask.any():
         return
