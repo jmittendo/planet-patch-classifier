@@ -54,7 +54,7 @@ class ImgGeoPatchGenerator:
         spherical_data, back_rotation_matrix = self._center_spherical_data(
             spherical_data
         )
-        half_patch_size = self._patch_scale_km / spherical_data["radius_km"]
+        half_patch_size = 0.5 * self._patch_scale_km / spherical_data["radius_km"]
         patch_coordinates = self._get_patch_coordinates(
             spherical_data, half_patch_size, back_rotation_matrix
         )
@@ -217,8 +217,6 @@ class ImgGeoPatchGenerator:
         patch_coordinates: list[PatchCoordinate],
         patch_xy_range: tuple[float, float],
     ) -> tuple[list[ImgGeoPatchProjection], list[PatchCoordinate]]:
-        img_values = spherical_data["img_values"]
-
         projections: list[ImgGeoPatchProjection] = []
         projection_coordinates: list[PatchCoordinate] = []
 
@@ -226,23 +224,29 @@ class ImgGeoPatchGenerator:
             # Note that the projection will occur in x-direction and therefore the x-
             # and y-coordinates in the 2d projections are actually the y- and
             # z-coordinates of the spherical coordinates.
-            rotated_sphere_points = self._get_rotated_sphere_points(
+            rotated_spherical_data = self._get_rotated_sphere_points(
                 spherical_data, patch_coordinate
             )
             visible_points_mask = self._get_visible_points_mask(
-                rotated_sphere_points, patch_xy_range
+                rotated_spherical_data, patch_xy_range
             )
-            patch_points = rotated_sphere_points[1:, visible_points_mask]
-            num_points = patch_points.shape[1]
+            num_points = np.count_nonzero(visible_points_mask)
 
             # Checks to make sure the projection segment is suitable for interpolation
             if not self._passes_global_density_check(num_points):
                 continue
 
+            patch_points = np.row_stack(
+                [
+                    rotated_spherical_data["y_values"][visible_points_mask],
+                    rotated_spherical_data["z_values"][visible_points_mask],
+                ]
+            )
+
             if not self._passes_local_density_check(patch_points, patch_xy_range):
                 continue
 
-            patch_img_values = img_values[visible_points_mask]
+            patch_img_values = rotated_spherical_data["img_values"][visible_points_mask]
 
             projection: ImgGeoPatchProjection = {
                 "img_values": patch_img_values,
@@ -257,30 +261,41 @@ class ImgGeoPatchGenerator:
 
     def _get_rotated_sphere_points(
         self, spherical_data: SphericalData, patch_coordinate: PatchCoordinate
-    ) -> ndarray:
+    ) -> SphericalData:
         x_values = spherical_data["x_values"]
         y_values = spherical_data["y_values"]
         z_values = spherical_data["z_values"]
         xyz_array = np.row_stack([x_values, y_values, z_values])
 
-        z_rot_angle = 0.5 * np.pi - patch_coordinate["theta"]
-        y_rot_angle = -patch_coordinate["phi"]
+        z_rot_angle = -patch_coordinate["phi"]
+        y_rot_angle = 0.5 * np.pi - patch_coordinate["theta"]
         rotation_matrix = sd_util.get_zy_rotation_matrix(z_rot_angle, y_rot_angle)
 
-        return np.dot(rotation_matrix, xyz_array)
+        rotated_points = np.dot(rotation_matrix, xyz_array)
+
+        rotated_spherical_data: SphericalData = {
+            "img_values": spherical_data["img_values"],
+            "x_values": rotated_points[0],
+            "y_values": rotated_points[1],
+            "z_values": rotated_points[2],
+            "radius_km": spherical_data["radius_km"],
+            "solar_longitude": spherical_data["solar_longitude"],
+        }
+
+        return rotated_spherical_data
 
     def _get_visible_points_mask(
-        self, sphere_points: ndarray, patch_xy_range: tuple[float, float]
+        self, spherical_data: SphericalData, patch_xy_range: tuple[float, float]
     ) -> ndarray:
-        visible_points_mask_x = sphere_points[0] >= 0
+        visible_points_mask_x = spherical_data["x_values"] >= 0
 
         # Factor 1.5 for selecting points outside the final projection area that are
         # necessary for the interpolation at the borders
-        visible_points_mask_y_1 = sphere_points[1] >= 1.5 * patch_xy_range[0]
-        visible_points_mask_y_2 = sphere_points[1] <= 1.5 * patch_xy_range[1]
+        visible_points_mask_y_1 = spherical_data["y_values"] >= 1.5 * patch_xy_range[0]
+        visible_points_mask_y_2 = spherical_data["y_values"] <= 1.5 * patch_xy_range[1]
 
-        visible_points_mask_z_1 = sphere_points[2] >= 1.5 * patch_xy_range[0]
-        visible_points_mask_z_2 = sphere_points[2] <= 1.5 * patch_xy_range[1]
+        visible_points_mask_z_1 = spherical_data["z_values"] >= 1.5 * patch_xy_range[0]
+        visible_points_mask_z_2 = spherical_data["z_values"] <= 1.5 * patch_xy_range[1]
 
         visible_points_mask = (
             visible_points_mask_x
