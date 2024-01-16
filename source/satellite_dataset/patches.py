@@ -466,7 +466,7 @@ def generate_img_geo_patches(
         data_arrays = archive.load_data_arrays(img_file_path, geo_file_path)
 
         _apply_img_geo_invalid_mask(archive, data_arrays)
-        _apply_img_geo_background_mask(data_arrays, user_config.PATCH_BACKGROUND_ANGLE)
+        _apply_img_geo_angle_mask(data_arrays, user_config.PATCH_ANGLE_THRESHOLD)
         _normalize_img_geo_intensity(data_arrays)
         _apply_img_geo_outlier_mask(data_arrays, user_config.PATCH_OUTLIER_SIGMA)
 
@@ -601,14 +601,14 @@ def _apply_img_geo_invalid_mask(
     _apply_img_geo_arrays_mask(data_arrays, invalid_mask)
 
 
-def _apply_img_geo_background_mask(
+def _apply_img_geo_angle_mask(
     data_arrays: ImgGeoDataArrays, threshold_angle_deg: float
 ) -> None:
     unilluminated_mask = data_arrays["incidence_angle"] > threshold_angle_deg
     observation_mask = data_arrays["emission_angle"] > threshold_angle_deg
-    background_mask = unilluminated_mask | observation_mask
+    angle_mask = unilluminated_mask | observation_mask
 
-    _apply_img_geo_arrays_mask(data_arrays, background_mask)
+    _apply_img_geo_arrays_mask(data_arrays, angle_mask)
 
 
 def _apply_img_geo_outlier_mask(
