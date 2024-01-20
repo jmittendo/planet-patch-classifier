@@ -127,7 +127,7 @@ class ImgGeoPatchGenerator:
         if y_values.size == 0:
             return []
 
-        phi_patches_angle = 2 * np.arcsin(0.5 * half_patch_size)
+        phi_patches_angle = 2 * np.arcsin(half_patch_size)
 
         # Offsets so that first and last phi angles are on the negative x-axis (because
         # their delta may not be equal to phi_patches_angle) and one angle is always on
