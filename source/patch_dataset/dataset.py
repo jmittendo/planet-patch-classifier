@@ -1,10 +1,10 @@
 import json
 from json import JSONDecodeError
 from pathlib import Path
-from typing import TypedDict
+from typing import Iterator, TypedDict
 
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.plotting as pd_plotting
@@ -38,6 +38,10 @@ class PatchDataset:
 
         table_path = self.path / "patch-info.pkl"
         self._table: DataFrame = pd.read_pickle(table_path)
+
+    def __iter__(self) -> Iterator[Series]:
+        for index, data in self._table.iterrows():
+            yield data
 
     def __len__(self) -> int:
         return len(self._table)
