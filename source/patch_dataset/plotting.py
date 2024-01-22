@@ -31,9 +31,9 @@ def plot_dataset(
 
     for patch_file_name in random_rows["file_name"]:
         patch_img_file_path = patch_images_dir_path / patch_file_name
-        patch_image = np.asarray(Image.open(patch_img_file_path))
+        patch_img = np.asarray(Image.open(patch_img_file_path))
 
-        patch_images.append(patch_image)
+        patch_images.append(patch_img)
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 12))
     ax1, ax2 = axes
