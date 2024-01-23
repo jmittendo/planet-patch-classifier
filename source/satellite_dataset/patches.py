@@ -525,7 +525,7 @@ def generate_img_geo_patches(
     )
 
 
-def load_vex_vmx_data_arrays(
+def load_vex_vmc_data_arrays(
     img_file_path: Path, geo_file_path: Path
 ) -> ImgGeoDataArrays:
     img_array = sd_util.load_pds3_data(img_file_path)[0]

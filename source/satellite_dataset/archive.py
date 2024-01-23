@@ -123,7 +123,7 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
     def load_data_arrays(
         self, img_file_path: Path, geo_file_path: Path
     ) -> ImgGeoDataArrays:
-        return sd_patches.load_vex_vmx_data_arrays(img_file_path, geo_file_path)
+        return sd_patches.load_vex_vmc_data_arrays(img_file_path, geo_file_path)
 
 
 class VcoArchive(ImgGeoArchive, name="vco"):
