@@ -7,7 +7,6 @@ from PIL import Image
 
 import source.patch_dataset.config as pd_config
 import source.plotting as plotting
-from source.patch_dataset.typing import PatchNormalization
 
 if typing.TYPE_CHECKING:
     from source.patch_dataset.dataset import PatchDataset
@@ -15,7 +14,7 @@ if typing.TYPE_CHECKING:
 
 def plot_dataset(
     dataset: "PatchDataset",
-    patch_normalization: PatchNormalization,
+    subdir_name: str,
     num_patches: int | None = None,
 ) -> None:
     num_patches = len(dataset) if num_patches is None else num_patches
@@ -25,7 +24,7 @@ def plot_dataset(
     patch_latitudes = random_rows["latitude"].to_numpy()
     patch_local_times = random_rows["local_time"].to_numpy()
 
-    patch_images_dir_path = dataset.get_img_dir_path(patch_normalization)
+    patch_images_dir_path = dataset.get_subdir_path(subdir_name)
 
     patch_images: list[ndarray] = []
 

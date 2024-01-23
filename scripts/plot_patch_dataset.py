@@ -6,17 +6,18 @@ import source.patch_dataset.dataset as pd_dataset
 def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
-    patch_normalization: str | None = input_args.normalization
+    subdir_name: str | None = input_args.subdir
     num_patches: int | None = input_args.number
 
     dataset = pd_dataset.get(dataset_name)
+    subdirs_str = ", ".join(dataset.subdir_names)
 
-    if patch_normalization is None:
-        patch_normalization = input(
-            "Enter patch normalization mode ('local', 'global'): "
+    if subdir_name is None:
+        subdir_name = input(
+            f"Enter name of the dataset subdir to use for plotting ({subdirs_str}): "
         )
 
-    dataset.plot(patch_normalization, num_patches=num_patches)  # type: ignore
+    dataset.plot(subdir_name, num_patches=num_patches)  # type: ignore
 
 
 def parse_input_args() -> Namespace:
@@ -26,7 +27,7 @@ def parse_input_args() -> Namespace:
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")
     arg_parser.add_argument(
-        "normalization", nargs="?", help="patch normalization mode ('local', 'global')"
+        "subdir", nargs="?", help="name of the dataset subdir to use for plotting"
     )
     arg_parser.add_argument(
         "-n", "--number", type=int, help="number of patches to plot"

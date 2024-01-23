@@ -10,7 +10,6 @@ import source.patch_dataset.config as pd_config
 import source.patch_dataset.plotting as pd_plotting
 import source.utility as util
 import user.config as user_config
-from source.patch_dataset.typing import PatchNormalization
 
 
 class _PatchDatasetDict(TypedDict):
@@ -39,6 +38,8 @@ class PatchDataset:
         table_path = self.path / "patch-info.pkl"
         self._table: DataFrame = pd.read_pickle(table_path)
 
+        self.subdir_names = [p.name for p in self.path.iterdir() if p.is_dir()]
+
     def __iter__(self) -> Iterator[Series]:
         for index, data in self._table.iterrows():
             yield data
@@ -59,22 +60,22 @@ class PatchDataset:
     def random_sample(self, num_patches: int) -> DataFrame:
         return self._table.sample(n=num_patches)
 
-    def get_img_dir_path(self, patch_normalization: PatchNormalization) -> Path:
-        img_dir_path = self.path / f"{patch_normalization}-normalization"
+    def get_subdir_path(self, subdir_name: str) -> Path:
+        subdir_path = self.path / subdir_name
 
-        if not img_dir_path.is_dir():
+        if not subdir_path.is_dir():
             raise FileNotFoundError(
-                f"Could not find patch dataset directory '{img_dir_path.as_posix()}'"
+                f"Could not find patch dataset subdir '{subdir_path.as_posix()}'"
             )
 
-        return img_dir_path
+        return subdir_path
 
     def plot(
         self,
-        patch_normalization: PatchNormalization,
+        subdir_name: str,
         num_patches: int | None = None,
     ) -> None:
-        pd_plotting.plot_dataset(self, patch_normalization, num_patches=num_patches)
+        pd_plotting.plot_dataset(self, subdir_name, num_patches=num_patches)
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:

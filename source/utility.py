@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from numpy import ndarray
+
 import source.config as config
 import user.config as user_config
 
@@ -28,3 +30,10 @@ def configure_logging(log_file_name_base: str) -> None:
         format=user_config.LOGGING_FORMAT,
         level=logging.DEBUG,
     )
+
+
+def get_normalized_img(img: ndarray) -> ndarray:
+    img_min = img.min()
+    img_max = img.max()
+
+    return (img - img_min) / (img_max - img_min)

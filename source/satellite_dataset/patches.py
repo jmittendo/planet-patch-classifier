@@ -12,6 +12,7 @@ from tqdm import tqdm
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.dataset as pd_dataset
 import source.satellite_dataset.utility as sd_util
+import source.utility as util
 import user.config as user_config
 from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.typing import (
@@ -396,7 +397,7 @@ class ImgGeoPatchGenerator:
                 )
 
             if patch_normalization in ("local", "both"):
-                normalized_patch_img = sd_util.get_normalized_img(patch_img)
+                normalized_patch_img = util.get_normalized_img(patch_img)
 
                 normalized_patch_images.append(normalized_patch_img)
                 normalization_modes.append("local")
