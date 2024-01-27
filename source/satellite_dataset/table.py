@@ -25,7 +25,7 @@ def generate_vex_vmc_dataset_table(
     max_resolutions_mpx: list[float] = []
     solar_longitudes_deg: list[float] = []
 
-    for mission_dir_path in dataset.path.iterdir():
+    for mission_dir_path in dataset.data_path.iterdir():
         img_file_dir_path = mission_dir_path / "DATA"
         geo_file_dir_path = mission_dir_path / "GEOMETRY"
 
@@ -95,12 +95,12 @@ def generate_vco_dataset_table(
     max_resolutions_mpx: list[float] = []
     solar_longitudes_deg: list[float] = []
 
-    geo_file_subdir_path = dataset.path / "extras"
+    geo_file_subdir_path = dataset.data_path / "extras"
     geo_file_dir_version_to_path_map = {
         path.name.split("_")[-1]: path for path in geo_file_subdir_path.iterdir()
     }
 
-    for img_file_dir_path in dataset.path.iterdir():
+    for img_file_dir_path in dataset.data_path.iterdir():
         if img_file_dir_path.name == "extras":
             continue
 

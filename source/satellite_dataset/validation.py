@@ -7,13 +7,13 @@ if typing.TYPE_CHECKING:
 
 def validate_vex_vmc_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
     # Dataset path must be a valid directory
-    if not dataset.path.is_dir():
-        message = f"Dataset directory '{dataset.path.as_posix()}' not found"
+    if not dataset.data_path.is_dir():
+        message = f"Dataset directory '{dataset.data_path.as_posix()}' not found"
         return False, message
 
     # Dataset directory must contain mission extension directories
     # (e.g. "VEX-V-VMC-3-RDR-V3.0" or "VEX-V-VMC-3-RDR-EXT1-V3.0", ...)
-    mission_dir_paths = list(dataset.path.iterdir())
+    mission_dir_paths = list(dataset.data_path.iterdir())
 
     if not mission_dir_paths:
         message = "Dataset directory is empty"
@@ -69,13 +69,13 @@ def validate_vex_vmc_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
 
 def validate_vco_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
     # Dataset path must be a valid directory
-    if not dataset.path.is_dir():
-        message = f"Dataset directory '{dataset.path.as_posix()}' not found"
+    if not dataset.data_path.is_dir():
+        message = f"Dataset directory '{dataset.data_path.as_posix()}' not found"
         return False, message
 
     # Dataset directory must contain an "extras" subdir that holds the geometry file
     # directories
-    geo_file_subdir_path = dataset.path / "extras"
+    geo_file_subdir_path = dataset.data_path / "extras"
 
     if not geo_file_subdir_path.is_dir():
         message = f"Geometry file subdir '{geo_file_subdir_path.as_posix()}' not found"
@@ -115,7 +115,7 @@ def validate_vco_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
 
     # Subdirs must either be image file directories (e.g. "vco-v-uvi-3-cdr-v1.0") or the
     # geometry file directory "extras"
-    for subdir_path in dataset.path.iterdir():
+    for subdir_path in dataset.data_path.iterdir():
         if not subdir_path.is_dir():
             message = (
                 "Illegal file found in dataset directory: "

@@ -1,19 +1,15 @@
 import abc
-import json
 import typing
 import warnings
 from abc import ABC
 from pathlib import Path
-from typing import TypedDict
 
 from pandas import DataFrame
 
-import source.satellite_dataset.config as sd_config
 import source.satellite_dataset.patches as sd_patches
 import source.satellite_dataset.planet as sd_planet
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.validation as sd_validation
-from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.planet import Planet
 from source.satellite_dataset.typing import ImgGeoDataArrays
 
@@ -21,31 +17,27 @@ if typing.TYPE_CHECKING:
     from source.satellite_dataset.dataset import SatelliteDataset
 
 
-class _ArchiveDict(TypedDict):
-    name: str
-    planet: str
-    spice_path: str | None
-
-
 class Archive(ABC):
     _subclass_registry: dict[str, type["Archive"]] = {}
 
-    def __init__(self, name: str, planet: Planet, spice_path: Path | None) -> None:
+    def __init__(self, name: str, path: Path, planet: Planet) -> None:
         self.name = name
         self.planet = planet
+        self.datasets_path = path / "datasets"
+
+        spice_path: Path | None = path / "spice-kernels"
+
+        if not spice_path.is_dir():
+            spice_path = None
+
         self.spice_path = spice_path
 
     @classmethod
-    def from_dict(cls, archive_dict: _ArchiveDict) -> "Archive":
-        name = archive_dict["name"]
-        planet = sd_planet.load(archive_dict["planet"])
+    def create(cls, path: Path, planet: Planet) -> "Archive":
+        archive_name = path.name
+        archive_subclass = cls._subclass_registry[archive_name]
 
-        spice_path_str = archive_dict["spice_path"]
-        spice_path = None if spice_path_str is None else Path(spice_path_str)
-
-        archive_subclass = cls._subclass_registry[name]
-
-        return archive_subclass(name, planet, spice_path)
+        return archive_subclass(archive_name, path, planet)
 
     @abc.abstractmethod
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
@@ -61,7 +53,7 @@ class Archive(ABC):
         dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
-        patch_normalization: PatchNormalization,
+        global_normalization: bool = False,
     ) -> None:
         raise NotImplementedError
 
@@ -76,10 +68,14 @@ class ImgGeoArchive(Archive):
         dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
-        patch_normalization: PatchNormalization,
+        global_normalization: bool = False,
     ) -> None:
         sd_patches.generate_img_geo_patches(
-            self, dataset, patch_scale_km, patch_resolution, patch_normalization
+            self,
+            dataset,
+            patch_scale_km,
+            patch_resolution,
+            global_normalization=global_normalization,
         )
 
     @abc.abstractmethod
@@ -99,7 +95,7 @@ class ImgSpiceArchive(Archive):
         dataset: "SatelliteDataset",
         patch_scale_km: float,
         patch_resolution: int,
-        patch_normalization: PatchNormalization,
+        global_normalization: bool = False,
     ) -> None:
         warnings.warn(
             "'generate_dataset_patches' method not yet implemented for "
@@ -115,7 +111,9 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
     @typing.override
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         if self.spice_path is None:
-            raise ValueError(f"Spice path must not be 'null' for archive {self.name}")
+            raise ValueError(
+                f"Spice kernel directory not found for archive '{self.name}'"
+            )
 
         return sd_table.generate_vex_vmc_dataset_table(dataset, self.spice_path)
 
@@ -158,21 +156,15 @@ class JunoJncArchive(ImgSpiceArchive, name="juno-jnc"):
         return DataFrame()  # TEMPORARY
 
 
-def _build_archive_registry() -> dict[str, Archive]:
-    archive_registry: dict[str, Archive] = {}
+def load_archives() -> list[Archive]:
+    archives: list[Archive] = []
 
-    with open(sd_config.ARCHIVES_JSON_PATH) as archives_json:
-        archive_dicts: list[_ArchiveDict] = json.load(archives_json)
+    for planet in sd_planet.load_planets():
+        for archive_path in planet.archives_path.iterdir():
+            if not archive_path.is_dir():
+                continue
 
-        for archive_dict in archive_dicts:
-            archive_name = archive_dict["name"]
-            archive_registry[archive_name] = Archive.from_dict(archive_dict)
+            archive = Archive.create(archive_path, planet)
+            archives.append(archive)
 
-    return archive_registry
-
-
-_archive_registry = _build_archive_registry()
-
-
-def get(name: str) -> Archive:
-    return _archive_registry[name]
+    return archives

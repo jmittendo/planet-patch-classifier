@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
 
 def plot_dataset(
     dataset: "PatchDataset",
-    subdir_name: str,
+    version_name: str | None = None,
     num_patches: int | None = None,
 ) -> None:
     num_patches = len(dataset) if num_patches is None else num_patches
@@ -24,7 +24,7 @@ def plot_dataset(
     patch_latitudes = random_rows["latitude"].to_numpy()
     patch_local_times = random_rows["local_time"].to_numpy()
 
-    patch_images_dir_path = dataset.get_subdir_path(subdir_name)
+    patch_images_dir_path = dataset.get_version_dir_path(version_name=version_name)
 
     patch_images: list[ndarray] = []
 
@@ -57,7 +57,8 @@ def plot_dataset(
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / f"{dataset.name}_scatter.png"
+    output_file_name = f"{dataset.name}_{patch_images_dir_path.name}_scatter.png"
+    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig.savefig(output_file_path, bbox_inches="tight")

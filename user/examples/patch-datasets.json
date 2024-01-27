@@ -1,9 +1,0 @@
-[
-    {
-        "name": "vex-vmc-uv_s25-r128",
-        "path": "data/patch-datasets/vex-vmc-uv_s25-r128",
-        "satellite_dataset": "vex-vmc-uv",
-        "scale_km": 25.0,
-        "resolution": 128
-    }
-]

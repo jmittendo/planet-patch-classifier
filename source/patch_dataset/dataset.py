@@ -1,5 +1,4 @@
 import json
-from json import JSONDecodeError
 from pathlib import Path
 from typing import Iterator, TypedDict
 
@@ -9,36 +8,33 @@ from pandas import DataFrame, Series
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.plotting as pd_plotting
 import source.utility as util
-import user.config as user_config
 
 
-class _PatchDatasetDict(TypedDict):
-    name: str
-    path: str
-    satellite_dataset: str
+class _PatchDatasetInfoDict(TypedDict):
     scale_km: float
     resolution: int
 
 
 class PatchDataset:
-    def __init__(
-        self,
-        name: str,
-        path: Path,
-        satellite_dataset_name: str,
-        scale_km: float,
-        resolution: int,
-    ) -> None:
+    def __init__(self, name: str, path: Path, satellite_dataset_name: str) -> None:
         self.name = name
-        self.path = path
         self.satellite_dataset_name = satellite_dataset_name
-        self.scale_km = scale_km
-        self.resolution = resolution
 
-        table_path = self.path / "patch-info.pkl"
+        versions_dir_path = path / "versions"
+        self._version_dir_paths_dict = {
+            p.name: p for p in versions_dir_path.iterdir() if p.is_dir()
+        }
+
+        table_path = path / "table.pkl"
         self._table: DataFrame = pd.read_pickle(table_path)
 
-        self.subdir_names = [p.name for p in self.path.iterdir() if p.is_dir()]
+        dataset_info_json_path = path / "info.json"
+
+        with open(dataset_info_json_path) as dataset_info_json:
+            dataset_info_dict: _PatchDatasetInfoDict = json.load(dataset_info_json)
+
+        self.scale_km = dataset_info_dict["scale_km"]
+        self.resolution = dataset_info_dict["resolution"]
 
     def __iter__(self) -> Iterator[Series]:
         for index, data in self._table.iterrows():
@@ -47,52 +43,49 @@ class PatchDataset:
     def __len__(self) -> int:
         return len(self._table)
 
-    @classmethod
-    def from_dict(cls, dataset_dict: _PatchDatasetDict) -> "PatchDataset":
-        name = dataset_dict["name"]
-        path = Path(dataset_dict["path"])
-        satellite_dataset_name = dataset_dict["satellite_dataset"]
-        scale_km = dataset_dict["scale_km"]
-        resolution = dataset_dict["resolution"]
-
-        return cls(name, path, satellite_dataset_name, scale_km, resolution)
-
     def random_sample(self, num_patches: int) -> DataFrame:
         return self._table.sample(n=num_patches)
 
-    def get_subdir_path(self, subdir_name: str) -> Path:
-        subdir_path = self.path / subdir_name
+    def get_version_dir_path(self, version_name: str | None = None) -> Path:
+        if version_name is None:
+            if util.user_confirm("Display available versions?"):
+                print("\nAvailable versions:\n-------------------")
 
-        if not subdir_path.is_dir():
-            raise FileNotFoundError(
-                f"Could not find patch dataset subdir '{subdir_path.as_posix()}'"
-            )
+                for version in self._version_dir_paths_dict:
+                    print(version)
 
-        return subdir_path
+                print()
+
+            version_name = input("Enter version name: ")
+
+        return self._version_dir_paths_dict[version_name]
 
     def plot(
         self,
-        subdir_name: str,
+        version_name: str | None = None,
         num_patches: int | None = None,
     ) -> None:
-        pd_plotting.plot_dataset(self, subdir_name, num_patches=num_patches)
+        pd_plotting.plot_dataset(
+            self, version_name=version_name, num_patches=num_patches
+        )
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:
-    datasets_json_path = pd_config.DATASETS_JSON_PATH
-
-    # If not patch dataset has been generated yet the file may not exist
-    if not datasets_json_path.is_file():
-        return {}
-
     dataset_registry: dict[str, PatchDataset] = {}
 
-    with open(pd_config.DATASETS_JSON_PATH) as datasets_json:
-        dataset_dicts: list[_PatchDatasetDict] = json.load(datasets_json)
+    for satellite_dataset_dir_path in pd_config.DATASETS_DIR_PATH.iterdir():
+        if not satellite_dataset_dir_path.is_dir():
+            continue
 
-        for dataset_dict in dataset_dicts:
-            dataset_name = dataset_dict["name"]
-            dataset_registry[dataset_name] = PatchDataset.from_dict(dataset_dict)
+        for patch_dataset_path in satellite_dataset_dir_path.iterdir():
+            if not patch_dataset_path.is_dir():
+                continue
+
+            dataset_name = patch_dataset_path.name
+            dataset = PatchDataset(
+                dataset_name, patch_dataset_path, satellite_dataset_dir_path.name
+            )
+            dataset_registry[dataset_name] = dataset
 
     return dataset_registry
 
@@ -113,59 +106,3 @@ def get(name: str | None) -> PatchDataset:
         name = input("Enter dataset name: ")
 
     return _dataset_registry[name]
-
-
-def add(
-    name: str,
-    path: Path,
-    satellite_dataset_name: str,
-    scale_km: float,
-    resolution: int,
-) -> None:
-    datasets_json_path = pd_config.DATASETS_JSON_PATH
-    datasets_json_path.parent.mkdir(parents=True, exist_ok=True)
-
-    dataset_dicts: list[_PatchDatasetDict] = []
-
-    if datasets_json_path.is_file():
-        with open(datasets_json_path, "r") as datasets_json:
-            try:
-                dataset_dicts: list[_PatchDatasetDict] = json.load(datasets_json)
-            except JSONDecodeError:
-                print(
-                    f"Warning: JSON file '{datasets_json_path.as_posix()}' "
-                    "contains invalid syntax and could not be deserialized."
-                )
-
-                if not util.user_confirm(
-                    "Continue and overwrite existing file content?"
-                ):
-                    return
-
-        dataset_names = [dataset_dict["name"] for dataset_dict in dataset_dicts]
-
-        if name in dataset_names:
-            print(
-                f"Warning: '{datasets_json_path.as_posix()}' already "
-                f"contains a dataset with the name '{name}'."
-            )
-
-            if not util.user_confirm("Continue and overwrite existing dataset?"):
-                return
-
-    with open(datasets_json_path, "w") as datasets_json:
-        dataset_dicts.append(
-            {
-                "name": name,
-                "path": path.as_posix(),
-                "satellite_dataset": satellite_dataset_name,
-                "scale_km": scale_km,
-                "resolution": resolution,
-            }
-        )
-
-        json.dump(dataset_dicts, datasets_json, indent=user_config.JSON_INDENT)
-
-        print(
-            f"Successfully added dataset '{name}' to {datasets_json_path.as_posix()}."
-        )

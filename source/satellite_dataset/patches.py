@@ -1,3 +1,4 @@
+import json
 import typing
 from pathlib import Path
 
@@ -10,11 +11,9 @@ from scipy import interpolate, ndimage, stats
 from tqdm import tqdm
 
 import source.patch_dataset.config as pd_config
-import source.patch_dataset.dataset as pd_dataset
 import source.satellite_dataset.utility as sd_util
 import source.utility as util
 import user.config as user_config
-from source.patch_dataset.typing import PatchNormalization
 from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     ImgGeoPatchInterpolation,
@@ -50,7 +49,7 @@ class ImgGeoPatchGenerator:
         spherical_data: SphericalData,
         output_dir_path: Path,
         output_file_name_base: str,
-        patch_normalization: PatchNormalization,
+        global_normalization: bool = False,
     ) -> tuple[list[str], list[PatchCoordinate]]:
         spherical_data, back_rotation_matrix = self._center_spherical_data(
             spherical_data
@@ -71,7 +70,7 @@ class ImgGeoPatchGenerator:
             patch_images,
             output_dir_path,
             output_file_name_base,
-            patch_normalization,
+            global_normalization,
             spherical_data,
         )
 
@@ -379,11 +378,12 @@ class ImgGeoPatchGenerator:
         self,
         patch_images: list[ndarray],
         output_dir_path: Path,
-        output_file_name_base: str,
-        patch_normalization: PatchNormalization,
+        file_name_base: str,
+        global_normalization: bool,
         full_spherical_data: SphericalData,
     ) -> list[str]:
-        output_dir_path.mkdir(parents=True, exist_ok=True)
+        dataset_versions_dir_path = output_dir_path / "versions"
+        dataset_versions_dir_path.mkdir(parents=True, exist_ok=True)
 
         img_file_names: list[str] = []
 
@@ -391,18 +391,12 @@ class ImgGeoPatchGenerator:
             normalized_patch_images = []
             normalization_modes = []
 
-            if patch_normalization not in ("local", "global", "both"):
-                raise ValueError(
-                    f"{patch_normalization} is not a valid patch normalization mode"
-                )
+            normalized_patch_img = util.get_normalized_img(patch_img)
 
-            if patch_normalization in ("local", "both"):
-                normalized_patch_img = util.get_normalized_img(patch_img)
+            normalized_patch_images.append(normalized_patch_img)
+            normalization_modes.append("local")
 
-                normalized_patch_images.append(normalized_patch_img)
-                normalization_modes.append("local")
-
-            if patch_normalization in ("global", "both"):
+            if global_normalization:
                 full_img_values = full_spherical_data["img_values"]
                 global_min = full_img_values.min()
                 global_max = full_img_values.max()
@@ -414,17 +408,17 @@ class ImgGeoPatchGenerator:
                 normalized_patch_images.append(normalized_patch_img)
                 normalization_modes.append("global")
 
-            output_file_name = f"{output_file_name_base}-patch-{i}.png"
+            output_file_name = f"{file_name_base}_patch-{i}.png"
 
             for patch_img, normalization_mode in zip(
                 normalized_patch_images, normalization_modes
             ):
-                normalization_dir_name = f"{normalization_mode}-normalization"
-                normalization_dir_path = output_dir_path / normalization_dir_name
-                normalization_dir_path.mkdir(parents=True, exist_ok=True)
+                version_dir_name = f"norm-{normalization_mode}"
 
-                output_file_path = normalization_dir_path / output_file_name
+                version_dir_path = dataset_versions_dir_path / version_dir_name
+                version_dir_path.mkdir(parents=True, exist_ok=True)
 
+                output_file_path = version_dir_path / output_file_name
                 int_image_array = (patch_img * 255).astype(np.uint8)
 
                 Image.fromarray(int_image_array).save(output_file_path)
@@ -439,10 +433,10 @@ def generate_img_geo_patches(
     dataset: "SatelliteDataset",
     patch_scale_km: float,
     patch_resolution: int,
-    patch_normalization: PatchNormalization,
+    global_normalization: bool = False,
 ) -> None:
     output_dir_name = f"{dataset.name}_s{patch_scale_km:g}-r{patch_resolution}"
-    output_dir_path = pd_config.DATASETS_DIR_PATH / output_dir_name
+    output_dir_path = pd_config.DATASETS_DIR_PATH / dataset.name / output_dir_name
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     # Spatial resolution of a patch in m/px (ignoring projection effects / distortions)
@@ -500,7 +494,7 @@ def generate_img_geo_patches(
             spherical_data,
             output_dir_path,
             data["file_name_base"],
-            patch_normalization,
+            global_normalization=global_normalization,
         )
 
         patch_file_names += img_file_names
@@ -518,11 +512,16 @@ def generate_img_geo_patches(
     }
 
     patch_info_table = DataFrame(data=patch_info_table_dict)
-    patch_info_table.to_pickle(output_dir_path / "patch-info.pkl")
+    patch_info_table.to_pickle(output_dir_path / "table.pkl")
 
-    pd_dataset.add(
-        output_dir_name, output_dir_path, dataset.name, patch_scale_km, patch_resolution
-    )
+    patch_dataset_info_dict = {
+        "scale_km": patch_scale_km,
+        "resolution": patch_resolution,
+    }
+    patch_dataset_info_json_path = output_dir_path / "info.json"
+
+    with open(patch_dataset_info_json_path, "w") as patch_dataset_info_json:
+        json.dump(patch_dataset_info_dict, patch_dataset_info_json)
 
 
 def load_vex_vmc_data_arrays(

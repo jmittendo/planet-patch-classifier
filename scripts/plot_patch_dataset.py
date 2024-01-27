@@ -6,18 +6,11 @@ import source.patch_dataset.dataset as pd_dataset
 def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
-    subdir_name: str | None = input_args.subdir
+    version_name: str | None = input_args.version
     num_patches: int | None = input_args.number
 
     dataset = pd_dataset.get(dataset_name)
-    subdirs_str = ", ".join(dataset.subdir_names)
-
-    if subdir_name is None:
-        subdir_name = input(
-            f"Enter name of the dataset subdir to use for plotting ({subdirs_str}): "
-        )
-
-    dataset.plot(subdir_name, num_patches=num_patches)  # type: ignore
+    dataset.plot(version_name=version_name, num_patches=num_patches)
 
 
 def parse_input_args() -> Namespace:
@@ -27,7 +20,7 @@ def parse_input_args() -> Namespace:
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")
     arg_parser.add_argument(
-        "subdir", nargs="?", help="name of the dataset subdir to use for plotting"
+        "version", nargs="?", help="version of the dataset to use for plotting"
     )
     arg_parser.add_argument(
         "-n", "--number", type=int, help="number of patches to plot"

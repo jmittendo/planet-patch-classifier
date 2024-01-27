@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
 
 def generate_flat_dataset(dataset: "PatchDataset", blur_sigma: float) -> None:
     try:
-        patch_images_dir_path = dataset.get_subdir_path("local-normalization")
+        patch_images_dir_path = dataset.get_version_dir_path(version_name="norm-local")
     except FileNotFoundError as error:
         raise ValueError(
             "Flattened dataset can only be generated from a local normalization dataset"

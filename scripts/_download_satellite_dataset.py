@@ -16,7 +16,7 @@ import json
 from argparse import ArgumentParser, Namespace
 
 import source.satellite_dataset.config as sd_config
-import source.satellite_dataset.download as sd_download
+import source.satellite_dataset._download as sd_download
 import source.utility as util
 from source.satellite_dataset.typing import DownloadConfig
 
