@@ -32,7 +32,7 @@ structures.
 Installation
 ------------
 1. Download and install **git** on your system: https://git-scm.com/downloads.
-2. Download and install the latest version of **Python**: https://www.python.org/downloads/.
+2. Download and install **Python 3.11**: https://www.python.org/downloads/.
 3. Clone this repository with:
     ```sh
     git clone https://github.com/jmittendo/planet-patch-classifier
