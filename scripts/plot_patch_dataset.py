@@ -9,8 +9,8 @@ def main() -> None:
     version_name: str | None = input_args.version
     num_patches: int | None = input_args.number
 
-    dataset = pd_dataset.get(dataset_name)
-    dataset.plot(version_name=version_name, num_patches=num_patches)
+    dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
+    dataset.plot(num_patches=num_patches)
 
 
 def parse_input_args() -> Namespace:

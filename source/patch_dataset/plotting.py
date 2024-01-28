@@ -2,8 +2,8 @@ import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import ndarray
-from PIL import Image
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 import source.patch_dataset.config as pd_config
 import source.plotting as plotting
@@ -12,27 +12,20 @@ if typing.TYPE_CHECKING:
     from source.patch_dataset.dataset import PatchDataset
 
 
-def plot_dataset(
-    dataset: "PatchDataset",
-    version_name: str | None = None,
-    num_patches: int | None = None,
-) -> None:
-    num_patches = len(dataset) if num_patches is None else num_patches
-    random_rows = dataset.random_sample(num_patches)
+def plot_dataset(dataset: "PatchDataset", num_patches: int | None = None) -> None:
+    dataset_size = len(dataset)
+    num_patches = dataset_size if num_patches is None else num_patches
 
-    patch_longitudes = random_rows["longitude"].to_numpy()
-    patch_latitudes = random_rows["latitude"].to_numpy()
-    patch_local_times = random_rows["local_time"].to_numpy()
+    rand_indices = np.arange(dataset_size)
+    np.random.shuffle(rand_indices)
 
-    patch_images_dir_path = dataset.get_version_dir_path(version_name=version_name)
+    data_loader = DataLoader(dataset, batch_size=num_patches, sampler=rand_indices)
+    patches_tensor: Tensor = next(iter(data_loader))
+    patch_images = list(patches_tensor.movedim(1, -1).numpy())
 
-    patch_images: list[ndarray] = []
-
-    for patch_file_name in random_rows["file_name"]:
-        patch_img_file_path = patch_images_dir_path / patch_file_name
-        patch_img = np.asarray(Image.open(patch_img_file_path))
-
-        patch_images.append(patch_img)
+    patch_longitudes = dataset.longitudes[rand_indices]
+    patch_latitudes = dataset.latitudes[rand_indices]
+    patch_local_times = dataset.local_times[rand_indices]
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 12))
     ax1, ax2 = axes
@@ -57,7 +50,7 @@ def plot_dataset(
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    output_file_name = f"{dataset.name}_{patch_images_dir_path.name}_scatter.png"
+    output_file_name = f"{dataset.name}_{dataset.version_name}_scatter.png"
     output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 

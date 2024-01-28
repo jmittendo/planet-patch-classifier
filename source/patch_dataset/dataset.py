@@ -61,6 +61,13 @@ class PatchDataset(Dataset):
     def file_names(self) -> list[str]:
         return self._table["file_name"].to_list()
 
+    @property
+    def version_name(self) -> str:
+        if self._version_dir_path is None:
+            raise ValueError(f"No version set for patch dataset '{self.name}'")
+
+        return self._version_dir_path.name
+
     def __getitem__(self, index: int) -> Tensor:
         if self._images_tensor is None:
             file_name: str = self._table.iloc[index]["file_name"]
@@ -104,12 +111,9 @@ class PatchDataset(Dataset):
 
     def plot(
         self,
-        version_name: str | None = None,
         num_patches: int | None = None,
     ) -> None:
-        pd_plotting.plot_dataset(
-            self, version_name=version_name, num_patches=num_patches
-        )
+        pd_plotting.plot_dataset(self, num_patches=num_patches)
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:
