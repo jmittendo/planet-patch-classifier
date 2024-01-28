@@ -16,9 +16,9 @@ class _PatchDatasetInfoDict(TypedDict):
 
 
 class PatchDataset:
-    def __init__(self, name: str, path: Path, satellite_dataset_name: str) -> None:
+    def __init__(self, name: str, path: Path) -> None:
         self.name = name
-        self.satellite_dataset_name = satellite_dataset_name
+        self.satellite_dataset_name = path.parent.name
 
         versions_dir_path = path / "versions"
         self._version_dir_paths_dict = {
@@ -82,9 +82,7 @@ def _build_dataset_registry() -> dict[str, PatchDataset]:
                 continue
 
             dataset_name = patch_dataset_path.name
-            dataset = PatchDataset(
-                dataset_name, patch_dataset_path, satellite_dataset_dir_path.name
-            )
+            dataset = PatchDataset(dataset_name, patch_dataset_path)
             dataset_registry[dataset_name] = dataset
 
     return dataset_registry
