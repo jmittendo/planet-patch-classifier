@@ -9,7 +9,7 @@ def main() -> None:
     dataset_name: str | None = input_args.name
     blur_sigma: float | None = input_args.sigma
 
-    dataset = pd_dataset.get(dataset_name)
+    dataset = pd_dataset.get(name=dataset_name, version_name="norm-local")
 
     if blur_sigma is None:
         blur_sigma = float(input("Enter Gaussian blur radius: "))

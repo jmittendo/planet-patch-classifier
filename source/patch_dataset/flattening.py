@@ -1,11 +1,11 @@
 import typing
 
-import numpy as np
-from numpy import ndarray
-from PIL import Image
-from scipy import ndimage
+import torchvision.utils as tv_util
+from torch import Tensor
+from torchvision.transforms import functional
 from tqdm import tqdm
 
+import source.patch_dataset.config as pd_config
 import source.utility as util
 
 if typing.TYPE_CHECKING:
@@ -13,27 +13,23 @@ if typing.TYPE_CHECKING:
 
 
 def generate_flat_dataset(dataset: "PatchDataset", blur_sigma: float) -> None:
-    try:
-        patch_images_dir_path = dataset.get_version_dir_path(version_name="norm-local")
-    except FileNotFoundError as error:
-        raise ValueError(
-            "Flattened dataset can only be generated from a local normalization dataset"
-        ) from error
+    flat_patches_dir_path = dataset.versions_dir_path / f"flat-s{blur_sigma:g}"
+    flat_patches_dir_path.mkdir(exist_ok=True)
 
-    flat_images_dir_path = patch_images_dir_path.parent / f"flat-s{blur_sigma:g}"
-    flat_images_dir_path.mkdir(exist_ok=True)
+    for patch_tensor, patch_file_name in tqdm(
+        zip(dataset, dataset.file_names), desc="Progress", total=len(dataset)
+    ):
+        flat_patch_tensor = _flatten_patch(patch_tensor, blur_sigma)
+        flat_patch_file_path = flat_patches_dir_path / patch_file_name
 
-    for patch_info in tqdm(dataset, desc="Progress"):
-        patch_img_file_name = patch_info["file_name"]
-        patch_img_file_path = patch_images_dir_path / patch_img_file_name
-        patch_img = np.asarray(Image.open(patch_img_file_path)).astype(float)
-        flat_patch_img = _flatten_patch(patch_img, blur_sigma)
-
-        Image.fromarray(flat_patch_img).save(flat_images_dir_path / patch_img_file_name)
+        tv_util.save_image(flat_patch_tensor, flat_patch_file_path)
 
 
-def _flatten_patch(patch_img: ndarray, blur_sigma: float) -> ndarray:
-    flat_img = patch_img - ndimage.gaussian_filter(patch_img, blur_sigma)
-    normalized_img = util.get_normalized_img(flat_img)
+def _flatten_patch(patch_tensor: Tensor, blur_sigma: float) -> Tensor:
+    kernel_size = int(blur_sigma * pd_config.BLUR_KERNEL_MULTIPLIER * 2 + 1)
 
-    return (normalized_img * 255).astype(np.uint8)
+    flat_patch_tensor = patch_tensor - functional.gaussian_blur(
+        patch_tensor, kernel_size, sigma=blur_sigma  # type: ignore
+    )
+
+    return util.get_normalized_img(flat_patch_tensor)

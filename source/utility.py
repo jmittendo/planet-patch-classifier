@@ -1,8 +1,10 @@
 import logging
+import typing
 from datetime import datetime
 from pathlib import Path
 
 from numpy import ndarray
+from torch import Tensor
 
 import source.config as config
 import user.config as user_config
@@ -32,7 +34,17 @@ def configure_logging(log_file_name_base: str) -> None:
     )
 
 
+@typing.overload
 def get_normalized_img(img: ndarray) -> ndarray:
+    ...
+
+
+@typing.overload
+def get_normalized_img(img: Tensor) -> Tensor:
+    ...
+
+
+def get_normalized_img(img: ndarray | Tensor) -> ndarray | Tensor:
     img_min = img.min()
     img_max = img.max()
 
