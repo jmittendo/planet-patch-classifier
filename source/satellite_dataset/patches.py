@@ -521,7 +521,11 @@ def generate_img_geo_patches(
     patch_dataset_info_json_path = output_dir_path / "info.json"
 
     with open(patch_dataset_info_json_path, "w") as patch_dataset_info_json:
-        json.dump(patch_dataset_info_dict, patch_dataset_info_json)
+        json.dump(
+            patch_dataset_info_dict,
+            patch_dataset_info_json,
+            indent=user_config.JSON_INDENT,
+        )
 
 
 def load_vex_vmc_data_arrays(
