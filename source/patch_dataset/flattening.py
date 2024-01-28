@@ -26,10 +26,16 @@ def generate_flat_dataset(dataset: "PatchDataset", blur_sigma: float) -> None:
 
 
 def _flatten_patch(patch_tensor: Tensor, blur_sigma: float) -> Tensor:
+    flat_patch_tensor = patch_tensor - _blur_patch(patch_tensor, blur_sigma)
+
+    return util.get_normalized_img(flat_patch_tensor)
+
+
+def _blur_patch(patch_tensor: Tensor, blur_sigma: float) -> Tensor:
     kernel_size = int(blur_sigma * pd_config.BLUR_KERNEL_MULTIPLIER * 2 + 1)
 
-    flat_patch_tensor = patch_tensor - functional.gaussian_blur(
+    blurred_patch_tensor = functional.gaussian_blur(
         patch_tensor, kernel_size, sigma=blur_sigma  # type: ignore
     )
 
-    return util.get_normalized_img(flat_patch_tensor)
+    return blurred_patch_tensor
