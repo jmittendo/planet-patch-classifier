@@ -11,3 +11,6 @@ spiceypy
 scipy
 pillow
 matplotlib
+
+torch
+torchvision

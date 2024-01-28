@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Literal, TypeAlias, TypedDict
 
 from numpy import ndarray
 from numpy.ma import MaskedArray
@@ -41,6 +41,6 @@ class ImgGeoPatchProjection(TypedDict):
     y_values: ndarray
 
 
-type ImgGeoPatchInterpolation = (
+ImgGeoPatchInterpolation: TypeAlias = (
     Literal["nearest"] | Literal["linear"] | Literal["cubic"]
 )

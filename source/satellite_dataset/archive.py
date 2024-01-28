@@ -62,7 +62,6 @@ class ImgGeoArchive(Archive):
     def __init_subclass__(cls, name: str) -> None:
         cls._subclass_registry[name] = cls
 
-    @typing.override
     def generate_dataset_patches(
         self,
         dataset: "SatelliteDataset",
@@ -89,7 +88,6 @@ class ImgSpiceArchive(Archive):
     def __init_subclass__(cls, name: str) -> None:
         cls._subclass_registry[name] = cls
 
-    @typing.override
     def generate_dataset_patches(
         self,
         dataset: "SatelliteDataset",
@@ -104,11 +102,9 @@ class ImgSpiceArchive(Archive):
 
 
 class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
-    @typing.override
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vex_vmc_dataset(dataset)
 
-    @typing.override
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         if self.spice_path is None:
             raise ValueError(
@@ -117,7 +113,6 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
 
         return sd_table.generate_vex_vmc_dataset_table(dataset, self.spice_path)
 
-    @typing.override
     def load_data_arrays(
         self, img_file_path: Path, geo_file_path: Path
     ) -> ImgGeoDataArrays:
@@ -125,15 +120,12 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
 
 
 class VcoArchive(ImgGeoArchive, name="vco"):
-    @typing.override
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vco_dataset(dataset)
 
-    @typing.override
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         return sd_table.generate_vco_dataset_table(dataset, self.planet.radius_km)
 
-    @typing.override
     def load_data_arrays(
         self, img_file_path: Path, geo_file_path: Path
     ) -> ImgGeoDataArrays:
@@ -141,14 +133,12 @@ class VcoArchive(ImgGeoArchive, name="vco"):
 
 
 class JunoJncArchive(ImgSpiceArchive, name="juno-jnc"):
-    @typing.override
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         warnings.warn(
             "'validate_dataset' method not yet implemented for 'ImgSpiceArchive'"
         )
         return True, ""  # TEMPORARY
 
-    @typing.override
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         warnings.warn(
             "'generate_dataset_table' method not yet implemented for 'ImgSpiceArchive'"
