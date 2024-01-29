@@ -1,17 +1,18 @@
 import json
 from pathlib import Path
-from typing import TypedDict
-import torch
-from typing import Iterator
+from typing import Iterator, TypedDict
 
 import pandas as pd
+import torch
 from numpy import ndarray
 from pandas import DataFrame
-from torch.utils.data import Dataset
 from torch import Tensor
+from torch.utils.data import Dataset
 from torchvision import io
 
+import source.patch_dataset.classification as pd_classification
 import source.patch_dataset.config as pd_config
+import source.patch_dataset.encoding as pd_encoding
 import source.patch_dataset.plotting as pd_plotting
 import source.utility as util
 
@@ -114,6 +115,12 @@ class PatchDataset(Dataset):
         num_patches: int | None = None,
     ) -> None:
         pd_plotting.plot_dataset(self, num_patches=num_patches)
+
+    def encode(self) -> ndarray:
+        return pd_encoding.encode_dataset(self)
+
+    def classify(self) -> tuple[ndarray, ndarray]:
+        return pd_classification.classify_dataset(self)
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:
