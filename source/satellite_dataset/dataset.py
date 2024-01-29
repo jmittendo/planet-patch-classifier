@@ -49,6 +49,8 @@ class SatelliteDataset:
 
 
 def _build_dataset_registry() -> dict[str, SatelliteDataset]:
+    print("Loading satellite datasets...")
+
     dataset_registry: dict[str, SatelliteDataset] = {}
 
     for archive in sd_archive.load_archives():

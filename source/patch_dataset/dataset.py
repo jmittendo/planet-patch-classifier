@@ -124,6 +124,8 @@ class PatchDataset(Dataset):
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:
+    print("Loading patch datasets...")
+
     dataset_registry: dict[str, PatchDataset] = {}
 
     for satellite_dataset_dir_path in pd_config.DATASETS_DIR_PATH.iterdir():
