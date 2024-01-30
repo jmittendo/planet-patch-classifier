@@ -11,6 +11,8 @@ if typing.TYPE_CHECKING:
 def classify_dataset(dataset: "PatchDataset") -> tuple[ndarray, ndarray]:
     encoded_dataset = dataset.encode()
 
+    print("Classifying dataset...")
+
     tsne = TSNE(n_components=3)
     reduced_dataset = tsne.fit_transform(encoded_dataset)
 

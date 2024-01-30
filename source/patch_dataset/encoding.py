@@ -22,6 +22,8 @@ class GrayscaleToRGB(Module):
 
 @no_grad()
 def encode_dataset(dataset: "PatchDataset") -> ndarray:
+    print("Encoding dataset...")
+
     model = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model.fc = Identity()  # type: ignore
 
