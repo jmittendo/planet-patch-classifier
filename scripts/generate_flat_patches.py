@@ -24,7 +24,7 @@ def parse_input_args() -> Namespace:
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")
     arg_parser.add_argument(
-        "-s", "--sigma", type=float, help="sigma value for the Gaussian blur"
+        "sigma", nargs="?", type=float, help="sigma value for the Gaussian blur"
     )
 
     return arg_parser.parse_args()
