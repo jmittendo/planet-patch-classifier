@@ -25,12 +25,12 @@ def main() -> None:
 
 def parse_input_args() -> Namespace:
     arg_parser = ArgumentParser(
-        description=("Generate a scatter plot for the specified dataset."),
+        description=("Generate classes for a patch dataset."),
     )
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")
     arg_parser.add_argument(
-        "version", nargs="?", help="version of the dataset to use for plotting"
+        "version", nargs="?", help="version of the dataset to classify"
     )
 
     return arg_parser.parse_args()
