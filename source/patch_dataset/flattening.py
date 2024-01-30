@@ -1,6 +1,6 @@
 import typing
 
-import torchvision.utils as tv_util
+from PIL import Image
 from torch import Tensor
 from torchvision.transforms import functional
 from tqdm import tqdm
@@ -20,9 +20,10 @@ def generate_flat_dataset(dataset: "PatchDataset", blur_sigma: float) -> None:
         zip(dataset, dataset.file_names), desc="Progress", total=len(dataset)
     ):
         flat_patch_tensor = _flatten_patch(patch_tensor, blur_sigma)
-        flat_patch_file_path = flat_patches_dir_path / patch_file_name
+        flat_patch_array = (flat_patch_tensor[0] * 255).byte().numpy()
 
-        tv_util.save_image(flat_patch_tensor, flat_patch_file_path)
+        flat_patch_file_path = flat_patches_dir_path / patch_file_name
+        Image.fromarray(flat_patch_array).save(flat_patch_file_path)
 
 
 def _flatten_patch(patch_tensor: Tensor, blur_sigma: float) -> Tensor:
