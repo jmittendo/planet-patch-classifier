@@ -26,7 +26,7 @@ def encode_dataset(dataset: "PatchDataset") -> ndarray:
     model.fc = Identity()  # type: ignore
 
     transforms_list = [
-        Normalize(0.458971, 0.225609),
+        Normalize(dataset.mean, dataset.std),
         Resize(224, antialias=True),  # type: ignore
         GrayscaleToRGB(),
     ]
