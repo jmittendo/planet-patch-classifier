@@ -45,6 +45,8 @@ class PatchDataset(Dataset):
         self._table: DataFrame = pd.read_pickle(table_path)
 
         self._images_tensor: Tensor | None = None
+        self._mean: Tensor | None = None
+        self._std: Tensor | None = None
 
     @property
     def longitudes(self) -> ndarray:
@@ -68,6 +70,37 @@ class PatchDataset(Dataset):
             raise ValueError(f"No version set for patch dataset '{self.name}'")
 
         return self._version_dir_path.name
+
+    @property
+    def mean(self) -> Tensor:
+        if self._mean is None:
+            if self._images_tensor is None:
+                sum_tensor = torch.zeros(self[0].shape[0])
+
+                for img_tensor in self:
+                    sum_tensor += img_tensor.mean(dim=(1, 2))
+
+                self._mean = sum_tensor / len(self)
+            else:
+                self._mean = self._images_tensor.mean(dim=(0, 2, 3))
+
+        return self._mean
+
+    @property
+    def std(self) -> Tensor:
+        if self._std is None:
+            if self._images_tensor is None:
+                sum_tensor = torch.zeros(self[0].shape[0])
+                mean_tensor = self.mean[:, None, None]
+
+                for img_tensor in self:
+                    sum_tensor += ((img_tensor - mean_tensor) ** 2).mean(dim=(1, 2))
+
+                self._std = torch.sqrt(sum_tensor / len(self))
+            else:
+                self._std = self._images_tensor.std(dim=(0, 2, 3))
+
+        return self._std
 
     def __getitem__(self, index: int) -> Tensor:
         if self._images_tensor is None:
