@@ -517,6 +517,7 @@ def generate_img_geo_patches(
     patch_dataset_info_dict = {
         "scale_km": patch_scale_km,
         "resolution": patch_resolution,
+        "labels": [],
     }
     patch_dataset_info_json_path = output_dir_path / "info.json"
 
