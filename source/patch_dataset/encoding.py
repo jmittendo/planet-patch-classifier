@@ -7,7 +7,7 @@ from torch.nn import Identity, Module
 from torch.utils.data import DataLoader
 from torchvision import models
 from torchvision.models import ResNet18_Weights
-from torchvision.transforms import Normalize, Resize, Compose
+from torchvision.transforms import Compose, Normalize, Resize
 
 import source.patch_dataset.config as pd_config
 
@@ -26,16 +26,18 @@ def encode_dataset(dataset: "PatchDataset") -> ndarray:
 
     model = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model.fc = Identity()  # type: ignore
+    model.eval()
 
     transforms_list = [
         Normalize(dataset.mean, dataset.std),
         Resize(224, antialias=True),  # type: ignore
-        GrayscaleToRGB(),
     ]
+
+    if dataset[0].shape[0] == 1:
+        transforms_list.append(GrayscaleToRGB())
+
     transforms = Compose(transforms_list)
-
     data_loader = DataLoader(dataset, batch_size=pd_config.ENCODING_BATCH_SIZE)
-
     encoded_tensors = [model(transforms(batch_tensor)) for batch_tensor in data_loader]
 
     return torch.cat(encoded_tensors).numpy()

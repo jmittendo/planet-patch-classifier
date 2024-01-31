@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Iterator, TypedDict
 
+import numpy as np
 import pandas as pd
 import torch
 from numpy import ndarray
@@ -18,8 +19,9 @@ import source.utility as util
 
 
 class _PatchDatasetInfoDict(TypedDict):
-    scale_km: float
+    scale_km: float | None
     resolution: int
+    labels: list[str]
 
 
 class PatchDataset(Dataset):
@@ -40,6 +42,7 @@ class PatchDataset(Dataset):
 
         self.scale_km = dataset_info_dict["scale_km"]
         self.resolution = dataset_info_dict["resolution"]
+        self.label_names = dataset_info_dict["labels"]
 
         table_path = path / "table.pkl"
         self._table: DataFrame = pd.read_pickle(table_path)
@@ -50,19 +53,23 @@ class PatchDataset(Dataset):
 
     @property
     def longitudes(self) -> ndarray:
-        return self._table["longitude"].to_numpy()
+        return self._get_table_column("longitude")
 
     @property
     def latitudes(self) -> ndarray:
-        return self._table["latitude"].to_numpy()
+        return self._get_table_column("latitude")
 
     @property
     def local_times(self) -> ndarray:
-        return self._table["local_time"].to_numpy()
+        return self._get_table_column("local_time")
 
     @property
     def file_names(self) -> list[str]:
-        return self._table["file_name"].to_list()
+        return self._get_table_column("file_name").tolist()
+
+    @property
+    def labels(self) -> ndarray:
+        return self._get_table_column("label").tolist()
 
     @property
     def version_name(self) -> str:
@@ -154,6 +161,12 @@ class PatchDataset(Dataset):
 
     def classify(self) -> tuple[ndarray, ndarray]:
         return pd_classification.classify_dataset(self)
+
+    def _get_table_column(self, column_name: str) -> ndarray:
+        if column_name in self._table:
+            return self._table[column_name].to_numpy()
+        else:
+            return np.full(len(self), np.nan)
 
 
 def _build_dataset_registry() -> dict[str, PatchDataset]:
