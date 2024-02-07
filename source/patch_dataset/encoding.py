@@ -28,13 +28,15 @@ def encode_dataset(dataset: "PatchDataset") -> ndarray:
     model.fc = Identity()  # type: ignore
     model.eval()
 
-    transforms_list = [
-        Normalize(dataset.mean, dataset.std),
-        Resize(224, antialias=True),  # type: ignore
-    ]
+    transforms_list: list[Module] = [Resize(224, antialias=True)]  # type: ignore
 
-    if dataset[0].shape[0] == 1:
+    if dataset.num_channels == 1:
         transforms_list.append(GrayscaleToRGB())
+        normalize = Normalize(0.4589225, 0.2255861)
+    else:
+        normalize = Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+
+    transforms_list.insert(0, normalize)
 
     transforms = Compose(transforms_list)
     data_loader = DataLoader(dataset, batch_size=pd_config.ENCODING_BATCH_SIZE)

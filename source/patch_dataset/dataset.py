@@ -76,6 +76,10 @@ class PatchDataset(Dataset):
         return np.isfinite(self.labels).any()  # type: ignore
 
     @property
+    def num_channels(self) -> int:
+        return self[0].shape[0]
+
+    @property
     def version_name(self) -> str:
         if self._version_dir_path is None:
             raise ValueError(f"No version set for patch dataset '{self.name}'")
