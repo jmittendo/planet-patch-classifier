@@ -72,6 +72,10 @@ class PatchDataset(Dataset):
         return self._get_table_column("label").tolist()
 
     @property
+    def has_labels(self) -> bool:
+        return np.isfinite(self.labels).any()  # type: ignore
+
+    @property
     def version_name(self) -> str:
         if self._version_dir_path is None:
             raise ValueError(f"No version set for patch dataset '{self.name}'")
@@ -150,11 +154,11 @@ class PatchDataset(Dataset):
 
         return self._images_tensor
 
-    def plot(
-        self,
-        num_patches: int | None = None,
-    ) -> None:
-        pd_plotting.plot_dataset(self, num_patches=num_patches)
+    def plot_geometry_scatter(self, num_patches: int | None = None) -> None:
+        pd_plotting.plot_dataset_geometry_scatter(self, num_patches=num_patches)
+
+    def plot_encoded_tsne_scatter(self):
+        pd_plotting.plot_encoded_dataset_tsne_scatter(self)
 
     def encode(self) -> ndarray:
         return pd_encoding.encode_dataset(self)

@@ -1,18 +1,30 @@
 import typing
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.manifold import TSNE
 from torch import Tensor
 from torch.utils.data import DataLoader
 
 import source.patch_dataset.config as pd_config
 import source.plotting as plotting
+import user.config as user_config
 
 if typing.TYPE_CHECKING:
     from source.patch_dataset.dataset import PatchDataset
 
 
-def plot_dataset(dataset: "PatchDataset", num_patches: int | None = None) -> None:
+if user_config.ENABLE_TEX_PLOTS:
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.size"] = 16
+    plt.rcParams["axes.titlepad"] = 8
+
+
+def plot_dataset_geometry_scatter(
+    dataset: "PatchDataset", num_patches: int | None = None
+) -> None:
     dataset_size = len(dataset)
     num_patches = dataset_size if num_patches is None else num_patches
 
@@ -50,8 +62,55 @@ def plot_dataset(dataset: "PatchDataset", num_patches: int | None = None) -> Non
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    output_file_name = f"{dataset.name}_{dataset.version_name}_scatter.png"
+    output_file_name = f"{dataset.name}_{dataset.version_name}_geometry-scatter.png"
     output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_file_path, bbox_inches="tight")
+    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+
+
+def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
+    encoded_dataset = dataset.encode()
+
+    tsne = TSNE()
+    tsne_map = tsne.fit_transform(encoded_dataset)
+
+    if dataset.has_labels:
+        cmap = mpl.colormaps["gist_rainbow"]
+        unique_labels, _ = np.unique(dataset.labels, return_counts=True)
+        colors = cmap(np.linspace(0, 1, unique_labels.size))
+
+        fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+        ax1, ax2 = axes
+
+        ax1.set_title("Images")
+        plotting.imscatter(ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+
+        ax2.set_title("True labels")
+
+        for label, color in zip(unique_labels, colors):
+            label_points = tsne_map[dataset.labels == label]
+            label_name = dataset.label_names[label]
+
+            ax2.scatter(
+                label_points[:, 0], label_points[:, 1], color=color, label=label_name
+            )
+
+        ax2.legend(fancybox=False)
+        ax2.set_yticklabels([])
+
+        for ax in axes.flatten():
+            ax.tick_params(direction="in", top=True, right=True)
+
+        fig.subplots_adjust(wspace=0.05)
+    else:
+        fig, ax = plt.subplots(figsize=(9, 9))
+
+        plotting.imscatter(ax, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+        ax.tick_params(direction="in", top=True, right=True)
+
+    output_file_name = f"{dataset.name}_{dataset.version_name}_encoded-tsne-scatter.png"
+    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
+    output_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)

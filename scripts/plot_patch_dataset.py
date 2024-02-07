@@ -10,7 +10,8 @@ def main() -> None:
     num_patches: int | None = input_args.number
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
-    dataset.plot(num_patches=num_patches)
+    dataset.plot_geometry_scatter(num_patches=num_patches)
+    dataset.plot_encoded_tsne_scatter()
 
 
 def parse_input_args() -> Namespace:
@@ -23,7 +24,10 @@ def parse_input_args() -> Namespace:
         "version", nargs="?", help="version of the dataset to use for plotting"
     )
     arg_parser.add_argument(
-        "-n", "--number", type=int, help="number of patches to plot"
+        "-n",
+        "--number",
+        type=int,
+        help="number of patches to plot for geometry scatter",
     )
 
     return arg_parser.parse_args()

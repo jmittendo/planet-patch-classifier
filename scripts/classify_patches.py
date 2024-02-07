@@ -9,7 +9,14 @@ from sklearn.manifold import TSNE
 
 import source.config as config
 import source.patch_dataset.dataset as pd_dataset
+import user.config as user_config
 from source.patch_dataset.dataset import PatchDataset
+
+if user_config.ENABLE_TEX_PLOTS:
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.size"] = 16
+    plt.rcParams["axes.titlepad"] = 8
 
 
 def main() -> None:
@@ -58,7 +65,7 @@ def plot_classification_scatter(
     patch_latitudes = dataset.latitudes
     patch_local_times = dataset.local_times
 
-    if np.nan in patch_longitudes:
+    if np.isnan(patch_longitudes).any():
         return
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 12))
