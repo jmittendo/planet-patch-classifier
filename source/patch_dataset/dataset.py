@@ -76,6 +76,13 @@ class PatchDataset(Dataset):
         return np.isfinite(self.labels).any()  # type: ignore
 
     @property
+    def num_labels(self) -> int:
+        if self.has_labels:
+            return np.unique(self.labels).size
+        else:
+            return 0
+
+    @property
     def num_channels(self) -> int:
         return self[0].shape[0]
 
@@ -167,8 +174,8 @@ class PatchDataset(Dataset):
     def encode(self) -> ndarray:
         return pd_encoding.encode_dataset(self)
 
-    def classify(self) -> tuple[ndarray, ndarray]:
-        return pd_classification.classify_dataset(self)
+    def classify(self, num_classes: int | None = None) -> tuple[ndarray, ndarray]:
+        return pd_classification.classify_dataset(self, num_classes=num_classes)
 
     def _get_table_column(self, column_name: str) -> ndarray:
         if column_name in self._table:

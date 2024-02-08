@@ -77,7 +77,7 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
 
     if dataset.has_labels:
         cmap = mpl.colormaps["gist_rainbow"]
-        unique_labels, _ = np.unique(dataset.labels, return_counts=True)
+        unique_labels = np.unique(dataset.labels)
         colors = cmap(np.linspace(0, 1, unique_labels.size))
 
         fig, axes = plt.subplots(1, 2, figsize=(18, 9))
@@ -96,18 +96,19 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
                 label_points[:, 0], label_points[:, 1], color=color, label=label_name
             )
 
-        ax2.legend(fancybox=False)
-        ax2.set_yticklabels([])
+        ax2.legend(fancybox=False, handletextpad=0)
 
         for ax in axes.flatten():
-            ax.tick_params(direction="in", top=True, right=True)
+            ax.set_xticks([])
+            ax.set_yticks([])
 
         fig.subplots_adjust(wspace=0.05)
     else:
         fig, ax = plt.subplots(figsize=(9, 9))
 
         plotting.imscatter(ax, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
-        ax.tick_params(direction="in", top=True, right=True)
+        ax.set_xticks([])
+        ax.set_yticks([])
 
     output_file_name = f"{dataset.name}_{dataset.version_name}_encoded-tsne-scatter.png"
     output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
