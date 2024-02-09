@@ -36,12 +36,12 @@ def main() -> None:
 
         adj_rand_score = metrics.adjusted_rand_score(dataset.labels, class_labels)
         conf_matrix = metrics.confusion_matrix(dataset.labels, class_labels)
-        cluster_accuracies = conf_matrix.diagonal() / conf_matrix.sum(axis=1)
-        total_accuracy = np.average(cluster_accuracies, weights=conf_matrix.sum(axis=1))
+        class_accuracies = conf_matrix.diagonal() / conf_matrix.sum(axis=1)
+        total_accuracy = np.average(class_accuracies, weights=conf_matrix.sum(axis=1))
 
         print(f"\nAdjusted rand score: {adj_rand_score}\n")
         print(f"Confusion matrix:\n{conf_matrix}\n")
-        print(f"Cluster accuracies:\n{cluster_accuracies}\n")
+        print(f"Class accuracies:\n{class_accuracies}\n")
         print(f"Total accuracy: {total_accuracy}\n")
 
     plot_classification_scatter(
