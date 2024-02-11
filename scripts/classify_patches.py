@@ -81,9 +81,15 @@ def plot_classification_scatter(
 ) -> None:
     print("Plotting classification scatter...")
 
-    cmap = mpl.colormaps["gist_rainbow"]
     unique_labels = np.unique(class_labels)
-    colors = cmap(np.linspace(0, 1, unique_labels.size))
+    num_labels = unique_labels.size
+
+    if num_labels > 10:
+        cmap = mpl.colormaps["gist_rainbow"]
+        colors = cmap(np.linspace(0, 1, num_labels))
+    else:
+        cmap = mpl.colormaps["tab10"]
+        colors = cmap(np.arange(num_labels))
 
     patch_longitudes = dataset.longitudes
     patch_latitudes = dataset.latitudes
@@ -125,9 +131,15 @@ def plot_classification_tsne(
 ) -> None:
     print("Plotting classification TSNE...")
 
-    cmap = mpl.colormaps["gist_rainbow"]
     unique_labels = np.unique(class_labels)
-    colors = cmap(np.linspace(0, 1, unique_labels.size))
+    num_labels = unique_labels.size
+
+    if num_labels > 10:
+        cmap = mpl.colormaps["gist_rainbow"]
+        colors = cmap(np.linspace(0, 1, num_labels))
+    else:
+        cmap = mpl.colormaps["tab10"]
+        colors = cmap(np.arange(num_labels))
 
     tsne = TSNE()
     tsne_map = tsne.fit_transform(encoded_dataset)

@@ -76,9 +76,14 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
     tsne_map = tsne.fit_transform(encoded_dataset)
 
     if dataset.has_labels:
-        cmap = mpl.colormaps["gist_rainbow"]
+        if dataset.num_labels > 10:
+            cmap = mpl.colormaps["gist_rainbow"]
+            colors = cmap(np.linspace(0, 1, dataset.num_labels))
+        else:
+            cmap = mpl.colormaps["tab10"]
+            colors = cmap(np.arange(dataset.num_labels))
+
         unique_labels = np.unique(dataset.labels)
-        colors = cmap(np.linspace(0, 1, unique_labels.size))
 
         fig, axes = plt.subplots(1, 2, figsize=(18, 9))
         ax1, ax2 = axes
