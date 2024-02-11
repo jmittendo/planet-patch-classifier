@@ -35,13 +35,11 @@ def configure_logging(log_file_name_base: str) -> None:
 
 
 @typing.overload
-def get_normalized_img(img: ndarray) -> ndarray:
-    ...
+def get_normalized_img(img: ndarray) -> ndarray: ...
 
 
 @typing.overload
-def get_normalized_img(img: Tensor) -> Tensor:
-    ...
+def get_normalized_img(img: Tensor) -> Tensor: ...
 
 
 def get_normalized_img(img: ndarray | Tensor) -> ndarray | Tensor:

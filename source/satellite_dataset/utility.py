@@ -11,15 +11,13 @@ from planetaryimage import PDS3Image
 
 
 @typing.overload
-def load_fits_data(file_path: Path, hdu_key_or_keys: int | str) -> ndarray:
-    ...
+def load_fits_data(file_path: Path, hdu_key_or_keys: int | str) -> ndarray: ...
 
 
 @typing.overload
 def load_fits_data(
     file_path: Path, hdu_key_or_keys: Sequence[int | str]
-) -> list[ndarray]:
-    ...
+) -> list[ndarray]: ...
 
 
 def load_fits_data(
@@ -60,13 +58,11 @@ def load_spice_kernels(kernels_dir_path: Path) -> None:
 
 
 @typing.overload
-def fix_360_longitude(longitude: float) -> float:
-    ...
+def fix_360_longitude(longitude: float) -> float: ...
 
 
 @typing.overload
-def fix_360_longitude(longitude: ndarray) -> ndarray:
-    ...
+def fix_360_longitude(longitude: ndarray) -> ndarray: ...
 
 
 def fix_360_longitude(longitude: float | ndarray) -> float | ndarray:
@@ -101,13 +97,11 @@ def get_zy_rotation_matrix(z_angle: float, y_angle: float) -> ndarray:
 
 
 @typing.overload
-def longitude_to_local_time(longitude: float, solar_longitude: float) -> float:
-    ...
+def longitude_to_local_time(longitude: float, solar_longitude: float) -> float: ...
 
 
 @typing.overload
-def longitude_to_local_time(longitude: ndarray, solar_longitude: float) -> ndarray:
-    ...
+def longitude_to_local_time(longitude: ndarray, solar_longitude: float) -> ndarray: ...
 
 
 def longitude_to_local_time(
