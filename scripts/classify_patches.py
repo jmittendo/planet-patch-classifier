@@ -4,13 +4,13 @@ from itertools import permutations
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.axes import Axes
 from numpy import ndarray
 from sklearn import metrics
 from sklearn.manifold import TSNE
 
 import source.config as config
 import source.patch_dataset.dataset as pd_dataset
+import source.plotting as plotting
 import user.config as user_config
 from source.patch_dataset.dataset import PatchDataset
 
@@ -54,6 +54,11 @@ def main() -> None:
         encoded_dataset,
         dataset,
         f"{dataset.name}_{dataset.version_name}_class-tsne.png",
+    )
+    plot_class_examples(
+        class_labels,
+        dataset,
+        f"{dataset.name}_{dataset.version_name}_class-examples.pdf",
     )
 
 
@@ -99,16 +104,31 @@ def plot_classification_scatter(
         return
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+    ax1, ax2 = axes
 
-    axes[0].scatter(patch_longitudes, patch_latitudes, c=colors[class_labels], s=18)
-    axes[0].set_xlim(-180, 180)
-    axes[0].set_xlabel("Longitude [deg]")
-    axes[0].set_xticks(np.arange(-180, 181, 30))
+    for label, color in zip(unique_labels, colors):
+        label_mask = class_labels == label
+        label_longitudes = patch_longitudes[label_mask]
+        label_latitudes = patch_latitudes[label_mask]
+        label_local_times = patch_local_times[label_mask]
 
-    axes[1].scatter(patch_local_times, patch_latitudes, c=colors[class_labels], s=18)
-    axes[1].set_xlim(24, 0)  # Might need parameter for planet rotation direction
-    axes[1].set_xlabel("Local time [h]")
-    axes[1].set_xticks(np.arange(0, 25, 2))
+        ax1.scatter(label_longitudes, label_latitudes, color=color, s=9)
+        ax2.scatter(
+            label_local_times,
+            label_latitudes,
+            color=color,
+            s=9,
+            label=f"Class {label}",
+        )
+
+    ax1.set_xlim(-180, 180)
+    ax1.set_xlabel("Longitude [deg]")
+    ax1.set_xticks(np.arange(-180, 181, 30))
+
+    ax2.legend(fancybox=False)
+    ax2.set_xlim(24, 0)  # Might need parameter for planet rotation direction
+    ax2.set_xlabel("Local time [h]")
+    ax2.set_xticks(np.arange(0, 25, 2))
 
     for ax in axes:
         ax.grid(linewidth=0.5, alpha=0.1)
@@ -176,35 +196,77 @@ def plot_classification_tsne(
             ncols=3,
             columnspacing=0.5,
         )
-
-        for ax in axes.flatten():
-            ax.set_xticks([])
-            ax.set_yticks([])
-
-        fig.subplots_adjust(wspace=0.05)
     else:
-        ax: Axes
-        fig, ax = plt.subplots(figsize=(9, 9))
+        fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+        ax1, ax2 = axes
+
+        ax1.set_title("Images")
+        plotting.imscatter(ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+
+        ax2.set_title("Class labels")
 
         for label, color in zip(unique_labels, colors):
             label_points = tsne_map[class_labels == label]
 
-            ax.scatter(
+            ax2.scatter(
                 label_points[:, 0],
                 label_points[:, 1],
                 color=color,
                 label=f"Class {label}",
+                s=18,
             )
 
-        ax.scatter(tsne_map[:, 0], tsne_map[:, 1], c=colors[class_labels], s=18)
-        ax.legend(fancybox=False, handletextpad=0)
+        ax2.legend(fancybox=False, handletextpad=0)
+
+    for ax in axes.flatten():
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    fig.subplots_adjust(wspace=0.05)
+
+    output_file_path = config.PLOTS_DIR_PATH / file_name
+    output_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    plt.close()
+
+
+def plot_class_examples(
+    class_labels: ndarray, dataset: PatchDataset, file_name: str, num_examples: int = 8
+) -> None:
+    print("Plotting class examples...")
+
+    unique_labels = np.unique(class_labels)
+    num_labels = unique_labels.size
+    fig_width = 9
+    fig_height = num_labels / num_examples * fig_width
+
+    fig, axes = plt.subplots(num_labels, num_examples, figsize=(fig_width, fig_height))
+
+    for row, label in enumerate(unique_labels):
+        axes[row, 0].set_ylabel(f"Class {label}")
+
+        label_img_indices = (class_labels == label).nonzero()[0]
+
+        if label_img_indices.size >= num_examples:
+            rand_img_indices = np.random.choice(
+                label_img_indices, size=num_examples, replace=False
+            )
+        else:
+            rand_img_indices = label_img_indices
+
+        for column, img_index in enumerate(rand_img_indices):
+            img_array = dataset[img_index].movedim(0, -1).numpy()
+            axes[row, column].imshow(img_array, cmap="gray")
+
+    for ax in axes.flatten():
         ax.set_xticks([])
         ax.set_yticks([])
 
     output_file_path = config.PLOTS_DIR_PATH / file_name
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(output_file_path, bbox_inches="tight")
     plt.close()
 
 
