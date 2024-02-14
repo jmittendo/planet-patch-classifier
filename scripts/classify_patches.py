@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from itertools import permutations
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -19,6 +20,9 @@ if user_config.ENABLE_TEX_PLOTS:
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.size"] = 16
     plt.rcParams["axes.titlepad"] = 8
+
+
+PLOTS_DIR_NAME = "classification"
 
 
 def main() -> None:
@@ -44,21 +48,26 @@ def main() -> None:
         print(f"Class accuracies:\n{class_accuracies}\n")
         print(f"Total accuracy: {total_accuracy}\n")
 
+    plots_dir_path = (
+        config.PLOTS_DIR_PATH / PLOTS_DIR_NAME / dataset.name / dataset.version_name
+    )
+    plots_dir_path.mkdir(parents=True, exist_ok=True)
+
     plot_classification_scatter(
         class_labels,
         dataset,
-        f"{dataset.name}_{dataset.version_name}_class-scatter.png",
+        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-scatter.png",
     )
     plot_classification_tsne(
         class_labels,
         encoded_dataset,
         dataset,
-        f"{dataset.name}_{dataset.version_name}_class-tsne.png",
+        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-tsne.png",
     )
     plot_class_examples(
         class_labels,
         dataset,
-        f"{dataset.name}_{dataset.version_name}_class-examples.pdf",
+        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-examples.pdf",
     )
 
 
@@ -82,7 +91,7 @@ def parse_input_args() -> Namespace:
 
 
 def plot_classification_scatter(
-    class_labels: ndarray, dataset: PatchDataset, file_name: str
+    class_labels: ndarray, dataset: PatchDataset, file_path: Path
 ) -> None:
     print("Plotting classification scatter...")
 
@@ -136,10 +145,7 @@ def plot_classification_scatter(
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    output_file_path = config.PLOTS_DIR_PATH / file_name
-    output_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(file_path, bbox_inches="tight", dpi=300)
     plt.close()
 
 
@@ -147,7 +153,7 @@ def plot_classification_tsne(
     class_labels: ndarray,
     encoded_dataset: ndarray,
     dataset: PatchDataset,
-    file_name: str,
+    file_path: Path,
 ) -> None:
     print("Plotting classification TSNE...")
 
@@ -223,16 +229,12 @@ def plot_classification_tsne(
         ax.set_yticks([])
 
     fig.subplots_adjust(wspace=0.05)
-
-    output_file_path = config.PLOTS_DIR_PATH / file_name
-    output_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(file_path, bbox_inches="tight", dpi=300)
     plt.close()
 
 
 def plot_class_examples(
-    class_labels: ndarray, dataset: PatchDataset, file_name: str, num_examples: int = 8
+    class_labels: ndarray, dataset: PatchDataset, file_path: Path, num_examples: int = 8
 ) -> None:
     print("Plotting class examples...")
 
@@ -263,10 +265,7 @@ def plot_class_examples(
         ax.set_xticks([])
         ax.set_yticks([])
 
-    output_file_path = config.PLOTS_DIR_PATH / file_name
-    output_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.savefig(output_file_path, bbox_inches="tight")
+    fig.savefig(file_path, bbox_inches="tight")
     plt.close()
 
 

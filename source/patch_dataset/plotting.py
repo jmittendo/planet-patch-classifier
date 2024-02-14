@@ -63,7 +63,12 @@ def plot_dataset_geometry_scatter(
         ax.tick_params(direction="in", top=True, right=True)
 
     output_file_name = f"{dataset.name}_{dataset.version_name}_geometry-scatter.png"
-    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
+    output_file_path = (
+        pd_config.DATASET_PLOTS_DIR_PATH
+        / dataset.name
+        / dataset.version_name
+        / output_file_name
+    )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
@@ -116,7 +121,12 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
         ax.set_yticks([])
 
     output_file_name = f"{dataset.name}_{dataset.version_name}_encoded-tsne-scatter.png"
-    output_file_path = pd_config.DATASET_PLOTS_DIR_PATH / output_file_name
+    output_file_path = (
+        pd_config.DATASET_PLOTS_DIR_PATH
+        / dataset.name
+        / dataset.version_name
+        / output_file_name
+    )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
