@@ -71,7 +71,7 @@ def plot_dataset_geometry_scatter(
     )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
 
 
 def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
@@ -129,4 +129,4 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
     )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)

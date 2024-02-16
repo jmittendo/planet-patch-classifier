@@ -145,7 +145,7 @@ def plot_classification_scatter(
         ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
-    fig.savefig(file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
     plt.close()
 
 
@@ -229,7 +229,7 @@ def plot_classification_tsne(
         ax.set_yticks([])
 
     fig.subplots_adjust(wspace=0.05)
-    fig.savefig(file_path, bbox_inches="tight", dpi=300)
+    fig.savefig(file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
     plt.close()
 
 
