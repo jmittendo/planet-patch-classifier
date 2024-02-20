@@ -112,7 +112,7 @@ def plot_classification_scatter(
     if np.isnan(patch_longitudes).any():
         return
 
-    fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     ax1, ax2 = axes
 
     for label, color in zip(unique_labels, colors):
@@ -121,30 +121,24 @@ def plot_classification_scatter(
         label_latitudes = patch_latitudes[label_mask]
         label_local_times = patch_local_times[label_mask]
 
-        ax1.scatter(label_longitudes, label_latitudes, color=color, s=9)
-        ax2.scatter(
-            label_local_times,
-            label_latitudes,
-            color=color,
-            s=9,
-            label=f"Class {label}",
+        ax1.scatter(
+            label_longitudes, label_latitudes, color=color, s=9, label=f"Class {label}"
         )
+        ax2.scatter(label_local_times, label_latitudes, color=color, s=9)
 
-    ax1.set_xlim(-180, 180)
     ax1.set_xlabel("Longitude [deg]")
-    ax1.set_xticks(np.arange(-180, 181, 30))
+    ax1.set_ylabel("Latitude [deg]")
+    ax1.legend(fancybox=False)
 
-    ax2.legend(fancybox=False)
-    ax2.set_xlim(24, 0)  # Might need parameter for planet rotation direction
+    ax2.invert_xaxis()  # Might need parameter for planet rotation direction
     ax2.set_xlabel("Local time [h]")
-    ax2.set_xticks(np.arange(0, 25, 2))
+    ax2.set_yticklabels([])
 
     for ax in axes:
         ax.grid(linewidth=0.5, alpha=0.1)
-        ax.set_ylim(-90, 90)
-        ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
+    fig.subplots_adjust(wspace=0.05)
     fig.savefig(file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
     plt.close()
 

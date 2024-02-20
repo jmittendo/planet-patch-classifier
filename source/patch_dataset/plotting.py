@@ -39,27 +39,24 @@ def plot_dataset_geometry_scatter(
     patch_latitudes = dataset.latitudes[rand_indices]
     patch_local_times = dataset.local_times[rand_indices]
 
-    fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     ax1, ax2 = axes
 
     plotting.imscatter(
         ax1, patch_images, patch_longitudes, patch_latitudes, cmap="gray"
     )
-    ax1.set_xlim(-180, 180)
     ax1.set_xlabel("Longitude [deg]")
-    ax1.set_xticks(np.arange(-180, 181, 30))
+    ax1.set_ylabel("Latitude [deg]")
 
     plotting.imscatter(
         ax2, patch_images, patch_local_times, patch_latitudes, cmap="gray"
     )
-    ax2.set_xlim(24, 0)  # Might need parameter for planet rotation direction
+    ax2.invert_xaxis()  # Might need parameter for planet rotation direction
     ax2.set_xlabel("Local time [h]")
-    ax2.set_xticks(np.arange(0, 25, 2))
+    ax2.set_yticklabels([])
 
     for ax in axes:
         ax.grid(linewidth=0.5, alpha=0.1)
-        ax.set_ylim(-90, 90)
-        ax.set_ylabel("Latitude [deg]")
         ax.tick_params(direction="in", top=True, right=True)
 
     output_file_name = f"{dataset.name}_{dataset.version_name}_geometry-scatter.png"
@@ -71,6 +68,7 @@ def plot_dataset_geometry_scatter(
     )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
+    fig.subplots_adjust(wspace=0.05)
     fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
 
 
