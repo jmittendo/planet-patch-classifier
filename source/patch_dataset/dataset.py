@@ -16,6 +16,7 @@ import source.patch_dataset.config as pd_config
 import source.patch_dataset.encoding as pd_encoding
 import source.patch_dataset.plotting as pd_plotting
 import source.utility as util
+from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 
 
 class _PatchDatasetInfoDict(TypedDict):
@@ -174,8 +175,22 @@ class PatchDataset(Dataset):
     def encode(self) -> ndarray:
         return pd_encoding.encode_dataset(self)
 
-    def classify(self, num_classes: int | None = None) -> tuple[ndarray, ndarray]:
-        return pd_classification.classify_dataset(self, num_classes=num_classes)
+    def classify(
+        self,
+        reduction_method: ReductionMethod,
+        clustering_method: ClusteringMethod,
+        num_classes: int | None,
+        pca_dims: int | None = None,
+        hdbscan_min_cluster_size: int = 5,
+    ) -> tuple[ndarray, ndarray]:
+        return pd_classification.classify_dataset(
+            self,
+            reduction_method,
+            clustering_method,
+            num_classes,
+            pca_dims=pca_dims,
+            hdbscan_min_cluster_size=hdbscan_min_cluster_size,
+        )
 
     def _get_table_column(self, column_name: str) -> ndarray:
         if column_name in self._table:

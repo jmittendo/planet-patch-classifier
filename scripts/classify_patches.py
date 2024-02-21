@@ -29,11 +29,43 @@ def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
     version_name: str | None = input_args.version
-    num_classes: int | None = input_args.num_classes
+    reduction_method: str | None = input_args.reduction_method
+    clustering_method: str | None = input_args.clustering_method
+    num_classes: int | None = input_args.classes
+    pca_dims: int | None = input_args.pca_dims
+    hdbscan_min_cluster_size: int | None = input_args.hdbscan_min_cluster_size
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
     num_classes = len(dataset.label_names) if dataset.has_labels else num_classes
-    class_labels, encoded_dataset = dataset.classify(num_classes=num_classes)
+
+    if reduction_method is None:
+        reduction_method = input("Enter reduction method ('tsne', 'pca', 'none'): ")
+
+    reduction_method = None if reduction_method == "none" else reduction_method
+
+    if clustering_method is None:
+        clustering_method = input("Enter clustering method ('kmeans', 'hdbscan'): ")
+
+    if clustering_method != "hdbscan" and num_classes is None:
+        num_classes = int(input("Enter number of classes: "))
+
+    if reduction_method == "pca" and pca_dims is None:
+        pca_dims = int(input("Enter PCA dimensions: "))
+
+    if clustering_method == "hdbscan" and hdbscan_min_cluster_size is None:
+        hdbscan_min_cluster_size = int(input("Enter HDBSCAN min cluster size: "))
+
+    hdbscan_min_cluster_size = (
+        5 if hdbscan_min_cluster_size is None else hdbscan_min_cluster_size
+    )
+
+    class_labels, encoded_dataset = dataset.classify(
+        reduction_method,  # type: ignore
+        clustering_method,  # type: ignore
+        num_classes,
+        pca_dims=pca_dims,
+        hdbscan_min_cluster_size=hdbscan_min_cluster_size,
+    )
 
     if dataset.has_labels:
         class_labels = get_matched_labels(class_labels, dataset.labels)
@@ -53,21 +85,30 @@ def main() -> None:
     )
     plots_dir_path.mkdir(parents=True, exist_ok=True)
 
+    file_name_base = get_file_name_base(
+        dataset,
+        reduction_method,
+        clustering_method,
+        num_classes,
+        pca_dims,
+        hdbscan_min_cluster_size,
+    )
+
     plot_classification_scatter(
         class_labels,
         dataset,
-        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-scatter.png",
+        plots_dir_path / f"{file_name_base}_class-scatter.png",
     )
     plot_classification_tsne(
         class_labels,
         encoded_dataset,
         dataset,
-        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-tsne.png",
+        plots_dir_path / f"{file_name_base}_class-tsne.png",
     )
     plot_class_examples(
         class_labels,
         dataset,
-        plots_dir_path / f"{dataset.name}_{dataset.version_name}_class-examples.pdf",
+        plots_dir_path / f"{file_name_base}_class-examples.pdf",
     )
 
 
@@ -81,13 +122,57 @@ def parse_input_args() -> Namespace:
         "version", nargs="?", help="version of the dataset to classify"
     )
     arg_parser.add_argument(
-        "-n",
-        "--num_classes",
+        "reduction_method", nargs="?", help="method to use for dimensionality reduction"
+    )
+    arg_parser.add_argument(
+        "clustering_method", nargs="?", help="method to use for clustering"
+    )
+    arg_parser.add_argument(
+        "-c",
+        "--classes",
         type=int,
         help="optional number of classes (ignored if dataset has labels)",
     )
+    arg_parser.add_argument(
+        "-p",
+        "--pca_dims",
+        type=int,
+        help=(
+            "number of dimensions for dimensionality reduction with PCA "
+            "(ignored otherwise)"
+        ),
+    )
+    arg_parser.add_argument(
+        "-m",
+        "--hdbscan_min_cluster_size",
+        type=int,
+        help=("min cluster size for clustering with HDBSCAN (ignored otherwise)"),
+    )
 
     return arg_parser.parse_args()
+
+
+def get_file_name_base(
+    dataset: PatchDataset,
+    reduction_method: str | None,
+    clustering_method: str,
+    num_classes: int | None,
+    pca_dims: int | None,
+    hdbscan_min_cluster_size: int,
+) -> str:
+    file_name_base = f"{dataset.name}_{dataset.version_name}_r-{reduction_method}"
+
+    if reduction_method == "pca":
+        file_name_base += f"-{pca_dims}"
+
+    file_name_base += f"_c-{clustering_method}"
+
+    if clustering_method == "hdbscan":
+        file_name_base += f"-{hdbscan_min_cluster_size}"
+    else:
+        file_name_base += f"-{num_classes}"
+
+    return file_name_base
 
 
 def plot_classification_scatter(
