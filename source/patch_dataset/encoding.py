@@ -1,16 +1,12 @@
 import typing
 
-import torch
 from numpy import ndarray
-from torch import Tensor, no_grad
-from torch.nn import Identity, Module
-from torch.utils.data import DataLoader
-from torchvision import models
-from torchvision.models import ResNet18_Weights
-from torchvision.transforms import Compose, Normalize, Resize
-from tqdm import tqdm
+from torch import no_grad
+from torch.nn import Module
+from torchvision.transforms import Normalize, Resize
 
 import source.patch_dataset.config as pd_config
+from source.neural_network.models import SimpleEncoderModel
 from source.neural_network.transforms import GrayscaleToRGB
 
 if typing.TYPE_CHECKING:
@@ -20,10 +16,6 @@ if typing.TYPE_CHECKING:
 @no_grad()
 def encode_dataset(dataset: "PatchDataset") -> ndarray:
     print("\nEncoding dataset...")
-
-    model = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    model.fc = Identity()  # type: ignore
-    model.eval()
 
     transforms_list: list[Module] = [Resize(224, antialias=True)]  # type: ignore
 
@@ -35,13 +27,9 @@ def encode_dataset(dataset: "PatchDataset") -> ndarray:
 
     transforms_list.insert(0, normalize)
 
-    transforms = Compose(transforms_list)
-    data_loader = DataLoader(dataset, batch_size=pd_config.ENCODING_BATCH_SIZE)
+    encoder = SimpleEncoderModel(transforms=transforms_list)
+    encoded_dataset = encoder.encode_dataset(
+        dataset, batch_size=pd_config.ENCODING_BATCH_SIZE
+    )
 
-    encoded_tensors: list[Tensor] = []
-
-    for batch_tensor in tqdm(data_loader, desc="Progress"):
-        encoded_tensor = model(transforms(batch_tensor))
-        encoded_tensors.append(encoded_tensor)
-
-    return torch.cat(encoded_tensors).numpy()
+    return encoded_dataset.numpy()

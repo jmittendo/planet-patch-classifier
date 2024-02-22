@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import TypeAlias, TypedDict
 
 import torch
-from torch import Module, Tensor, no_grad
-from torch.nn import Identity, MSELoss
+from torch import Tensor, no_grad
+from torch.nn import Identity, Module, MSELoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import (
@@ -16,8 +16,14 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     RandomResizedCrop,
 )
+from tqdm import tqdm
 
-from source.neural_network.encoders import Autoencoder, Encoder, SimCLREncoder
+from source.neural_network.encoders import (
+    Autoencoder,
+    Encoder,
+    SimCLREncoder,
+    SimpleEncoder,
+)
 from source.neural_network.losses import NTXentLoss
 from source.neural_network.optimizers import LARS
 from source.neural_network.transforms import RandomCroppedRotation
@@ -83,7 +89,12 @@ class EncoderModel:
         self._encoder.eval()
 
         data_loader = DataLoader(dataset, batch_size=batch_size)
-        encoded_tensors = [self.encode(batch_tensor) for batch_tensor in data_loader]
+
+        encoded_tensors: list[Tensor] = []
+
+        for batch_tensor in tqdm(data_loader, desc="Encoding progress"):
+            encoded_tensor = self.encode(batch_tensor)
+            encoded_tensors.append(encoded_tensor)
 
         return torch.cat(encoded_tensors)
 
@@ -382,3 +393,14 @@ class AutoencoderModel(EncoderModel):
         mean_loss = total_loss / len(test_data_loader)
 
         return mean_loss
+
+
+class SimpleEncoderModel(EncoderModel):
+    def __init__(
+        self,
+        transforms: list[Module] | None = None,
+        checkpoint_path: Path | None = None,
+    ):
+        encoder = SimpleEncoder()
+
+        super().__init__(encoder, transforms, checkpoint_path)
