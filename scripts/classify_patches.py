@@ -1,3 +1,4 @@
+import warnings
 from argparse import ArgumentParser, Namespace
 from itertools import permutations
 from pathlib import Path
@@ -349,7 +350,17 @@ def plot_class_examples(
 
 
 def get_matched_labels(class_labels: ndarray, true_labels: ndarray) -> ndarray:
-    class_to_true_maps = np.asarray(list(permutations(np.unique(true_labels))))
+    unique_class_labels = np.unique(class_labels)
+    unique_true_labels = np.unique(true_labels)
+
+    if unique_class_labels.size != unique_true_labels.size:
+        warnings.warn(
+            "Number of class labels not equal to number of true labels, "
+            "labels will not be matched"
+        )
+        return class_labels
+
+    class_to_true_maps = np.asarray(list(permutations(unique_true_labels)))
 
     best_accuracy = 0
     best_map: ndarray | None = None

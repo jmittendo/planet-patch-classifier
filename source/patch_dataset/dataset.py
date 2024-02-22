@@ -15,7 +15,6 @@ import source.patch_dataset.classification as pd_classification
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.encoding as pd_encoding
 import source.patch_dataset.plotting as pd_plotting
-import source.utility as util
 from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 
 
@@ -147,13 +146,12 @@ class PatchDataset(Dataset):
 
     def set_version(self, version_name: str | None = None) -> None:
         if version_name is None:
-            if util.user_confirm("Display available versions?"):
-                print("\nAvailable versions:\n-------------------")
+            print("\nAvailable versions:\n-------------------")
 
-                for version in self._version_dir_paths_dict:
-                    print(version)
+            for version in self._version_dir_paths_dict:
+                print(version)
 
-                print()
+            print()
 
             version_name = input("Enter version name: ")
 
@@ -224,13 +222,12 @@ _dataset_registry = _build_dataset_registry()
 
 def get(name: str | None = None, version_name: str | None = None) -> PatchDataset:
     if name is None:
-        if util.user_confirm("Display available datasets?"):
-            print("\nAvailable datasets:\n-------------------")
+        print("\nAvailable datasets:\n-------------------")
 
-            for dataset_name in _dataset_registry:
-                print(dataset_name)
+        for dataset_name in _dataset_registry:
+            print(dataset_name)
 
-            print()
+        print()
 
         name = input("Enter dataset name: ")
 
