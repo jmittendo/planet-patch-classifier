@@ -7,6 +7,7 @@ from sklearn.cluster._hdbscan.hdbscan import HDBSCAN
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
+from source.neural_network.typing import DeviceLike
 from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 
 if typing.TYPE_CHECKING:
@@ -20,8 +21,9 @@ def classify_dataset(
     num_classes: int | None,
     pca_dims: int | None = None,
     hdbscan_min_cluster_size: int = 5,
+    device: DeviceLike | None = None,
 ) -> tuple[ndarray, ndarray]:
-    encoded_dataset = dataset.encode()
+    encoded_dataset = dataset.encode(device=device)
 
     print("Classifying dataset...")
 

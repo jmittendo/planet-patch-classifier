@@ -18,6 +18,7 @@ def main() -> None:
     model_type: str | None = input_args.model
     dataset_name: str | None = input_args.dataset
     version_name: str | None = input_args.version
+    device: str | None = input_args.device
 
     if model_type is None:
         model_type = input("\nEnter model type ('autoencoder', 'simclr'): ")
@@ -47,8 +48,10 @@ def main() -> None:
         case _:
             raise ValueError(f"'{model_type}' is not a valid model type")
 
-    print()
+    if device is not None:
+        model.move_to_device(device)
 
+    print()
     model.train(train_dataset, test_dataset, train_params)  # type: ignore
 
     checkpoint_path = (
@@ -69,6 +72,7 @@ def parse_input_args() -> Namespace:
     arg_parser.add_argument("model", nargs="?", help="type of model")
     arg_parser.add_argument("dataset", nargs="?", help="name of the dataset")
     arg_parser.add_argument("version", nargs="?", help="version of the dataset to use")
+    arg_parser.add_argument("-d", "--device", help="device to train the model on")
 
     return arg_parser.parse_args()
 

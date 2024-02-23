@@ -1,4 +1,6 @@
-from typing import TypedDict
+from typing import TypeAlias, TypedDict
+
+import torch
 
 
 class SimCLREncoderTrainParams(TypedDict):
@@ -14,3 +16,6 @@ class AutoencoderTrainParams(TypedDict):
     learning_rate: float
     epochs: int
     output_interval: int
+
+
+DeviceLike: TypeAlias = str | torch.device

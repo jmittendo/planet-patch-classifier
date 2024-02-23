@@ -35,6 +35,7 @@ def main() -> None:
     num_classes: int | None = input_args.classes
     pca_dims: int | None = input_args.pca_dims
     hdbscan_min_cluster_size: int | None = input_args.hdbscan_min_cluster_size
+    device: str | None = input_args.device
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
     num_classes = len(dataset.label_names) if dataset.has_labels else num_classes
@@ -66,6 +67,7 @@ def main() -> None:
         num_classes,
         pca_dims=pca_dims,
         hdbscan_min_cluster_size=hdbscan_min_cluster_size,
+        device=device,
     )
 
     if dataset.has_labels:
@@ -149,6 +151,7 @@ def parse_input_args() -> Namespace:
         type=int,
         help=("min cluster size for clustering with HDBSCAN (ignored otherwise)"),
     )
+    arg_parser.add_argument("-d", "--device", help="device to use for encoder model")
 
     return arg_parser.parse_args()
 

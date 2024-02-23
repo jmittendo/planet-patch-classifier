@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import TypeAlias
 
 import torch
 from torch import Tensor, no_grad
@@ -28,10 +27,9 @@ from source.neural_network.optimizers import LARS
 from source.neural_network.transforms import RandomCroppedRotation
 from source.neural_network.typing import (
     AutoencoderTrainParams,
+    DeviceLike,
     SimCLREncoderTrainParams,
 )
-
-DeviceLike: TypeAlias = str | torch.device
 
 
 class EncoderModel:
@@ -170,7 +168,7 @@ class SimCLREncoderModel(EncoderModel):
         total_loss = 0
 
         for batch_index, batch_images in enumerate(train_data_loader):
-            transformed_images = self._transforms(batch_images)
+            transformed_images = self._transforms(batch_images.to(self.current_device))
             augmented_images = self._augment_batch_images(transformed_images)
 
             loss = loss_function(augmented_images)
@@ -203,7 +201,7 @@ class SimCLREncoderModel(EncoderModel):
         total_loss = 0
 
         for batch_images in test_data_loader:
-            transformed_images = self._transforms(batch_images)
+            transformed_images = self._transforms(batch_images.to(self.current_device))
             augmented_images = self._augment_batch_images(transformed_images)
 
             loss = loss_function(augmented_images)
@@ -343,7 +341,7 @@ class AutoencoderModel(EncoderModel):
         total_loss = 0
 
         for batch_index, batch_images in enumerate(train_data_loader):
-            transformed_images = self._transforms(batch_images)
+            transformed_images = self._transforms(batch_images.to(self.current_device))
             augmented_images = self._augment_transforms(transformed_images)
             reconstructed_images = self._encoder(augmented_images)
 
@@ -377,7 +375,7 @@ class AutoencoderModel(EncoderModel):
         total_loss = 0
 
         for batch_images in test_data_loader:
-            transformed_images = self._transforms(batch_images)
+            transformed_images = self._transforms(batch_images.to(self.current_device))
             reconstructed_images = self._encoder(transformed_images)
             loss = loss_function(reconstructed_images, transformed_images)
             total_loss += loss.item()
