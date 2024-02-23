@@ -5,7 +5,6 @@ import pandas as pd
 from pandas import DataFrame, Series
 
 import source.satellite_dataset.archive as sd_archive
-import source.utility as util
 from source.satellite_dataset.archive import Archive
 
 
@@ -70,13 +69,12 @@ _dataset_registry = _build_dataset_registry()
 
 def get(name: str | None = None) -> SatelliteDataset:
     if name is None:
-        if util.user_confirm("Display available datasets?"):
-            print("\nAvailable datasets:\n-------------------")
+        print("\nAvailable datasets:\n-------------------")
 
-            for dataset_name in _dataset_registry:
-                print(dataset_name)
+        for dataset_name in _dataset_registry:
+            print(dataset_name)
 
-            print()
+        print()
 
         name = input("Enter dataset name: ")
 

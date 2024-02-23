@@ -1,19 +1,14 @@
-import json
 import typing
 from pathlib import Path
 
 import numpy as np
 from numpy import ndarray
 from numpy.ma import MaskedArray
-from pandas import DataFrame
 from PIL import Image
 from scipy import interpolate, ndimage, stats
-from tqdm import tqdm
 
-import source.patch_dataset.config as pd_config
 import source.satellite_dataset.utility as sd_util
 import source.utility as util
-import user.config as user_config
 from source.satellite_dataset.typing import (
     ImgGeoDataArrays,
     ImgGeoPatchInterpolation,
@@ -23,8 +18,7 @@ from source.satellite_dataset.typing import (
 )
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.archive import Archive, ImgGeoArchive
-    from source.satellite_dataset.dataset import SatelliteDataset
+    from source.satellite_dataset.archive import Archive
 
 
 class ImgGeoPatchGenerator:
@@ -428,153 +422,7 @@ class ImgGeoPatchGenerator:
         return img_file_names
 
 
-def generate_img_geo_patches(
-    archive: "ImgGeoArchive",
-    dataset: "SatelliteDataset",
-    patch_scale_km: float,
-    patch_resolution: int,
-    global_normalization: bool = False,
-) -> None:
-    output_dir_name = f"{dataset.name}_s{patch_scale_km:g}-r{patch_resolution}"
-    output_dir_path = pd_config.DATASETS_DIR_PATH / dataset.name / output_dir_name
-    output_dir_path.mkdir(parents=True, exist_ok=True)
-
-    # Spatial resolution of a patch in m/px (ignoring projection effects / distortions)
-    patch_resolution_mpx = patch_scale_km * 1000 / patch_resolution
-
-    patch_file_names: list[str] = []
-    patch_longitudes: list[float] = []
-    patch_latitudes: list[float] = []
-    patch_local_times: list[float] = []
-
-    for data in tqdm(dataset, desc="Generating patches"):
-        img_max_resolution_mpx: float = data["max_resolution_mpx"]
-
-        if not _passes_resolution_threshold(
-            img_max_resolution_mpx, patch_resolution_mpx
-        ):
-            continue
-
-        img_file_path = Path(data["img_file_path"])
-        geo_file_path = Path(data["geo_file_path"])
-
-        data_arrays = archive.load_data_arrays(img_file_path, geo_file_path)
-
-        _apply_img_geo_invalid_mask(archive, data_arrays)
-        _apply_img_geo_angle_mask(data_arrays, user_config.PATCH_ANGLE_THRESHOLD)
-        _normalize_img_geo_intensity(data_arrays)
-        _apply_img_geo_outlier_mask(data_arrays, user_config.PATCH_OUTLIER_SIGMA)
-
-        img_values = data_arrays["image"].compressed()
-        lon_values = data_arrays["longitude"].compressed()
-        lat_values = data_arrays["latitude"].compressed()
-
-        if img_values.size == 0:
-            continue
-
-        solar_longitude = data["solar_longitude_deg"]
-
-        spherical_data = _get_img_geo_spherical_data(
-            img_values,
-            lon_values,
-            lat_values,
-            archive.planet.radius_km,
-            solar_longitude,
-        )
-
-        patch_generator = ImgGeoPatchGenerator(
-            patch_scale_km,
-            patch_resolution,
-            user_config.MIN_PATCH_DENSITY,
-            user_config.NUM_PATCH_DENSITY_BINS,
-            user_config.MIN_PATCH_BIN_DENSITY,
-            user_config.PATCH_INTERPOLATION_METHOD,
-        )
-        img_file_names, patch_coordinates = patch_generator.generate(
-            spherical_data,
-            output_dir_path,
-            data["file_name_base"],
-            global_normalization=global_normalization,
-        )
-
-        patch_file_names += img_file_names
-
-        for patch_coordinate in patch_coordinates:
-            patch_longitudes.append(patch_coordinate["longitude"])
-            patch_latitudes.append(patch_coordinate["latitude"])
-            patch_local_times.append(patch_coordinate["local_time"])
-
-    patch_info_table_dict = {
-        "file_name": patch_file_names,
-        "longitude": patch_longitudes,
-        "latitude": patch_latitudes,
-        "local_time": patch_local_times,
-    }
-
-    patch_info_table = DataFrame(data=patch_info_table_dict)
-    patch_info_table.to_pickle(output_dir_path / "table.pkl")
-
-    patch_dataset_info_dict = {
-        "scale_km": patch_scale_km,
-        "resolution": patch_resolution,
-        "labels": [],
-    }
-    patch_dataset_info_json_path = output_dir_path / "info.json"
-
-    with open(patch_dataset_info_json_path, "w") as patch_dataset_info_json:
-        json.dump(
-            patch_dataset_info_dict,
-            patch_dataset_info_json,
-            indent=user_config.JSON_INDENT,
-        )
-
-
-def load_vex_vmc_data_arrays(
-    img_file_path: Path, geo_file_path: Path
-) -> ImgGeoDataArrays:
-    img_array = sd_util.load_pds3_data(img_file_path)[0]
-    (
-        ina_array,  # Incidence angle data
-        ema_array,  # Emission angle data
-        pha_array,  # Phase angle data (not needed)
-        lat_array,  # Latitude data
-        lon_array,  # Longitude data
-    ) = sd_util.load_pds3_data(geo_file_path)
-
-    data_arrays: ImgGeoDataArrays = {
-        "image": MaskedArray(data=img_array.astype(float)),
-        "incidence_angle": MaskedArray(data=ina_array.astype(float)),
-        "emission_angle": MaskedArray(data=ema_array.astype(float)),
-        "latitude": MaskedArray(data=lat_array.astype(float)),
-        "longitude": MaskedArray(data=lon_array.astype(float)),
-    }
-
-    return data_arrays
-
-
-def load_vco_data_arrays(img_file_path: Path, geo_file_path: Path) -> ImgGeoDataArrays:
-    img_array = sd_util.load_fits_data(img_file_path, 1)
-    ina_array, ema_array, lat_array, lon_array = sd_util.load_fits_data(
-        geo_file_path,
-        ["Incidence angle", "Emission angle", "Latitude", "Longitude"],
-    )
-
-    lon_array = sd_util.fix_360_longitude(lon_array)
-
-    data_arrays: ImgGeoDataArrays = {
-        "image": MaskedArray(data=img_array.astype(float)),
-        "incidence_angle": MaskedArray(data=ina_array.astype(float)),
-        "emission_angle": MaskedArray(data=ema_array.astype(float)),
-        "latitude": MaskedArray(data=lat_array.astype(float)),
-        "longitude": MaskedArray(data=lon_array.astype(float)),
-    }
-
-    return data_arrays
-
-
-def _apply_img_geo_invalid_mask(
-    archive: "Archive", data_arrays: ImgGeoDataArrays
-) -> None:
+def apply_invalid_mask(archive: "Archive", data_arrays: ImgGeoDataArrays) -> None:
     match archive.name:
         case "vex-vmc":
             # The invalidity comparison values could be done more "exact" but this
@@ -603,38 +451,28 @@ def _apply_img_geo_invalid_mask(
                 f"No invalid-mask code implemented for archive '{archive.name}'"
             )
 
-    _apply_img_geo_arrays_mask(data_arrays, invalid_mask)
+    _apply_arrays_mask(data_arrays, invalid_mask)
 
 
-def _apply_img_geo_angle_mask(
-    data_arrays: ImgGeoDataArrays, threshold_angle_deg: float
-) -> None:
+def apply_angle_mask(data_arrays: ImgGeoDataArrays, threshold_angle_deg: float) -> None:
     unilluminated_mask = data_arrays["incidence_angle"] > threshold_angle_deg
     observation_mask = data_arrays["emission_angle"] > threshold_angle_deg
     angle_mask = unilluminated_mask | observation_mask
 
-    _apply_img_geo_arrays_mask(data_arrays, angle_mask)
+    _apply_arrays_mask(data_arrays, angle_mask)
 
 
-def _apply_img_geo_outlier_mask(
-    data_arrays: ImgGeoDataArrays, sigma_threshold: float
-) -> None:
+def apply_outlier_mask(data_arrays: ImgGeoDataArrays, sigma_threshold: float) -> None:
     img_array = data_arrays["image"]
 
     filtered_img_array = ndimage.median_filter(img_array, size=3)
     diff_array = filtered_img_array - img_array
     outlier_mask = np.abs(diff_array) > sigma_threshold * diff_array.std()
 
-    _apply_img_geo_arrays_mask(data_arrays, outlier_mask)
+    _apply_arrays_mask(data_arrays, outlier_mask)
 
 
-def _apply_img_geo_arrays_mask(data_arrays: ImgGeoDataArrays, mask: ndarray) -> None:
-    array: MaskedArray
-    for array in data_arrays.values():  # type: ignore
-        array.mask |= mask
-
-
-def _normalize_img_geo_intensity(data_arrays: ImgGeoDataArrays) -> None:
+def normalize_intensity(data_arrays: ImgGeoDataArrays) -> None:
     # Normalization using Minnaert's law
 
     img_array = data_arrays["image"]
@@ -676,7 +514,7 @@ def _normalize_img_geo_intensity(data_arrays: ImgGeoDataArrays) -> None:
     img_array[...] = img_array / (cos_ema_array ** (slope - 1) * cos_ina_array**slope)
 
 
-def _get_img_geo_spherical_data(
+def get_spherical_data(
     img_values: ndarray,
     longitude_values: ndarray,
     latitude_values: ndarray,
@@ -707,9 +545,7 @@ def _get_img_geo_spherical_data(
     return spherical_data_values
 
 
-def _passes_resolution_threshold(
-    img_max_resolution: float, patch_resolution: float
-) -> bool:
-    return (
-        img_max_resolution / patch_resolution < user_config.PATCH_RESOLUTION_TOLERANCE
-    )
+def _apply_arrays_mask(data_arrays: ImgGeoDataArrays, mask: ndarray) -> None:
+    array: MaskedArray
+    for array in data_arrays.values():  # type: ignore
+        array.mask |= mask

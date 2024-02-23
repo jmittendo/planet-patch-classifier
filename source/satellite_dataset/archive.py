@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pandas import DataFrame
 
-import source.satellite_dataset.patches as sd_patches
+import source.satellite_dataset.patches.patches as sd_patches
 import source.satellite_dataset.planet as sd_planet
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.validation as sd_validation
@@ -132,7 +132,7 @@ class VcoArchive(ImgGeoArchive, name="vco"):
         return sd_patches.load_vco_data_arrays(img_file_path, geo_file_path)
 
 
-class JunoJncArchive(ImgSpiceArchive, name="juno-jnc"):
+class JnoJncArchive(ImgSpiceArchive, name="jno-jnc"):
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         warnings.warn(
             "'validate_dataset' method not yet implemented for 'ImgSpiceArchive'"
