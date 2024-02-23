@@ -1,6 +1,5 @@
-import logging
 from pathlib import Path
-from typing import TypeAlias, TypedDict
+from typing import TypeAlias
 
 import torch
 from torch import Tensor, no_grad
@@ -27,23 +26,12 @@ from source.neural_network.encoders import (
 from source.neural_network.losses import NTXentLoss
 from source.neural_network.optimizers import LARS
 from source.neural_network.transforms import RandomCroppedRotation
+from source.neural_network.typing import (
+    AutoencoderTrainParams,
+    SimCLREncoderTrainParams,
+)
 
 DeviceLike: TypeAlias = str | torch.device
-
-
-class SimCLREncoderTrainParams(TypedDict):
-    batch_size: int
-    loss_temperature: float
-    base_learning_rate: float
-    epochs: int
-    output_interval: int
-
-
-class AutoencoderTrainParams(TypedDict):
-    batch_size: int
-    learning_rate: float
-    epochs: int
-    output_interval: int
 
 
 class EncoderModel:
@@ -61,7 +49,7 @@ class EncoderModel:
             self.load_checkpoint(checkpoint_path)
 
     def __call__(self, input_tensor: Tensor) -> Tensor:
-        return self.encode(input_tensor)
+        return self._encoder(self._transforms(input_tensor))
 
     def encode(self, input_tensor: Tensor) -> Tensor:
         return self._encoder.encode(self._transforms(input_tensor))
@@ -139,8 +127,8 @@ class SimCLREncoderModel(EncoderModel):
         best_model_state_dict = None
 
         for epoch in range(train_params["epochs"]):
-            logging.info(f"Epoch {epoch + 1} / {train_params['epochs']}")
-            logging.info("------------------------------------------------------------")
+            print(f"Epoch {epoch + 1} / {train_params['epochs']}")
+            print("------------------------------------------------------------")
 
             train_loss = self._train_epoch(
                 loss_function,
@@ -149,23 +137,23 @@ class SimCLREncoderModel(EncoderModel):
                 train_params["output_interval"],
             )
 
-            logging.info(f"\nMean train loss: {train_loss:.3e}\n")
+            print(f"\nMean train loss: {train_loss:.3e}\n")
 
             test_loss = self._test(test_data_loader, loss_function)
 
-            logging.info(f"Mean test loss: {test_loss:.3e}\n")
+            print(f"Mean test loss: {test_loss:.3e}\n")
 
             if test_loss < best_test_loss:
-                logging.info("New best model found. Saving state dict...\n")
+                print("New best model found. Saving state dict...\n")
 
                 best_test_loss = test_loss
                 best_epoch = epoch + 1
                 best_model_state_dict = self._encoder.state_dict()
 
-        logging.info("Training finished.")
+        print("Training finished.")
 
         if best_model_state_dict is not None:
-            logging.info(f"Loading best model state dict from epoch {best_epoch}...")
+            print(f"Loading best model state dict from epoch {best_epoch}...")
             self._encoder.load_state_dict(best_model_state_dict)
 
         return best_test_loss
@@ -182,7 +170,8 @@ class SimCLREncoderModel(EncoderModel):
         total_loss = 0
 
         for batch_index, batch_images in enumerate(train_data_loader):
-            augmented_images = self._augment_batch_images(batch_images)
+            transformed_images = self._transforms(batch_images)
+            augmented_images = self._augment_batch_images(transformed_images)
 
             loss = loss_function(augmented_images)
 
@@ -199,7 +188,7 @@ class SimCLREncoderModel(EncoderModel):
                 ) * train_data_loader.batch_size  # type: ignore
                 batch_total = len(train_data_loader.dataset)  # type: ignore
 
-                logging.info(
+                print(
                     f"Loss: {batch_loss:.2e}  [{batch_progress:>4} / {batch_total:>4}]"
                 )
 
@@ -214,7 +203,8 @@ class SimCLREncoderModel(EncoderModel):
         total_loss = 0
 
         for batch_images in test_data_loader:
-            augmented_images = self._augment_batch_images(batch_images)
+            transformed_images = self._transforms(batch_images)
+            augmented_images = self._augment_batch_images(transformed_images)
 
             loss = loss_function(augmented_images)
 
@@ -310,8 +300,8 @@ class AutoencoderModel(EncoderModel):
         best_model_state_dict = None
 
         for epoch in range(train_params["epochs"]):
-            logging.info(f"Epoch {epoch + 1} / {train_params['epochs']}")
-            logging.info("------------------------------------------------------------")
+            print(f"Epoch {epoch + 1} / {train_params['epochs']}")
+            print("------------------------------------------------------------")
 
             train_loss = self._train_epoch(
                 loss_function,
@@ -320,23 +310,23 @@ class AutoencoderModel(EncoderModel):
                 train_params["output_interval"],
             )
 
-            logging.info(f"\nMean train loss: {train_loss:.3e}\n")
+            print(f"\nMean train loss: {train_loss:.3e}\n")
 
             test_loss = self._test(test_data_loader, loss_function)
 
-            logging.info(f"Mean test loss: {test_loss:.3e}\n")
+            print(f"Mean test loss: {test_loss:.3e}\n")
 
             if test_loss < best_test_loss:
-                logging.info("New best model found. Saving state dict...\n")
+                print("New best model found. Saving state dict...\n")
 
                 best_test_loss = test_loss
                 best_epoch = epoch + 1
                 best_model_state_dict = self._encoder.state_dict()
 
-        logging.info("Training finished.")
+        print("Training finished.")
 
         if best_model_state_dict is not None:
-            logging.info(f"Loading best model state dict from epoch {best_epoch}...")
+            print(f"Loading best model state dict from epoch {best_epoch}...")
             self._encoder.load_state_dict(best_model_state_dict)
 
         return best_test_loss
@@ -353,8 +343,9 @@ class AutoencoderModel(EncoderModel):
         total_loss = 0
 
         for batch_index, batch_images in enumerate(train_data_loader):
-            augmented_images = self._augment_transforms(batch_images)
-            reconstructed_images = self(augmented_images)
+            transformed_images = self._transforms(batch_images)
+            augmented_images = self._augment_transforms(transformed_images)
+            reconstructed_images = self._encoder(augmented_images)
 
             loss = loss_function(reconstructed_images, augmented_images)
 
@@ -371,7 +362,7 @@ class AutoencoderModel(EncoderModel):
                 ) * train_data_loader.batch_size  # type: ignore
                 batch_total = len(train_data_loader.dataset)  # type: ignore
 
-                logging.info(
+                print(
                     f"Loss: {batch_loss:.2e}  [{batch_progress:>4} / {batch_total:>4}]"
                 )
 
@@ -386,8 +377,9 @@ class AutoencoderModel(EncoderModel):
         total_loss = 0
 
         for batch_images in test_data_loader:
-            reconstructed_images = self(batch_images)
-            loss = loss_function(reconstructed_images, batch_images)
+            transformed_images = self._transforms(batch_images)
+            reconstructed_images = self._encoder(transformed_images)
+            loss = loss_function(reconstructed_images, transformed_images)
             total_loss += loss.item()
 
         mean_loss = total_loss / len(test_data_loader)
