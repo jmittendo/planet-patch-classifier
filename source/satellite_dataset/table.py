@@ -169,3 +169,40 @@ def generate_vco_dataset_table(
     }
 
     return DataFrame(data=table_dict)
+
+
+def generate_jno_jnc_table(dataset: "SatelliteDataset") -> DataFrame:
+    # FOV of a single pixel in radians (approximation) (58 / 1648 / 180 * pi)
+    # (see ik kernel juno_junocam_v03.ti)
+    pixel_fov_rad = 6.1425422703683929284935718793895e-4
+
+    pds3_lbl_paths: list[Path] = []
+    max_resolutions_mpx: list[float] = []
+
+    for volume_dir_path in dataset.data_path.iterdir():
+        # Search only for reduced ('R'DR) images of Jupiter
+        planet_dir_path = volume_dir_path / "RDR" / "JUPITER"
+
+        for orbit_dir_path in planet_dir_path.iterdir():
+            # Search only for LBL files with the C (BGR) color filter combination
+            for pds3_lbl_path in orbit_dir_path.glob("*[0-9][0-9]C*.LBL"):
+                try:
+                    pds3_image = PDS3Image.open(pds3_lbl_path.resolve().as_posix())
+                except ValueError:
+                    continue
+
+                pds3_label: PVLModule = pds3_image.label  # type: ignore
+                altitude_m: float = pds3_label["SPACECRAFT_ALTITUDE"].value * 1000  # type: ignore
+
+                # Approximation of max resolution of a pixel in m/px
+                max_resolution_mpx = pixel_fov_rad * altitude_m
+
+                pds3_lbl_paths.append(pds3_lbl_path)
+                max_resolutions_mpx.append(max_resolution_mpx)
+
+    table_dict = {
+        "pds3_lbl_path": pds3_lbl_paths,
+        "max_resolution_mpx": max_resolutions_mpx,
+    }
+
+    return DataFrame(data=table_dict)

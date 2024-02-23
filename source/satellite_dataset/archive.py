@@ -98,10 +98,7 @@ class JnoJncArchive(Archive):
         return True, ""  # TEMPORARY
 
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
-        warnings.warn(
-            "'generate_dataset_table' method not yet implemented for 'JnoJncArchive'"
-        )
-        return DataFrame()  # TEMPORARY
+        return sd_table.generate_jno_jnc_table(dataset)
 
     def generate_dataset_patches(
         self,
@@ -110,8 +107,8 @@ class JnoJncArchive(Archive):
         patch_resolution: int,
         global_normalization: bool = False,
     ) -> None:
-        warnings.warn(
-            "'generate_dataset_patches' method not yet implemented for 'JnoJncArchive'"
+        sd_patches.generate_jno_jnc_patches(
+            self, dataset, patch_scale_km, patch_resolution, global_normalization
         )
 
 

@@ -14,7 +14,7 @@ from source.satellite_dataset.patches.img_geo_patches import ImgGeoPatchGenerato
 from source.satellite_dataset.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.archive import ImgGeoArchive
+    from source.satellite_dataset.archive import ImgGeoArchive, JnoJncArchive
     from source.satellite_dataset.dataset import SatelliteDataset
 
 
@@ -164,6 +164,15 @@ def load_vco_data_arrays(img_file_path: Path, geo_file_path: Path) -> ImgGeoData
     }
 
     return data_arrays
+
+
+def generate_jno_jnc_patches(
+    archive: "JnoJncArchive",
+    dataset: "SatelliteDataset",
+    patch_scale_km: float,
+    patch_resolution: int,
+    global_normalization: bool = False,
+) -> None: ...
 
 
 def _passes_resolution_threshold(
