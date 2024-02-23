@@ -3,6 +3,7 @@ import typing
 import warnings
 from abc import ABC
 from pathlib import Path
+from typing import Callable
 
 from pandas import DataFrame
 
@@ -15,6 +16,13 @@ from source.satellite_dataset.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
     from source.satellite_dataset.dataset import SatelliteDataset
+
+
+def _register_subclass(name: str) -> Callable:
+    def decorator(cls) -> None:
+        cls._subclass_registry[name] = cls
+
+    return decorator
 
 
 class Archive(ABC):
@@ -59,9 +67,6 @@ class Archive(ABC):
 
 
 class ImgGeoArchive(Archive):
-    def __init_subclass__(cls, name: str) -> None:
-        cls._subclass_registry[name] = cls
-
     def generate_dataset_patches(
         self,
         dataset: "SatelliteDataset",
@@ -84,9 +89,19 @@ class ImgGeoArchive(Archive):
         raise NotImplementedError
 
 
-class ImgSpiceArchive(Archive):
-    def __init_subclass__(cls, name: str) -> None:
-        cls._subclass_registry[name] = cls
+@_register_subclass("jno-jnc")  # Has to match name of archive dir in archives dir
+class JnoJncArchive(Archive):
+    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
+        warnings.warn(
+            "'validate_dataset' method not yet implemented for 'JnoJncArchive'"
+        )
+        return True, ""  # TEMPORARY
+
+    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
+        warnings.warn(
+            "'generate_dataset_table' method not yet implemented for 'JnoJncArchive'"
+        )
+        return DataFrame()  # TEMPORARY
 
     def generate_dataset_patches(
         self,
@@ -96,12 +111,12 @@ class ImgSpiceArchive(Archive):
         global_normalization: bool = False,
     ) -> None:
         warnings.warn(
-            "'generate_dataset_patches' method not yet implemented for "
-            "'ImgSpiceArchive'"
+            "'generate_dataset_patches' method not yet implemented for 'JnoJncArchive'"
         )
 
 
-class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
+@_register_subclass("vex-vmc")  # Has to match name of archive dir in archives dir
+class VexVmcArchive(ImgGeoArchive):
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vex_vmc_dataset(dataset)
 
@@ -119,7 +134,8 @@ class VexVmcArchive(ImgGeoArchive, name="vex-vmc"):
         return sd_patches.load_vex_vmc_data_arrays(img_file_path, geo_file_path)
 
 
-class VcoArchive(ImgGeoArchive, name="vco"):
+@_register_subclass("vco")  # Has to match name of archive dir in archives dir
+class VcoArchive(ImgGeoArchive):
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
         return sd_validation.validate_vco_dataset(dataset)
 
@@ -130,20 +146,6 @@ class VcoArchive(ImgGeoArchive, name="vco"):
         self, img_file_path: Path, geo_file_path: Path
     ) -> ImgGeoDataArrays:
         return sd_patches.load_vco_data_arrays(img_file_path, geo_file_path)
-
-
-class JnoJncArchive(ImgSpiceArchive, name="jno-jnc"):
-    def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
-        warnings.warn(
-            "'validate_dataset' method not yet implemented for 'ImgSpiceArchive'"
-        )
-        return True, ""  # TEMPORARY
-
-    def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
-        warnings.warn(
-            "'generate_dataset_table' method not yet implemented for 'ImgSpiceArchive'"
-        )
-        return DataFrame()  # TEMPORARY
 
 
 def load_archives() -> list[Archive]:
