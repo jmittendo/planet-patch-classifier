@@ -11,8 +11,8 @@ import source.satellite_dataset.patches.patches as sd_patches
 import source.satellite_dataset.planet as sd_planet
 import source.satellite_dataset.table as sd_table
 import source.satellite_dataset.validation as sd_validation
+from source.satellite_dataset.patches.typing import ImgGeoDataArrays
 from source.satellite_dataset.planet import Planet
-from source.satellite_dataset.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
     from source.satellite_dataset.dataset import SatelliteDataset

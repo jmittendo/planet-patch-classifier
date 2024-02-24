@@ -13,7 +13,7 @@ import source.satellite_dataset.utility as sd_util
 import user.config as user_config
 from source.satellite_dataset.patches.img_geo_patches import ImgGeoPatchGenerator
 from source.satellite_dataset.patches.jno_jnc_patches import JnoJncPatchGenerator
-from source.satellite_dataset.typing import ImgGeoDataArrays
+from source.satellite_dataset.patches.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
     from source.satellite_dataset.archive import ImgGeoArchive, JnoJncArchive

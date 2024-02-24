@@ -9,7 +9,7 @@ from scipy import interpolate, ndimage, stats
 
 import source.satellite_dataset.utility as sd_util
 import source.utility as util
-from source.satellite_dataset.typing import (
+from source.satellite_dataset.patches.typing import (
     ImgGeoDataArrays,
     ImgGeoPatchInterpolation,
     ImgGeoPatchProjection,
