@@ -8,9 +8,11 @@ from tqdm import tqdm
 
 import source.patch_dataset.config as pd_config
 import source.satellite_dataset.patches.img_geo_patches as sd_img_geo_patches
+import source.satellite_dataset.patches.utility as sd_patch_util
 import source.satellite_dataset.utility as sd_util
 import user.config as user_config
 from source.satellite_dataset.patches.img_geo_patches import ImgGeoPatchGenerator
+from source.satellite_dataset.patches.jno_jnc_patches import JnoJncPatchGenerator
 from source.satellite_dataset.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
@@ -40,7 +42,7 @@ def generate_img_geo_patches(
     for data in tqdm(dataset, desc="Generating patches"):
         img_max_resolution_mpx: float = data["max_resolution_mpx"]
 
-        if not _passes_resolution_threshold(
+        if not sd_patch_util.passes_resolution_threshold(
             img_max_resolution_mpx, patch_resolution_mpx
         ):
             continue
@@ -172,12 +174,24 @@ def generate_jno_jnc_patches(
     patch_scale_km: float,
     patch_resolution: int,
     global_normalization: bool = False,
-) -> None: ...
+) -> None:
+    output_dir_name = f"{dataset.name}_s{patch_scale_km:g}-r{patch_resolution}"
+    output_dir_path = pd_config.DATASETS_DIR_PATH / dataset.name / output_dir_name
+    output_dir_path.mkdir(parents=True, exist_ok=True)
 
+    patch_generator = JnoJncPatchGenerator(patch_scale_km, patch_resolution)
+    patch_generator.generate(dataset, output_dir_path)
 
-def _passes_resolution_threshold(
-    img_max_resolution: float, patch_resolution: float
-) -> bool:
-    return (
-        img_max_resolution / patch_resolution < user_config.PATCH_RESOLUTION_TOLERANCE
-    )
+    patch_dataset_info_dict = {
+        "scale_km": patch_scale_km,
+        "resolution": patch_resolution,
+        "labels": [],
+    }
+    patch_dataset_info_json_path = output_dir_path / "info.json"
+
+    with open(patch_dataset_info_json_path, "w") as patch_dataset_info_json:
+        json.dump(
+            patch_dataset_info_dict,
+            patch_dataset_info_json,
+            indent=user_config.JSON_INDENT,
+        )

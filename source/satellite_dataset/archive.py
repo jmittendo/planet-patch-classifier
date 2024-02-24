@@ -108,7 +108,11 @@ class JnoJncArchive(Archive):
         global_normalization: bool = False,
     ) -> None:
         sd_patches.generate_jno_jnc_patches(
-            self, dataset, patch_scale_km, patch_resolution, global_normalization
+            self,
+            dataset,
+            patch_scale_km,
+            patch_resolution,
+            global_normalization=global_normalization,
         )
 
 

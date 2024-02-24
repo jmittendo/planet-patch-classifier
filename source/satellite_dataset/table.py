@@ -172,9 +172,9 @@ def generate_vco_dataset_table(
 
 
 def generate_jno_jnc_table(dataset: "SatelliteDataset") -> DataFrame:
-    # FOV of a single pixel in radians (approximation) (58 / 1648 / 180 * pi)
-    # (see ik kernel juno_junocam_v03.ti)
-    pixel_fov_rad = 6.1425422703683929284935718793895e-4
+    # FOV of central pixel in radians, see
+    # https://www.missionjuno.swri.edu/pub/e/downloads/JunoCam_Junos_Outreach_Camera.pdf
+    pixel_fov_rad = 672.7e-6
 
     pds3_lbl_paths: list[Path] = []
     max_resolutions_mpx: list[float] = []
