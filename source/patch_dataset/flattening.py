@@ -20,7 +20,10 @@ def generate_flat_dataset(dataset: "PatchDataset", blur_sigma: float) -> None:
         zip(dataset, dataset.file_names), desc="Progress", total=len(dataset)
     ):
         flat_patch_tensor = _flatten_patch(patch_tensor, blur_sigma)
-        flat_patch_array = (flat_patch_tensor[0] * 255).byte().numpy()
+        flat_patch_array = (flat_patch_tensor.movedim(0, -1) * 255).byte().numpy()
+
+        if flat_patch_array.shape[-1] == 1:
+            flat_patch_array = flat_patch_array[:, :, 0]
 
         flat_patch_file_path = flat_patches_dir_path / patch_file_name
         Image.fromarray(flat_patch_array).save(flat_patch_file_path)
