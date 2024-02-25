@@ -5,6 +5,7 @@ from pathlib import Path
 import einops
 import numpy as np
 import spiceypy as spice
+from pandas import DataFrame
 from PIL import Image
 from planetaryimage import PDS3Image
 from pvl import PVLModule, Quantity
@@ -86,6 +87,11 @@ class JnoJncPatchGenerator:
         # (ignoring projection effects / distortions)
         patch_resolution_mpx = self._patch_scale_km * 1000 / self._patch_resolution
 
+        patch_file_names: list[str] = []
+        patch_longitudes: list[float] = []
+        patch_latitudes: list[float] = []
+        patch_local_times: list[float] = []
+
         for data in tqdm(dataset, desc="Generating patches"):
             max_resolution_mpx = data["max_resolution_mpx"]
 
@@ -101,6 +107,11 @@ class JnoJncPatchGenerator:
             filter_ids = [FILTER_NAME_IDS[fn] for fn in filter_names]
             num_filters = len(filter_ids)
             frame_height = FRAMELET_HEIGHT * num_filters
+
+            image_time_utc: datetime = pds3_image.label["IMAGE_TIME"]  # type: ignore
+            image_time_et: float = spice.str2et(  # type: ignore
+                image_time_utc.strftime(r"%Y-%m-%d %H:%M:%S.%f")
+            )
 
             # Get all frames and corresponding frame times (in ephemeris time) in the
             # PDS3 image (one image consists of multiple frames taken at different times
@@ -128,11 +139,25 @@ class JnoJncPatchGenerator:
                 abberation_correction=user_config.SPICE_ABBERATION_CORRECTION,
             )
 
-            for theta_index, (phi_intersection_points, patch_indices) in enumerate(
-                zip(theta_phi_intersection_points, theta_patch_indices)
+            file_index = 0
+
+            for phi_intersection_points, patch_indices, theta_center in zip(
+                theta_phi_intersection_points, theta_patch_indices, patch_theta_centers
             ):
-                for phi_index, intersection_points in enumerate(
-                    phi_intersection_points
+                # Calculate geocentric latitude corresponding to theta center
+                tan_theta_center = np.tan(theta_center)
+
+                if tan_theta_center == 0:
+                    latitude_center = 0.5 * np.pi
+                else:
+                    latitude_center = np.arctan(
+                        ellipsoid_radii[2] / ellipsoid_radii[0] / tan_theta_center
+                    )
+
+                latitude_center = np.rad2deg(latitude_center)
+
+                for intersection_points, phi_center in zip(
+                    phi_intersection_points, patch_phi_centers
                 ):
                     # Intialize the full patch image and overlap counter array
                     patch_image = np.zeros(
@@ -293,10 +318,38 @@ class JnoJncPatchGenerator:
 
                     output_file_name = (
                         f"{pds3_file_name.split('.')[0].replace('_', '-')}"
-                        f"_patch_{theta_index}-{phi_index}.png"
+                        f"_patch-{file_index}.png"
+                    )
+
+                    longitude_center = sd_util.fix_360_longitude(np.rad2deg(phi_center))
+
+                    local_time_h, local_time_m, local_time_s, _, _ = spice.et2lst(
+                        image_time_et,
+                        spice.bodn2c(PLANET),
+                        phi_center,
+                        "PLANETOCENTRIC",
+                    )
+                    local_time_center = (
+                        local_time_h + local_time_m / 60 + local_time_s / 3600
                     )
 
                     save_patch_image(patch_image, version_dir_path / output_file_name)
+                    patch_file_names.append(output_file_name)
+                    patch_longitudes.append(longitude_center)
+                    patch_latitudes.append(latitude_center)
+                    patch_local_times.append(local_time_center)
+
+                    file_index += 1
+
+        patch_info_table_dict = {
+            "file_name": patch_file_names,
+            "longitude": patch_longitudes,
+            "latitude": patch_latitudes,
+            "local_time": patch_local_times,
+        }
+
+        patch_info_table = DataFrame(data=patch_info_table_dict)
+        patch_info_table.to_pickle(output_dir_path / "table.pkl")
 
 
 def load_spice_kernels(kernels_dir: str) -> None:

@@ -1,4 +1,5 @@
 import typing
+import warnings
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -9,7 +10,9 @@ from torch.utils.data import DataLoader
 
 import source.patch_dataset.config as pd_config
 import source.plotting as plotting
+import source.satellite_dataset.dataset as sd_dataset
 import user.config as user_config
+from source.satellite_dataset.planet import Planet
 
 if typing.TYPE_CHECKING:
     from source.patch_dataset.dataset import PatchDataset
@@ -51,7 +54,16 @@ def plot_dataset_geometry_scatter(
     plotting.imscatter(
         ax2, patch_images, patch_local_times, patch_latitudes, cmap="gray"
     )
-    ax2.invert_xaxis()  # Might need parameter for planet rotation direction
+
+    try:
+        satellite_dataset = sd_dataset.get(dataset.satellite_dataset_name)
+        planet_rotation = satellite_dataset.archive.planet.rotation
+
+        if planet_rotation is Planet.Rotation.RETROGRADE:
+            ax2.invert_xaxis()
+    except KeyError:
+        warnings.warn(f"Satellite dataset '{dataset.satellite_dataset_name}' not found")
+
     ax2.set_xlabel("Local time [h]")
     ax2.set_yticklabels([])
 

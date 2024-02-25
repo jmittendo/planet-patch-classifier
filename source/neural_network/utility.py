@@ -1,11 +1,15 @@
+import typing
+
 from torch.nn import Module
 from torchvision.transforms import Normalize, Resize
 
 from source.neural_network.transforms import GrayscaleToRGB
-from source.patch_dataset.dataset import PatchDataset
+
+if typing.TYPE_CHECKING:
+    from source.patch_dataset.dataset import PatchDataset
 
 
-def get_patch_dataset_transforms(dataset: PatchDataset) -> list[Module]:
+def get_patch_dataset_transforms(dataset: "PatchDataset") -> list[Module]:
     transforms: list[Module] = [Resize(224, antialias=True)]  # type: ignore
 
     if dataset.num_channels == 1:

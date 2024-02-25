@@ -13,8 +13,10 @@ from sklearn.manifold import TSNE
 import source.config as config
 import source.patch_dataset.dataset as pd_dataset
 import source.plotting as plotting
+import source.satellite_dataset.dataset as sd_dataset
 import user.config as user_config
 from source.patch_dataset.dataset import PatchDataset
+from source.satellite_dataset.planet import Planet
 
 if user_config.ENABLE_TEX_PLOTS:
     plt.rcParams["text.usetex"] = True
@@ -219,7 +221,15 @@ def plot_classification_scatter(
     ax1.set_ylabel("Latitude [deg]")
     ax1.legend(fancybox=False)
 
-    ax2.invert_xaxis()  # Might need parameter for planet rotation direction
+    try:
+        satellite_dataset = sd_dataset.get(dataset.satellite_dataset_name)
+        planet_rotation = satellite_dataset.archive.planet.rotation
+
+        if planet_rotation is Planet.Rotation.RETROGRADE:
+            ax2.invert_xaxis()
+    except KeyError:
+        warnings.warn(f"Satellite dataset '{dataset.satellite_dataset_name}' not found")
+
     ax2.set_xlabel("Local time [h]")
     ax2.set_yticklabels([])
 
