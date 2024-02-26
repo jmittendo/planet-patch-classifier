@@ -18,16 +18,8 @@ def imscatter(
     vmax: float | None = None,
 ):
     for image, x, y in zip(images, x_values, y_values):
-        if isinstance(image, Tensor):
-            image = image.movedim(1, -1).numpy()
-
-        if image.ndim == 3:
-            if image.shape[0] == 1 and image.shape[1] > 1:
-                image = image[0]
-            elif image.shape[0] == 3 and image.shape[1] > 3:
-                image = np.moveaxis(image, 0, -1)
-            elif image.shape[2] == 1 and image.shape[1] > 1:
-                image = image[:, :, 0]
+        if isinstance(image, Tensor) and image.ndim == 3:
+            image = image.movedim(0, -1).numpy()
 
         downscale_factor = 32 / (image.shape[0] + image.shape[1]) * zoom
 
