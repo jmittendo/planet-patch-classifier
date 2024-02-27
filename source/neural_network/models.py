@@ -105,7 +105,7 @@ class SimCLREncoderModel(EncoderModel):
         train_dataset: Dataset,
         test_dataset: Dataset,
         train_params: SimCLREncoderTrainParams,
-    ) -> float:
+    ) -> tuple[list[float], list[float], int]:
         train_data_loader = DataLoader(
             train_dataset, batch_size=train_params["batch_size"], shuffle=True
         )
@@ -119,6 +119,9 @@ class SimCLREncoderModel(EncoderModel):
             base_learning_rate=train_params["base_learning_rate"],
             weight_decay=0.00001,  # same as representation learner (don't remember why)
         )
+
+        train_losses: list[float] = []
+        test_losses: list[float] = []
 
         best_test_loss = float("inf")
         best_epoch = -1
@@ -134,10 +137,12 @@ class SimCLREncoderModel(EncoderModel):
                 train_data_loader,
                 train_params["output_interval"],
             )
+            train_losses.append(train_loss)
 
             print(f"\nMean train loss: {train_loss:.3e}\n")
 
             test_loss = self._test(test_data_loader, loss_function)
+            test_losses.append(test_loss)
 
             print(f"Mean test loss: {test_loss:.3e}\n")
 
@@ -154,7 +159,7 @@ class SimCLREncoderModel(EncoderModel):
             print(f"Loading best model state dict from epoch {best_epoch}...")
             self._encoder.load_state_dict(best_model_state_dict)
 
-        return best_test_loss
+        return train_losses, test_losses, best_epoch
 
     def _train_epoch(
         self,
@@ -282,7 +287,7 @@ class AutoencoderModel(EncoderModel):
         train_dataset: Dataset,
         test_dataset: Dataset,
         train_params: AutoencoderTrainParams,
-    ) -> float:
+    ) -> tuple[list[float], list[float], int]:
         train_data_loader = DataLoader(
             train_dataset, batch_size=train_params["batch_size"], shuffle=True
         )
@@ -292,6 +297,9 @@ class AutoencoderModel(EncoderModel):
 
         loss_function = MSELoss()
         optimizer = Adam(self._encoder.parameters(), lr=train_params["learning_rate"])
+
+        train_losses: list[float] = []
+        test_losses: list[float] = []
 
         best_test_loss = float("inf")
         best_epoch = -1
@@ -307,10 +315,12 @@ class AutoencoderModel(EncoderModel):
                 train_data_loader,
                 train_params["output_interval"],
             )
+            train_losses.append(train_loss)
 
             print(f"\nMean train loss: {train_loss:.3e}\n")
 
             test_loss = self._test(test_data_loader, loss_function)
+            test_losses.append(test_loss)
 
             print(f"Mean test loss: {test_loss:.3e}\n")
 
@@ -327,7 +337,7 @@ class AutoencoderModel(EncoderModel):
             print(f"Loading best model state dict from epoch {best_epoch}...")
             self._encoder.load_state_dict(best_model_state_dict)
 
-        return best_test_loss
+        return train_losses, test_losses, best_epoch
 
     def _train_epoch(
         self,
