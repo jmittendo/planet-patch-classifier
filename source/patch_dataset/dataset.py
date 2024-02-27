@@ -15,8 +15,8 @@ import source.patch_dataset.classification as pd_classification
 import source.patch_dataset.config as pd_config
 import source.patch_dataset.encoding as pd_encoding
 import source.patch_dataset.plotting as pd_plotting
-from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 from source.neural_network.typing import DeviceLike
+from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 
 
 class _PatchDatasetInfoDict(TypedDict):
@@ -171,8 +171,15 @@ class PatchDataset(Dataset):
     def plot_encoded_tsne_scatter(self):
         pd_plotting.plot_encoded_dataset_tsne_scatter(self)
 
-    def encode(self, device: DeviceLike | None = None) -> ndarray:
-        return pd_encoding.encode_dataset(self, device=device)
+    def encode(
+        self,
+        model: str = "encoder",
+        checkpoint_path: Path | None = None,
+        device: DeviceLike | None = None,
+    ) -> ndarray:
+        return pd_encoding.encode_dataset(
+            self, model=model, checkpoint_path=checkpoint_path, device=device
+        )
 
     def classify(
         self,
@@ -181,6 +188,8 @@ class PatchDataset(Dataset):
         num_classes: int | None,
         pca_dims: int | None = None,
         hdbscan_min_cluster_size: int = 5,
+        encoder_model: str = "simple",
+        checkpoint_path: Path | None = None,
         device: DeviceLike | None = None,
     ) -> tuple[ndarray, ndarray]:
         return pd_classification.classify_dataset(
@@ -190,6 +199,8 @@ class PatchDataset(Dataset):
             num_classes,
             pca_dims=pca_dims,
             hdbscan_min_cluster_size=hdbscan_min_cluster_size,
+            encoder_model=encoder_model,
+            checkpoint_path=checkpoint_path,
             device=device,
         )
 

@@ -1,8 +1,9 @@
 import typing
 import warnings
+from pathlib import Path
 
 from numpy import ndarray
-from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.cluster._hdbscan.hdbscan import HDBSCAN
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -21,9 +22,13 @@ def classify_dataset(
     num_classes: int | None,
     pca_dims: int | None = None,
     hdbscan_min_cluster_size: int = 5,
+    encoder_model: str = "simple",
+    checkpoint_path: Path | None = None,
     device: DeviceLike | None = None,
 ) -> tuple[ndarray, ndarray]:
-    encoded_dataset = dataset.encode(device=device)
+    encoded_dataset = dataset.encode(
+        model=encoder_model, checkpoint_path=checkpoint_path, device=device
+    )
 
     print("Classifying dataset...")
 
@@ -56,6 +61,13 @@ def classify_dataset(
         case "hdbscan":
             hdbscan = HDBSCAN(min_samples=hdbscan_min_cluster_size)
             class_labels = hdbscan.fit_predict(reduced_dataset)
+        case "hac":
+            if num_classes is None:
+                hac = AgglomerativeClustering()
+            else:
+                hac = AgglomerativeClustering(n_clusters=num_classes)
+
+            class_labels = hac.fit_predict(reduced_dataset)
         case _:
             raise ValueError(f"'{clustering_method}' is not a valid clustering method")
 
