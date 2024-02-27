@@ -24,7 +24,9 @@ def main() -> None:
         model_type = input("\nEnter model type ('autoencoder', 'simclr'): ")
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
-    train_dataset, test_dataset = data.random_split(dataset, [0.8, 0.2])
+    train_dataset, test_dataset = data.random_split(
+        dataset, [1 - user_config.TRAIN_TEST_RATIO, user_config.TRAIN_TEST_RATIO]
+    )
     transforms = nn_util.get_patch_dataset_transforms(dataset)
 
     match model_type:
