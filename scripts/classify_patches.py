@@ -11,6 +11,7 @@ from sklearn import metrics
 from sklearn.manifold import TSNE
 
 import source.config as config
+import source.neural_network.config as nn_config
 import source.patch_dataset.dataset as pd_dataset
 import source.plotting as plotting
 import source.satellite_dataset.dataset as sd_dataset
@@ -34,6 +35,7 @@ def main() -> None:
     version_name: str | None = input_args.version
     reduction_method: str | None = input_args.reduction_method
     clustering_method: str | None = input_args.clustering_method
+    encoder_model: str | None = input_args.encoder
     num_classes: int | None = input_args.classes
     pca_dims: int | None = input_args.pca_dims
     hdbscan_min_cluster_size: int | None = input_args.hdbscan_min_cluster_size
@@ -48,7 +50,9 @@ def main() -> None:
     reduction_method = None if reduction_method == "none" else reduction_method
 
     if clustering_method is None:
-        clustering_method = input("Enter clustering method ('kmeans', 'hdbscan'): ")
+        clustering_method = input(
+            "Enter clustering method ('kmeans', 'hdbscan', 'hac'): "
+        )
 
     if clustering_method != "hdbscan" and num_classes is None:
         num_classes = int(input("Enter number of classes: "))
@@ -63,12 +67,33 @@ def main() -> None:
         5 if hdbscan_min_cluster_size is None else hdbscan_min_cluster_size
     )
 
+    if encoder_model is None:
+        encoder_model = input(
+            "Enter encoder model type ('simple', 'autoencoder', 'simclr'): "
+        )
+
+    checkpoint_path = (
+        None
+        if encoder_model == "simple"
+        else nn_config.CHECKPOINTS_DIR_PATH
+        / encoder_model
+        / f"{encoder_model}_{dataset.name}_{dataset.version_name}.pt"
+    )
+
+    if checkpoint_path is not None and not checkpoint_path.is_file():
+        raise FileNotFoundError(
+            f"No model checkpoint found for encoder model type '{encoder_model}' and "
+            f"dataset '{dataset.name}' with version '{dataset.version_name}'"
+        )
+
     class_labels, encoded_dataset = dataset.classify(
         reduction_method,  # type: ignore
         clustering_method,  # type: ignore
         num_classes,
         pca_dims=pca_dims,
         hdbscan_min_cluster_size=hdbscan_min_cluster_size,
+        encoder_model=encoder_model,
+        checkpoint_path=checkpoint_path,
         device=device,
     )
 
@@ -97,6 +122,7 @@ def main() -> None:
         num_classes,
         pca_dims,
         hdbscan_min_cluster_size,
+        encoder_model,
     )
 
     plot_classification_scatter(
@@ -132,6 +158,7 @@ def parse_input_args() -> Namespace:
     arg_parser.add_argument(
         "clustering_method", nargs="?", help="method to use for clustering"
     )
+    arg_parser.add_argument("encoder", nargs="?", help="model type to use for encoding")
     arg_parser.add_argument(
         "-c",
         "--classes",
@@ -165,6 +192,7 @@ def get_file_name_base(
     num_classes: int | None,
     pca_dims: int | None,
     hdbscan_min_cluster_size: int,
+    encoder_model: str,
 ) -> str:
     file_name_base = f"{dataset.name}_{dataset.version_name}_r-{reduction_method}"
 
@@ -177,6 +205,8 @@ def get_file_name_base(
         file_name_base += f"-{hdbscan_min_cluster_size}"
     else:
         file_name_base += f"-{num_classes}"
+
+    file_name_base += f"_e-{encoder_model}"
 
     return file_name_base
 
