@@ -168,12 +168,16 @@ class PatchDataset(Dataset):
     def plot_geometry_scatter(self, num_patches: int | None = None) -> None:
         pd_plotting.plot_dataset_geometry_scatter(self, num_patches=num_patches)
 
-    def plot_encoded_tsne_scatter(self):
-        pd_plotting.plot_encoded_dataset_tsne_scatter(self)
+    def plot_encoded_tsne_scatter(
+        self, encoder_model: str, checkpoint_path: Path | None = None
+    ):
+        pd_plotting.plot_encoded_dataset_tsne_scatter(
+            self, encoder_model=encoder_model, checkpoint_path=checkpoint_path
+        )
 
     def encode(
         self,
-        model: str = "encoder",
+        model: str = "simple",
         checkpoint_path: Path | None = None,
         device: DeviceLike | None = None,
     ) -> ndarray:

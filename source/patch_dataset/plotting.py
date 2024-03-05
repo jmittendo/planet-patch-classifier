@@ -1,5 +1,6 @@
 import typing
 import warnings
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -84,8 +85,12 @@ def plot_dataset_geometry_scatter(
     fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
 
 
-def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
-    encoded_dataset = dataset.encode()
+def plot_encoded_dataset_tsne_scatter(
+    dataset: "PatchDataset", encoder_model: str, checkpoint_path: Path | None = None
+) -> None:
+    encoded_dataset = dataset.encode(
+        model=encoder_model, checkpoint_path=checkpoint_path
+    )
 
     tsne = TSNE()
     tsne_map = tsne.fit_transform(encoded_dataset)
@@ -130,7 +135,10 @@ def plot_encoded_dataset_tsne_scatter(dataset: "PatchDataset") -> None:
         ax.set_xticks([])
         ax.set_yticks([])
 
-    output_file_name = f"{dataset.name}_{dataset.version_name}_encoded-tsne-scatter.png"
+    output_file_name = (
+        f"{dataset.name}_{dataset.version_name}_e-{encoder_model}"
+        "_encoded-tsne-scatter.png"
+    )
     output_file_path = (
         pd_config.DATASET_PLOTS_DIR_PATH
         / dataset.name
