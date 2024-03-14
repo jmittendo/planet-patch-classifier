@@ -10,21 +10,15 @@ from sklearn import metrics
 import source.config as config
 import source.neural_network.config as nn_config
 import source.patch_dataset.dataset as pd_dataset
+import user.config as user_config
 from source.patch_dataset.dataset import PatchDataset
-
-ITERATIONS = 3
-DATASET_NAME = "cloud-imvn-1.0"
-DATASET_VERSION = "default"
-ENCODER_MODELS = ["simple", "autoencoder"]
-# ENCODER_MODELS = ["simple", "autoencoder", "simclr"]
-REDUCTION_METHODS = ["tsne", "pca", None]
-CLUSTERING_METHODS = ["kmeans", "hac"]
-PCA_DIM_VALUES = [256, 64, 16]
-OUTPUT_FILE_NAME = f"benchmark-results_i{ITERATIONS}_{datetime.now()}.pkl"
 
 
 def main() -> None:
-    dataset = pd_dataset.get(name=DATASET_NAME, version_name=DATASET_VERSION)
+    dataset = pd_dataset.get(
+        name=user_config.BENCHMARK_DATASET_NAME,
+        version_name=user_config.BENCHMARK_DATASET_VERSION,
+    )
     num_classes = len(dataset.label_names)
 
     table = DataFrame(
@@ -43,29 +37,39 @@ def main() -> None:
         )
     )
 
-    table_file_path = config.DATA_DIR_PATH / "benchmark-results" / OUTPUT_FILE_NAME
+    table_file_name = (
+        f"benchmark-results_i{user_config.BENCHMARK_ITERATIONS}_{datetime.now()}.pkl"
+    )
+    table_file_path = config.DATA_DIR_PATH / "benchmark-results" / table_file_name
     table_file_path.parent.mkdir(exist_ok=True, parents=True)
 
     table_row_index = 0
 
-    for encoder_model in ENCODER_MODELS:
+    for encoder_model in user_config.BENCHMARK_ENCODER_MODELS:
         checkpoint_path = (
             None
             if encoder_model == "simple"
             else nn_config.CHECKPOINTS_DIR_PATH
             / encoder_model
-            / f"{encoder_model}_{DATASET_NAME}_{DATASET_VERSION}.pt"
+            / (
+                f"{encoder_model}_{user_config.BENCHMARK_DATASET_NAME}"
+                f"_{user_config.BENCHMARK_DATASET_VERSION}.pt"
+            )
         )
 
-        for reduction_method in REDUCTION_METHODS:
-            pca_dim_values = PCA_DIM_VALUES if reduction_method == "pca" else [None]
+        for reduction_method in user_config.BENCHMARK_REDUCTION_METHODS:
+            pca_dim_values = (
+                user_config.BENCHMARK_PCA_DIM_VALUES
+                if reduction_method == "pca"
+                else [None]
+            )
 
             for pca_dims in pca_dim_values:
-                for clustering_method in CLUSTERING_METHODS:
+                for clustering_method in user_config.BENCHMARK_CLUSTERING_METHODS:
                     adj_rand_scores: list[float] = []
                     total_accuracies: list[float] = []
 
-                    for iteration in range(ITERATIONS):
+                    for iteration in range(user_config.BENCHMARK_ITERATIONS):
                         print(
                             f"\n{encoder_model = }, {reduction_method = }, "
                             f"{pca_dims = }, {clustering_method = }, {iteration = }"
@@ -100,11 +104,15 @@ def main() -> None:
 
                     mean_adj_rand_score = np.mean(adj_rand_scores)
                     std_adj_rand_score = np.std(adj_rand_scores)
-                    err_adj_rand_score = std_adj_rand_score / np.sqrt(ITERATIONS)
+                    err_adj_rand_score = std_adj_rand_score / np.sqrt(
+                        user_config.BENCHMARK_ITERATIONS
+                    )
 
                     mean_total_accuracy = np.mean(total_accuracies)
                     std_total_accuracy = np.std(total_accuracies)
-                    err_total_accuracy = std_total_accuracy / np.sqrt(ITERATIONS)
+                    err_total_accuracy = std_total_accuracy / np.sqrt(
+                        user_config.BENCHMARK_ITERATIONS
+                    )
 
                     table.loc[table_row_index] = [
                         encoder_model,
