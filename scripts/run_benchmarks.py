@@ -78,9 +78,10 @@ def main() -> None:
                         class_labels, encoded_dataset = dataset.classify(
                             reduction_method,  # type: ignore
                             clustering_method,  # type: ignore
+                            encoder_model,
+                            user_config.BENCHMARK_ENCODER_BASE_MODEL,
                             num_classes,
                             pca_dims=pca_dims,
-                            encoder_model=encoder_model,
                             checkpoint_path=checkpoint_path,
                         )
 

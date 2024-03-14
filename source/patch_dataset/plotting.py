@@ -86,10 +86,13 @@ def plot_dataset_geometry_scatter(
 
 
 def plot_encoded_dataset_tsne_scatter(
-    dataset: "PatchDataset", encoder_model: str, checkpoint_path: Path | None = None
+    dataset: "PatchDataset",
+    encoder_model: str,
+    encoder_base_model: str,
+    checkpoint_path: Path | None = None,
 ) -> None:
     encoded_dataset = dataset.encode(
-        model=encoder_model, checkpoint_path=checkpoint_path
+        encoder_model, encoder_base_model, checkpoint_path=checkpoint_path
     )
 
     tsne = TSNE()
@@ -136,7 +139,7 @@ def plot_encoded_dataset_tsne_scatter(
         ax.set_yticks([])
 
     output_file_name = (
-        f"{dataset.name}_{dataset.version_name}_e-{encoder_model}"
+        f"{dataset.name}_{dataset.version_name}_e-{encoder_model}-{encoder_base_model}"
         "_encoded-tsne-scatter.png"
     )
     output_file_path = (

@@ -1,4 +1,5 @@
 import json
+import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
@@ -30,12 +31,23 @@ PLOTS_DIR_NAME = "train-losses"
 def main() -> None:
     input_args = parse_input_args()
     model_type: str | None = input_args.model
+    base_model_type: str | None = input_args.base_model
     dataset_name: str | None = input_args.dataset
     version_name: str | None = input_args.version
     device: str | None = input_args.device
 
     if model_type is None:
         model_type = input("\nEnter model type ('autoencoder', 'simclr'): ")
+
+    if model_type != "autoencoder" and base_model_type is None:
+        base_model_type = input(
+            "Enter encoder base model type "
+            "('resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152'): "
+        )
+
+    if model_type == "autoencoder" and base_model_type != "resnet18":
+        warnings.warn("Autoencoder model always uses 'resnet18' base model")
+        base_model_type = "resnet18"
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
     train_dataset, test_dataset = data.random_split(
@@ -53,7 +65,7 @@ def main() -> None:
                 "output_interval": user_config.TRAIN_OUTPUT_INTERVAL,
             }
         case "simclr":
-            model = SimCLREncoderModel(transforms=transforms)
+            model = SimCLREncoderModel(base_model_type, transforms=transforms)  # type: ignore
             train_params: SimCLREncoderTrainParams = {
                 "batch_size": user_config.TRAIN_BATCH_SIZE,
                 "loss_temperature": nn_config.SIMCLR_LOSS_TEMPERATURE,
@@ -72,7 +84,9 @@ def main() -> None:
         train_dataset, test_dataset, train_params  # type: ignore
     )
 
-    file_name_base = f"{model_type}_{dataset.name}_{dataset.version_name}"
+    file_name_base = (
+        f"{model_type}_{base_model_type}_{dataset.name}_{dataset.version_name}"
+    )
 
     output_dir_path = nn_config.CHECKPOINTS_DIR_PATH / model_type
     output_dir_path.mkdir(parents=True, exist_ok=True)
@@ -115,6 +129,7 @@ def parse_input_args() -> Namespace:
     )
 
     arg_parser.add_argument("model", nargs="?", help="type of model")
+    arg_parser.add_argument("base_model", nargs="?", help="type of base model")
     arg_parser.add_argument("dataset", nargs="?", help="name of the dataset")
     arg_parser.add_argument("version", nargs="?", help="version of the dataset to use")
     arg_parser.add_argument("-d", "--device", help="device to train the model on")

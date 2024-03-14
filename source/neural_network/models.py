@@ -88,10 +88,11 @@ class EncoderModel:
 class SimCLREncoderModel(EncoderModel):
     def __init__(
         self,
+        base_model: str,
         transforms: list[Module] | None = None,
         checkpoint_path: Path | None = None,
     ):
-        encoder = SimCLREncoder()
+        encoder = SimCLREncoder(base_model=base_model)
 
         super().__init__(
             encoder, transforms=transforms, checkpoint_path=checkpoint_path
@@ -398,9 +399,10 @@ class AutoencoderModel(EncoderModel):
 class SimpleEncoderModel(EncoderModel):
     def __init__(
         self,
+        base_model: str,
         transforms: list[Module] | None = None,
         checkpoint_path: Path | None = None,
     ):
-        encoder = SimpleEncoder()
+        encoder = SimpleEncoder(base_model=base_model)
 
         super().__init__(encoder, transforms, checkpoint_path)

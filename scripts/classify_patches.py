@@ -36,6 +36,7 @@ def main() -> None:
     reduction_method: str | None = input_args.reduction_method
     clustering_method: str | None = input_args.clustering_method
     encoder_model: str | None = input_args.encoder
+    encoder_base_model: str | None = input_args.base_model
     num_classes: int | None = input_args.classes
     pca_dims: int | None = input_args.pca_dims
     hdbscan_min_cluster_size: int | None = input_args.hdbscan_min_cluster_size
@@ -72,12 +73,25 @@ def main() -> None:
             "Enter encoder model type ('simple', 'autoencoder', 'simclr'): "
         )
 
+    if encoder_model != "autoencoder" and encoder_base_model is None:
+        encoder_base_model = input(
+            "Enter encoder base model type "
+            "('resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152'): "
+        )
+
+    if encoder_model == "autoencoder" and encoder_base_model != "resnet18":
+        warnings.warn("Autoencoder model always uses 'resnet18' base model")
+        encoder_base_model = "resnet18"
+
     checkpoint_path = (
         None
         if encoder_model == "simple"
         else nn_config.CHECKPOINTS_DIR_PATH
         / encoder_model
-        / f"{encoder_model}_{dataset.name}_{dataset.version_name}.pt"
+        / (
+            f"{encoder_model}_{encoder_base_model}_{dataset.name}"
+            f"_{dataset.version_name}.pt"
+        )
     )
 
     if checkpoint_path is not None and not checkpoint_path.is_file():
@@ -89,10 +103,11 @@ def main() -> None:
     class_labels, encoded_dataset = dataset.classify(
         reduction_method,  # type: ignore
         clustering_method,  # type: ignore
+        encoder_model,
+        encoder_base_model,  # type: ignore
         num_classes,
         pca_dims=pca_dims,
         hdbscan_min_cluster_size=hdbscan_min_cluster_size,
-        encoder_model=encoder_model,
         checkpoint_path=checkpoint_path,
         device=device,
     )
@@ -123,6 +138,7 @@ def main() -> None:
         pca_dims,
         hdbscan_min_cluster_size,
         encoder_model,
+        encoder_base_model,  # type: ignore
     )
 
     plot_classification_scatter(
@@ -159,6 +175,7 @@ def parse_input_args() -> Namespace:
         "clustering_method", nargs="?", help="method to use for clustering"
     )
     arg_parser.add_argument("encoder", nargs="?", help="model type to use for encoding")
+    arg_parser.add_argument("base_model", nargs="?", help="base model type for encoder")
     arg_parser.add_argument(
         "-c",
         "--classes",
@@ -193,6 +210,7 @@ def get_file_name_base(
     pca_dims: int | None,
     hdbscan_min_cluster_size: int,
     encoder_model: str,
+    encoder_base_model: str,
 ) -> str:
     file_name_base = f"{dataset.name}_{dataset.version_name}_r-{reduction_method}"
 
@@ -206,7 +224,7 @@ def get_file_name_base(
     else:
         file_name_base += f"-{num_classes}"
 
-    file_name_base += f"_e-{encoder_model}"
+    file_name_base += f"_e-{encoder_model}-{encoder_base_model}"
 
     return file_name_base
 

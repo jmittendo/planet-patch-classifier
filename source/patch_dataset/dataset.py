@@ -169,30 +169,35 @@ class PatchDataset(Dataset):
         pd_plotting.plot_dataset_geometry_scatter(self, num_patches=num_patches)
 
     def plot_encoded_tsne_scatter(
-        self, encoder_model: str, checkpoint_path: Path | None = None
+        self,
+        encoder_model: str,
+        encoder_base_model: str,
+        checkpoint_path: Path | None = None,
     ):
         pd_plotting.plot_encoded_dataset_tsne_scatter(
-            self, encoder_model=encoder_model, checkpoint_path=checkpoint_path
+            self, encoder_model, encoder_base_model, checkpoint_path=checkpoint_path
         )
 
     def encode(
         self,
-        model: str = "simple",
+        model: str,
+        base_model: str,
         checkpoint_path: Path | None = None,
         device: DeviceLike | None = None,
     ) -> ndarray:
         return pd_encoding.encode_dataset(
-            self, model=model, checkpoint_path=checkpoint_path, device=device
+            self, model, base_model, checkpoint_path=checkpoint_path, device=device
         )
 
     def classify(
         self,
         reduction_method: ReductionMethod,
         clustering_method: ClusteringMethod,
+        encoder_model: str,
+        encoder_base_model: str,
         num_classes: int | None,
         pca_dims: int | None = None,
         hdbscan_min_cluster_size: int = 5,
-        encoder_model: str = "simple",
         checkpoint_path: Path | None = None,
         device: DeviceLike | None = None,
     ) -> tuple[ndarray, ndarray]:
@@ -200,10 +205,11 @@ class PatchDataset(Dataset):
             self,
             reduction_method,
             clustering_method,
+            encoder_model,
+            encoder_base_model,
             num_classes,
             pca_dims=pca_dims,
             hdbscan_min_cluster_size=hdbscan_min_cluster_size,
-            encoder_model=encoder_model,
             checkpoint_path=checkpoint_path,
             device=device,
         )

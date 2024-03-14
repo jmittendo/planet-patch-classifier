@@ -1,8 +1,8 @@
 import typing
+import warnings
 from pathlib import Path
 
 from numpy import ndarray
-import warnings
 from torch import no_grad
 
 import source.neural_network.utility as nn_util
@@ -21,7 +21,8 @@ if typing.TYPE_CHECKING:
 @no_grad()
 def encode_dataset(
     dataset: "PatchDataset",
-    model: str = "simple",
+    model: str,
+    base_model: str,
     checkpoint_path: Path | None = None,
     device: DeviceLike | None = None,
 ) -> ndarray:
@@ -37,14 +38,19 @@ def encode_dataset(
 
     match model:
         case "simple":
-            encoder = SimpleEncoderModel(transforms=transforms)
+            encoder = SimpleEncoderModel(base_model=base_model, transforms=transforms)
         case "autoencoder":
+            if base_model != "resnet18":
+                warnings.warn("Autoencoder model always uses 'resnet18' base model")
+
             encoder = AutoencoderModel(
                 transforms=transforms, checkpoint_path=checkpoint_path
             )
         case "simclr":
             encoder = SimCLREncoderModel(
-                transforms=transforms, checkpoint_path=checkpoint_path
+                base_model=base_model,
+                transforms=transforms,
+                checkpoint_path=checkpoint_path,
             )
         case _:
             raise ValueError(f"'{model}' is not a valid model type")

@@ -3,7 +3,18 @@ import abc
 import torch
 from torch import Tensor
 from torch.nn import Identity, Module
-from torchvision.models import ResNet18_Weights, resnet18
+from torchvision.models import (
+    ResNet18_Weights,
+    ResNet34_Weights,
+    ResNet50_Weights,
+    ResNet101_Weights,
+    ResNet152_Weights,
+    resnet18,
+    resnet34,
+    resnet50,
+    resnet101,
+    resnet152,
+)
 
 from source.neural_network.modules import DecoderResNet18, EncoderResNet18
 
@@ -43,16 +54,31 @@ class Autoencoder(Encoder):
 class SimCLREncoder(Encoder):
     # See: https://arxiv.org/abs/2002.05709
 
-    def __init__(self) -> None:
+    def __init__(self, base_model: str) -> None:
         super().__init__()
 
-        self._base_encoder = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        match base_model:
+            case "resnet18":
+                self._base_encoder = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+            case "resnet34":
+                self._base_encoder = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+            case "resnet50":
+                self._base_encoder = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+            case "resnet101":
+                self._base_encoder = resnet101(weights=ResNet101_Weights.IMAGENET1K_V2)
+            case "resnet152":
+                self._base_encoder = resnet152(weights=ResNet152_Weights.IMAGENET1K_V2)
+            case _:
+                raise ValueError(f"'{base_model}' is not a valid base model")
+
+        final_layer_size = self._base_encoder.fc.in_features
+
         self._base_encoder.fc = Identity()  # type: ignore
 
         self._projection_head = torch.nn.Sequential(
-            torch.nn.Linear(512, 256, bias=True),
+            torch.nn.Linear(final_layer_size, final_layer_size // 2, bias=True),
             torch.nn.ReLU(),
-            torch.nn.Linear(256, 64, bias=True),
+            torch.nn.Linear(final_layer_size // 2, final_layer_size // 8, bias=True),
         )
 
     def encode(self, input_tensor: Tensor) -> Tensor:
@@ -63,10 +89,23 @@ class SimCLREncoder(Encoder):
 
 
 class SimpleEncoder(Encoder):
-    def __init__(self) -> None:
+    def __init__(self, base_model: str) -> None:
         super().__init__()
 
-        self._encoder = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        match base_model:
+            case "resnet18":
+                self._encoder = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+            case "resnet34":
+                self._encoder = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+            case "resnet50":
+                self._encoder = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+            case "resnet101":
+                self._encoder = resnet101(weights=ResNet101_Weights.IMAGENET1K_V2)
+            case "resnet152":
+                self._encoder = resnet152(weights=ResNet152_Weights.IMAGENET1K_V2)
+            case _:
+                raise ValueError(f"'{base_model}' is not a valid base model")
+
         self._encoder.fc = Identity()  # type: ignore
 
     def encode(self, input_tensor: Tensor) -> Tensor:

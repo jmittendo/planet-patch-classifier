@@ -19,15 +19,19 @@ def classify_dataset(
     dataset: "PatchDataset",
     reduction_method: ReductionMethod,
     clustering_method: ClusteringMethod,
+    encoder_model: str,
+    encoder_base_model: str,
     num_classes: int | None,
     pca_dims: int | None = None,
     hdbscan_min_cluster_size: int = 5,
-    encoder_model: str = "simple",
     checkpoint_path: Path | None = None,
     device: DeviceLike | None = None,
 ) -> tuple[ndarray, ndarray]:
     encoded_dataset = dataset.encode(
-        model=encoder_model, checkpoint_path=checkpoint_path, device=device
+        encoder_model,
+        encoder_base_model,
+        checkpoint_path=checkpoint_path,
+        device=device,
     )
 
     print("Classifying dataset...")

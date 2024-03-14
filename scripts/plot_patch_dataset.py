@@ -1,3 +1,4 @@
+import warnings
 from argparse import ArgumentParser, Namespace
 
 import source.neural_network.config as nn_config
@@ -9,6 +10,7 @@ def main() -> None:
     dataset_name: str | None = input_args.name
     version_name: str | None = input_args.version
     encoder_model: str | None = input_args.encoder
+    encoder_base_model: str | None = input_args.base_model
     num_patches: int | None = input_args.number
 
     dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
@@ -17,6 +19,16 @@ def main() -> None:
         encoder_model = input(
             "Enter encoder model type ('simple', 'autoencoder', 'simclr'): "
         )
+
+    if encoder_model != "autoencoder" and encoder_base_model is None:
+        encoder_base_model = input(
+            "Enter encoder base model type "
+            "('resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152'): "
+        )
+
+    if encoder_model == "autoencoder" and encoder_base_model != "resnet18":
+        warnings.warn("Autoencoder model always uses 'resnet18' base model")
+        encoder_base_model = "resnet18"
 
     checkpoint_path = (
         None
@@ -33,7 +45,9 @@ def main() -> None:
         )
 
     dataset.plot_geometry_scatter(num_patches=num_patches)
-    dataset.plot_encoded_tsne_scatter(encoder_model, checkpoint_path=checkpoint_path)
+    dataset.plot_encoded_tsne_scatter(
+        encoder_model, encoder_base_model, checkpoint_path=checkpoint_path  # type: ignore
+    )
 
 
 def parse_input_args() -> Namespace:
@@ -46,6 +60,7 @@ def parse_input_args() -> Namespace:
         "version", nargs="?", help="version of the dataset to use for plotting"
     )
     arg_parser.add_argument("encoder", nargs="?", help="model type to use for encoding")
+    arg_parser.add_argument("base_model", nargs="?", help="base model type for encoder")
     arg_parser.add_argument(
         "-n",
         "--number",
