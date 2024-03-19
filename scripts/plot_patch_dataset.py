@@ -35,7 +35,10 @@ def main() -> None:
         if encoder_model == "simple"
         else nn_config.CHECKPOINTS_DIR_PATH
         / encoder_model
-        / f"{encoder_model}_{dataset.name}_{dataset.version_name}.pt"
+        / (
+            f"{encoder_model}_{encoder_base_model}_{dataset.name}"
+            f"_{dataset.version_name}.pt"
+        )
     )
 
     if checkpoint_path is not None and not checkpoint_path.is_file():

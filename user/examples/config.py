@@ -29,10 +29,15 @@ BENCHMARK_REDUCTION_METHODS = ["tsne", "pca", None]
 BENCHMARK_CLUSTERING_METHODS = ["kmeans", "hac"]
 BENCHMARK_PCA_DIM_VALUES = [256, 64, 16]
 
+# Plots
+PLOT_FONT = "Times New Roman"
+PLOT_MATH_FONT = "stix"
+PLOT_FONT_SIZE = 8
+PLOT_DPI = 1000
+PLOT_ENABLE_TEX = False
+
 # Misc
 DOWNLOAD_CHUNK_SIZE = 67_108_864  # 64 MB
 DATETIME_FORMAT = r"%Y-%m-%d_%H-%M-%S"
 LOGGING_FORMAT = r"%(asctime)s - %(levelname)s - %(message)s"
 JSON_INDENT = 4
-ENABLE_TEX_PLOTS = True
-PLOT_DPI = 150

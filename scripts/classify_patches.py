@@ -1,3 +1,4 @@
+import itertools
 import warnings
 from argparse import ArgumentParser, Namespace
 from itertools import permutations
@@ -19,11 +20,26 @@ import user.config as user_config
 from source.patch_dataset.dataset import PatchDataset
 from source.satellite_dataset.planet import Planet
 
-if user_config.ENABLE_TEX_PLOTS:
-    plt.rcParams["text.usetex"] = True
+plt.rcParams["axes.linewidth"] = 0.4
+plt.rcParams["patch.linewidth"] = 0.4
+plt.rcParams["grid.linewidth"] = 0.4
+plt.rcParams["xtick.major.size"] = 2.5
+plt.rcParams["xtick.minor.size"] = 1.5
+plt.rcParams["xtick.major.width"] = 0.4
+plt.rcParams["xtick.minor.width"] = 0.3
+plt.rcParams["ytick.major.size"] = 2.5
+plt.rcParams["ytick.minor.size"] = 1.5
+plt.rcParams["ytick.major.width"] = 0.4
+plt.rcParams["ytick.minor.width"] = 0.3
+plt.rcParams["font.size"] = user_config.PLOT_FONT_SIZE
+plt.rcParams["savefig.dpi"] = user_config.PLOT_DPI
+plt.rcParams["text.usetex"] = user_config.PLOT_ENABLE_TEX
+
+if user_config.PLOT_ENABLE_TEX:
     plt.rcParams["font.family"] = "serif"
-    plt.rcParams["font.size"] = 16
-    plt.rcParams["axes.titlepad"] = 8
+else:
+    plt.rcParams["font.family"] = user_config.PLOT_FONT
+    plt.rcParams["mathtext.fontset"] = user_config.PLOT_MATH_FONT
 
 
 PLOTS_DIR_NAME = "classification"
@@ -251,23 +267,40 @@ def plot_classification_scatter(
     if np.isnan(patch_longitudes).any():
         return
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(3.5, 2.1))
     ax1, ax2 = axes
+
+    markers = itertools.cycle(("o", "v", "^", "<", ">", "*", "D", "X"))
 
     for label, color in zip(unique_labels, colors):
         label_mask = class_labels == label
         label_longitudes = patch_longitudes[label_mask]
         label_latitudes = patch_latitudes[label_mask]
         label_local_times = patch_local_times[label_mask]
+        marker = next(markers)
 
         ax1.scatter(
-            label_longitudes, label_latitudes, color=color, s=9, label=f"Class {label}"
+            label_longitudes,
+            label_latitudes,
+            color=color,
+            s=2,
+            label=f"Class {label}",
+            marker=marker,
         )
-        ax2.scatter(label_local_times, label_latitudes, color=color, s=9)
+        ax2.scatter(label_local_times, label_latitudes, color=color, s=2, marker=marker)
 
     ax1.set_xlabel("Longitude [deg]")
     ax1.set_ylabel("Latitude [deg]")
-    ax1.legend(fancybox=False)
+
+    legend = ax1.legend(
+        loc="upper center",
+        bbox_to_anchor=(1.035, 1.2),
+        fancybox=False,
+        handletextpad=0,
+        ncols=4,
+        columnspacing=0.5,
+    )
+    legend.set_in_layout(False)
 
     try:
         satellite_dataset = sd_dataset.get(dataset.satellite_dataset_name)
@@ -279,14 +312,15 @@ def plot_classification_scatter(
         warnings.warn(f"Satellite dataset '{dataset.satellite_dataset_name}' not found")
 
     ax2.set_xlabel("Local time [h]")
+    ax2.set_xticks(np.linspace(8, 16, 5))
     ax2.set_yticklabels([])
 
     for ax in axes:
         ax.grid(linewidth=0.5, alpha=0.1)
         ax.tick_params(direction="in", top=True, right=True)
 
-    fig.subplots_adjust(wspace=0.05)
-    fig.savefig(file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
+    fig.tight_layout(rect=(0, 0, 1, 0.875), pad=0.1, w_pad=1)
+    fig.savefig(file_path)
     plt.close()
 
 
@@ -312,45 +346,63 @@ def plot_classification_tsne(
     tsne_map = tsne.fit_transform(encoded_dataset)
 
     if dataset.has_labels:
-        fig, axes = plt.subplots(1, 2, figsize=(9, 4.5))
+        fig, axes = plt.subplots(1, 2, figsize=(3.5, 2.3))
         ax1, ax2 = axes
 
         ax1.set_title("True labels")
         ax2.set_title("Class labels")
 
+        markers = itertools.cycle(("o", "v", "^", "<", ">", "*", "D", "X"))
+
         for label, color in zip(unique_labels, colors):
             true_label_points = tsne_map[dataset.labels == label]
             class_label_points = tsne_map[class_labels == label]
             label_name = dataset.label_names[label]
+            marker = next(markers)
 
             ax1.scatter(
                 true_label_points[:, 0],
                 true_label_points[:, 1],
                 color=color,
                 label=label_name,
-                s=9,
+                s=3,
+                marker=marker,
             )
             ax2.scatter(
-                class_label_points[:, 0], class_label_points[:, 1], color=color, s=9
+                class_label_points[:, 0],
+                class_label_points[:, 1],
+                color=color,
+                s=3,
+                marker=marker,
             )
 
-        ax1.legend(
+        legend = ax1.legend(
             loc="upper center",
             bbox_to_anchor=(1.025, -0.025),
-            ncol=dataset.num_labels,
             fancybox=False,
             handletextpad=0,
             ncols=3,
             columnspacing=0.5,
         )
+        legend.set_in_layout(False)
+
+        for ax in axes.flatten():
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+        fig.tight_layout(rect=(0, 0.2, 1, 1), pad=0.1, w_pad=1)
     else:
-        fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+        fig, axes = plt.subplots(1, 2, figsize=(3.5, 2.2))
         ax1, ax2 = axes
 
         ax1.set_title("Images")
-        plotting.imscatter(ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+        plotting.imscatter(
+            ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray", zoom=0.33
+        )
 
         ax2.set_title("Class labels")
+
+        markers = itertools.cycle(("o", "v", "^", "<", ">", "*", "D", "X"))
 
         for label, color in zip(unique_labels, colors):
             label_points = tsne_map[class_labels == label]
@@ -360,17 +412,27 @@ def plot_classification_tsne(
                 label_points[:, 1],
                 color=color,
                 label=f"Class {label}",
-                s=18,
+                s=2,
+                marker=next(markers),
             )
 
-        ax2.legend(fancybox=False, handletextpad=0)
+        legend = ax2.legend(
+            loc="upper center",
+            bbox_to_anchor=(-0.035, -0.025),
+            fancybox=False,
+            handletextpad=0,
+            ncols=unique_labels.size,
+            columnspacing=0.5,
+        )
+        legend.set_in_layout(False)
 
-    for ax in axes.flatten():
-        ax.set_xticks([])
-        ax.set_yticks([])
+        for ax in axes.flatten():
+            ax.set_xticks([])
+            ax.set_yticks([])
 
-    fig.subplots_adjust(wspace=0.05)
-    fig.savefig(file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
+        fig.tight_layout(rect=(0, 0.15, 1, 1), pad=0.1, w_pad=1)
+
+    fig.savefig(file_path)
     plt.close()
 
 
@@ -381,7 +443,7 @@ def plot_class_examples(
 
     unique_labels = np.unique(class_labels)
     num_labels = unique_labels.size
-    fig_width = 9
+    fig_width = 3.5
     fig_height = num_labels / num_examples * fig_width
 
     fig, axes = plt.subplots(num_labels, num_examples, figsize=(fig_width, fig_height))
@@ -406,7 +468,8 @@ def plot_class_examples(
         ax.set_xticks([])
         ax.set_yticks([])
 
-    fig.savefig(file_path, bbox_inches="tight")
+    fig.tight_layout(pad=0.1, h_pad=0.25, w_pad=0.5)
+    fig.savefig(file_path)
     plt.close()
 
 

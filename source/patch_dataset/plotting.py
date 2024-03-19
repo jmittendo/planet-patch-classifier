@@ -1,3 +1,4 @@
+import itertools
 import typing
 import warnings
 from pathlib import Path
@@ -19,11 +20,26 @@ if typing.TYPE_CHECKING:
     from source.patch_dataset.dataset import PatchDataset
 
 
-if user_config.ENABLE_TEX_PLOTS:
-    plt.rcParams["text.usetex"] = True
+plt.rcParams["axes.linewidth"] = 0.4
+plt.rcParams["patch.linewidth"] = 0.4
+plt.rcParams["grid.linewidth"] = 0.4
+plt.rcParams["xtick.major.size"] = 2.5
+plt.rcParams["xtick.minor.size"] = 1.5
+plt.rcParams["xtick.major.width"] = 0.4
+plt.rcParams["xtick.minor.width"] = 0.3
+plt.rcParams["ytick.major.size"] = 2.5
+plt.rcParams["ytick.minor.size"] = 1.5
+plt.rcParams["ytick.major.width"] = 0.4
+plt.rcParams["ytick.minor.width"] = 0.3
+plt.rcParams["font.size"] = user_config.PLOT_FONT_SIZE
+plt.rcParams["savefig.dpi"] = user_config.PLOT_DPI
+plt.rcParams["text.usetex"] = user_config.PLOT_ENABLE_TEX
+
+if user_config.PLOT_ENABLE_TEX:
     plt.rcParams["font.family"] = "serif"
-    plt.rcParams["font.size"] = 16
-    plt.rcParams["axes.titlepad"] = 8
+else:
+    plt.rcParams["font.family"] = user_config.PLOT_FONT
+    plt.rcParams["mathtext.fontset"] = user_config.PLOT_MATH_FONT
 
 
 def plot_dataset_geometry_scatter(
@@ -43,17 +59,17 @@ def plot_dataset_geometry_scatter(
     patch_latitudes = dataset.latitudes[rand_indices]
     patch_local_times = dataset.local_times[rand_indices]
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(3.5, 1.75))
     ax1, ax2 = axes
 
     plotting.imscatter(
-        ax1, patch_images, patch_longitudes, patch_latitudes, cmap="gray"
+        ax1, patch_images, patch_longitudes, patch_latitudes, cmap="gray", zoom=0.33
     )
     ax1.set_xlabel("Longitude [deg]")
     ax1.set_ylabel("Latitude [deg]")
 
     plotting.imscatter(
-        ax2, patch_images, patch_local_times, patch_latitudes, cmap="gray"
+        ax2, patch_images, patch_local_times, patch_latitudes, cmap="gray", zoom=0.33
     )
 
     try:
@@ -66,6 +82,7 @@ def plot_dataset_geometry_scatter(
         warnings.warn(f"Satellite dataset '{dataset.satellite_dataset_name}' not found")
 
     ax2.set_xlabel("Local time [h]")
+    ax2.set_xticks(np.linspace(8, 16, 5))
     ax2.set_yticklabels([])
 
     for ax in axes:
@@ -81,8 +98,8 @@ def plot_dataset_geometry_scatter(
     )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.subplots_adjust(wspace=0.05)
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
+    fig.tight_layout(w_pad=1, pad=0.1)
+    fig.savefig(output_file_path)
 
 
 def plot_encoded_dataset_tsne_scatter(
@@ -108,20 +125,29 @@ def plot_encoded_dataset_tsne_scatter(
 
         unique_labels = np.unique(dataset.labels)
 
-        fig, axes = plt.subplots(1, 2, figsize=(18, 9))
+        fig, axes = plt.subplots(1, 2, figsize=(7.25, 3.625))
         ax1, ax2 = axes
 
         ax1.set_title("Images")
-        plotting.imscatter(ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+        plotting.imscatter(
+            ax1, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray", zoom=0.5
+        )
 
         ax2.set_title("True labels")
+
+        markers = itertools.cycle(("o", "v", "^", "<", ">", "*", "D", "X"))
 
         for label, color in zip(unique_labels, colors):
             label_points = tsne_map[dataset.labels == label]
             label_name = dataset.label_names[label]
 
             ax2.scatter(
-                label_points[:, 0], label_points[:, 1], color=color, label=label_name
+                label_points[:, 0],
+                label_points[:, 1],
+                color=color,
+                label=label_name,
+                s=6,
+                marker=next(markers),
             )
 
         ax2.legend(fancybox=False, handletextpad=0)
@@ -130,11 +156,13 @@ def plot_encoded_dataset_tsne_scatter(
             ax.set_xticks([])
             ax.set_yticks([])
 
-        fig.subplots_adjust(wspace=0.05)
+        fig.tight_layout(pad=0.25, w_pad=1)
     else:
-        fig, ax = plt.subplots(figsize=(9, 9))
+        fig, ax = plt.subplots(figsize=(3.5, 3.5))
 
-        plotting.imscatter(ax, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray")
+        plotting.imscatter(
+            ax, dataset, tsne_map[:, 0], tsne_map[:, 1], cmap="gray", zoom=0.33
+        )
         ax.set_xticks([])
         ax.set_yticks([])
 
@@ -150,4 +178,5 @@ def plot_encoded_dataset_tsne_scatter(
     )
     output_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_file_path, bbox_inches="tight", dpi=user_config.PLOT_DPI)
+    fig.tight_layout(pad=0.1)
+    fig.savefig(output_file_path)
