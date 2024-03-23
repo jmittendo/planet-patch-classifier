@@ -15,7 +15,7 @@ from source.satellite_dataset.patches.typing import ImgGeoDataArrays
 from source.satellite_dataset.planet import Planet
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import SatelliteDataset
+    from source.satellite_dataset import SatelliteDataset
 
 
 def _register_subclass(name: str) -> Callable:

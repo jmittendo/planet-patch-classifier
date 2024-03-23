@@ -10,10 +10,10 @@ import source.patch_dataset.config as pd_config
 import source.utility as util
 
 if typing.TYPE_CHECKING:
-    from source.patch_dataset.dataset import PatchDataset
+    from source.patch_dataset import PatchDataset
 
 
-def generate_flat_dataset(
+def generate_flat_version(
     dataset: "PatchDataset", blur_sigma: float, contrast: float
 ) -> None:
     flat_patches_dir_path = (

@@ -8,14 +8,14 @@ from pandas import DataFrame
 from sklearn import metrics
 
 import source.config as config
-import source.neural_network.config as nn_config
-import source.patch_dataset.dataset as pd_dataset
+import source.neural_network as nn
+import source.patch_dataset as pd
 import user.config as user_config
-from source.patch_dataset.dataset import PatchDataset
+from source.patch_dataset import PatchDataset
 
 
 def main() -> None:
-    dataset = pd_dataset.get(
+    dataset = pd.get_dataset(
         name=user_config.BENCHMARK_DATASET_NAME,
         version_name=user_config.BENCHMARK_DATASET_VERSION,
     )
@@ -49,11 +49,11 @@ def main() -> None:
         checkpoint_path = (
             None
             if encoder_model == "simple"
-            else nn_config.CHECKPOINTS_DIR_PATH
-            / encoder_model
-            / (
-                f"{encoder_model}_{user_config.BENCHMARK_DATASET_NAME}"
-                f"_{user_config.BENCHMARK_DATASET_VERSION}.pt"
+            else nn.get_checkpoint_path(
+                encoder_model,
+                user_config.BENCHMARK_ENCODER_BASE_MODEL,
+                user_config.BENCHMARK_DATASET_NAME,
+                user_config.BENCHMARK_DATASET_VERSION,
             )
         )
 

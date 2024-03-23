@@ -5,9 +5,9 @@ from pathlib import Path
 from numpy import ndarray
 from torch import no_grad
 
-import source.neural_network.utility as nn_util
+import source.neural_network as nn
 import source.patch_dataset.config as pd_config
-from source.neural_network.models import (
+from source.neural_network import (
     AutoencoderModel,
     SimCLREncoderModel,
     SimpleEncoderModel,
@@ -15,7 +15,7 @@ from source.neural_network.models import (
 from source.neural_network.typing import DeviceLike
 
 if typing.TYPE_CHECKING:
-    from source.patch_dataset.dataset import PatchDataset
+    from source.patch_dataset import PatchDataset
 
 
 @no_grad()
@@ -34,7 +34,7 @@ def encode_dataset(
     if model == "simple" and checkpoint_path is not None:
         warnings.warn(f"Model checkpoint not used with model type '{model}'")
 
-    transforms = nn_util.get_patch_dataset_transforms(dataset)
+    transforms = nn.get_patch_dataset_transforms(dataset)
 
     match model:
         case "simple":

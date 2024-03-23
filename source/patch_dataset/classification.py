@@ -12,7 +12,7 @@ from source.neural_network.typing import DeviceLike
 from source.patch_dataset.typing import ClusteringMethod, ReductionMethod
 
 if typing.TYPE_CHECKING:
-    from source.patch_dataset.dataset import PatchDataset
+    from source.patch_dataset import PatchDataset
 
 
 def classify_dataset(

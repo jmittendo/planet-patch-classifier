@@ -11,14 +11,16 @@ from numpy import ndarray
 from sklearn import metrics
 from sklearn.manifold import TSNE
 
-import source.config as config
-import source.neural_network.config as nn_config
-import source.patch_dataset.dataset as pd_dataset
-import source.plotting as plotting
-import source.satellite_dataset.dataset as sd_dataset
+import source.neural_network as nn
+import source.patch_dataset as pd
+import source.satellite_dataset as sd
 import user.config as user_config
-from source.patch_dataset.dataset import PatchDataset
-from source.satellite_dataset.planet import Planet
+from source import config, plotting
+from source.patch_dataset import PatchDataset
+from source.satellite_dataset import Planet
+
+PLOTS_DIR_NAME = "classification"
+
 
 plt.rcParams["axes.linewidth"] = 0.4
 plt.rcParams["patch.linewidth"] = 0.4
@@ -42,9 +44,6 @@ else:
     plt.rcParams["mathtext.fontset"] = user_config.PLOT_MATH_FONT
 
 
-PLOTS_DIR_NAME = "classification"
-
-
 def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
@@ -58,7 +57,7 @@ def main() -> None:
     hdbscan_min_cluster_size: int | None = input_args.hdbscan_min_cluster_size
     device: str | None = input_args.device
 
-    dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
+    dataset = pd.get_dataset(name=dataset_name, version_name=version_name)
     num_classes = len(dataset.label_names) if dataset.has_labels else num_classes
 
     if reduction_method is None:
@@ -102,11 +101,8 @@ def main() -> None:
     checkpoint_path = (
         None
         if encoder_model == "simple"
-        else nn_config.CHECKPOINTS_DIR_PATH
-        / encoder_model
-        / (
-            f"{encoder_model}_{encoder_base_model}_{dataset.name}"
-            f"_{dataset.version_name}.pt"
+        else nn.get_checkpoint_path(
+            encoder_model, encoder_base_model, dataset.name, dataset.version_name  # type: ignore
         )
     )
 
@@ -303,7 +299,7 @@ def plot_classification_scatter(
     legend.set_in_layout(False)
 
     try:
-        satellite_dataset = sd_dataset.get(dataset.satellite_dataset_name)
+        satellite_dataset = sd.get_dataset(dataset.satellite_dataset_name)
         planet_rotation = satellite_dataset.archive.planet.rotation
 
         if planet_rotation is Planet.Rotation.RETROGRADE:

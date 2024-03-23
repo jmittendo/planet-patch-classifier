@@ -2,7 +2,7 @@ import typing
 from pathlib import Path
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import SatelliteDataset
+    from source.satellite_dataset import SatelliteDataset
 
 
 def validate_vex_vmc_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:

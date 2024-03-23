@@ -5,10 +5,10 @@ from torchvision.transforms import functional
 from tqdm import tqdm
 
 if typing.TYPE_CHECKING:
-    from source.patch_dataset.dataset import PatchDataset
+    from source.patch_dataset import PatchDataset
 
 
-def generate_grayscale_dataset(dataset: "PatchDataset") -> None:
+def generate_grayscale_version(dataset: "PatchDataset") -> None:
     grayscale_patches_dir_path = (
         dataset.versions_dir_path / f"{dataset.version_name}_grayscale"
     )

@@ -6,18 +6,18 @@ from numpy.ma import MaskedArray
 from pandas import DataFrame
 from tqdm import tqdm
 
-import source.patch_dataset.config as pd_config
 import source.satellite_dataset.patches.img_geo_patches as sd_img_geo_patches
 import source.satellite_dataset.patches.utility as sd_patch_util
 import source.satellite_dataset.utility as sd_util
 import user.config as user_config
+from source import config
 from source.satellite_dataset.patches.img_geo_patches import ImgGeoPatchGenerator
 from source.satellite_dataset.patches.jno_jnc_patches import JnoJncPatchGenerator
 from source.satellite_dataset.patches.typing import ImgGeoDataArrays
 
 if typing.TYPE_CHECKING:
+    from source.satellite_dataset import SatelliteDataset
     from source.satellite_dataset.archive import ImgGeoArchive, JnoJncArchive
-    from source.satellite_dataset.dataset import SatelliteDataset
 
 
 def generate_img_geo_patches(
@@ -27,8 +27,9 @@ def generate_img_geo_patches(
     patch_resolution: int,
     global_normalization: bool = False,
 ) -> None:
-    output_dir_name = f"{dataset.name}_s{patch_scale_km:g}-r{patch_resolution}"
-    output_dir_path = pd_config.DATASETS_DIR_PATH / dataset.name / output_dir_name
+    output_dir_path = get_patch_dataset_path(
+        dataset.name, patch_scale_km, patch_resolution
+    )
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     # Spatial resolution of a patch in m/px (ignoring projection effects / distortions)
@@ -175,8 +176,9 @@ def generate_jno_jnc_patches(
     patch_resolution: int,
     global_normalization: bool = False,
 ) -> None:
-    output_dir_name = f"{dataset.name}_s{patch_scale_km:g}-r{patch_resolution}"
-    output_dir_path = pd_config.DATASETS_DIR_PATH / dataset.name / output_dir_name
+    output_dir_path = get_patch_dataset_path(
+        dataset.name, patch_scale_km, patch_resolution
+    )
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     patch_generator = JnoJncPatchGenerator(patch_scale_km, patch_resolution)
@@ -195,3 +197,12 @@ def generate_jno_jnc_patches(
             patch_dataset_info_json,
             indent=user_config.JSON_INDENT,
         )
+
+
+def get_patch_dataset_path(
+    dataset_name: str, patch_scale_km: float, patch_resolution: int
+) -> "Path":
+    output_dir_name = f"{dataset_name}_s{patch_scale_km:g}-r{patch_resolution}"
+    output_dir_path = config.PATCH_DATASETS_DIR_PATH / dataset_name / output_dir_name
+
+    return output_dir_path

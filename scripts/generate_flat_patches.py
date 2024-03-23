@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-import source.patch_dataset.dataset as pd_dataset
-import source.patch_dataset.flattening as pd_flattening
+import source.patch_dataset as pd
 
 
 def main() -> None:
@@ -10,7 +9,7 @@ def main() -> None:
     blur_sigma: float | None = input_args.sigma
     contrast: float | None = input_args.contrast
 
-    dataset = pd_dataset.get(name=dataset_name, version_name="norm-local")
+    dataset = pd.get_dataset(name=dataset_name, version_name="norm-local")
 
     if blur_sigma is None:
         blur_sigma = float(input("Enter Gaussian blur radius: "))
@@ -18,7 +17,7 @@ def main() -> None:
     if contrast is None:
         contrast = float(input("Enter contrast: "))
 
-    pd_flattening.generate_flat_dataset(dataset, blur_sigma, contrast)
+    pd.generate_flat_version(dataset, blur_sigma, contrast)
 
 
 def parse_input_args() -> Namespace:

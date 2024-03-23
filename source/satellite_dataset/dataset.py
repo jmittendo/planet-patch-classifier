@@ -67,7 +67,7 @@ def _build_dataset_registry() -> dict[str, SatelliteDataset]:
 _dataset_registry = _build_dataset_registry()
 
 
-def get(name: str | None = None) -> SatelliteDataset:
+def get_dataset(name: str | None = None) -> SatelliteDataset:
     if name is None:
         print("\nAvailable datasets:\n-------------------")
 

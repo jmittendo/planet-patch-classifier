@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-import source.patch_dataset.dataset as pd_dataset
-import source.patch_dataset.grayscale as pd_grayscale
+import source.patch_dataset as pd
 
 
 def main() -> None:
@@ -9,9 +8,9 @@ def main() -> None:
     dataset_name: str | None = input_args.name
     version_name: str | None = input_args.version
 
-    dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
+    dataset = pd.get_dataset(name=dataset_name, version_name=version_name)
 
-    pd_grayscale.generate_grayscale_dataset(dataset)
+    pd.generate_grayscale_version(dataset)
 
 
 def parse_input_args() -> Namespace:

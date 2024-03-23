@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 
-import source.satellite_dataset.dataset as sd_dataset
+import source.satellite_dataset as sd
 
 
 def main() -> None:
@@ -10,7 +10,7 @@ def main() -> None:
     patch_resolution: int | None = input_args.resolution
     global_normalization: bool = input_args.globalnorm
 
-    dataset = sd_dataset.get(dataset_name)
+    dataset = sd.get_dataset(dataset_name)
 
     if patch_scale_km is None:
         patch_scale_km = float(input("Enter scale of patches in km: "))

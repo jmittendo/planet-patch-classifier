@@ -244,7 +244,9 @@ def _build_dataset_registry() -> dict[str, PatchDataset]:
 _dataset_registry = _build_dataset_registry()
 
 
-def get(name: str | None = None, version_name: str | None = None) -> PatchDataset:
+def get_dataset(
+    name: str | None = None, version_name: str | None = None
+) -> PatchDataset:
     if name is None:
         print("\nAvailable datasets:\n-------------------")
 

@@ -1,13 +1,13 @@
 from argparse import ArgumentParser, Namespace
 
-import source.satellite_dataset.dataset as sd_dataset
+import source.satellite_dataset as sd
 
 
 def main() -> None:
     input_args = parse_input_args()
     dataset_name: str | None = input_args.name
 
-    dataset = sd_dataset.get(dataset_name)
+    dataset = sd.get_dataset(dataset_name)
     dataset.generate_table()
 
 

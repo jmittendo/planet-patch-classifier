@@ -1,8 +1,8 @@
 import warnings
 from argparse import ArgumentParser, Namespace
 
-import source.neural_network.config as nn_config
-import source.patch_dataset.dataset as pd_dataset
+import source.neural_network as nn
+import source.patch_dataset as pd
 
 
 def main() -> None:
@@ -13,7 +13,7 @@ def main() -> None:
     encoder_base_model: str | None = input_args.base_model
     num_patches: int | None = input_args.number
 
-    dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
+    dataset = pd.get_dataset(name=dataset_name, version_name=version_name)
 
     if encoder_model is None:
         encoder_model = input(
@@ -33,11 +33,8 @@ def main() -> None:
     checkpoint_path = (
         None
         if encoder_model == "simple"
-        else nn_config.CHECKPOINTS_DIR_PATH
-        / encoder_model
-        / (
-            f"{encoder_model}_{encoder_base_model}_{dataset.name}"
-            f"_{dataset.version_name}.pt"
+        else nn.get_checkpoint_path(
+            encoder_model, encoder_base_model, dataset.name, dataset.version_name  # type: ignore
         )
     )
 

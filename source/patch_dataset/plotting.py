@@ -11,13 +11,13 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 import source.patch_dataset.config as pd_config
-import source.plotting as plotting
-import source.satellite_dataset.dataset as sd_dataset
+import source.satellite_dataset as sd
 import user.config as user_config
-from source.satellite_dataset.planet import Planet
+from source import plotting
+from source.satellite_dataset import Planet
 
 if typing.TYPE_CHECKING:
-    from source.patch_dataset.dataset import PatchDataset
+    from source.patch_dataset import PatchDataset
 
 
 plt.rcParams["axes.linewidth"] = 0.4
@@ -73,10 +73,10 @@ def plot_dataset_geometry_scatter(
     )
 
     try:
-        satellite_dataset = sd_dataset.get(dataset.satellite_dataset_name)
+        satellite_dataset = sd.get_dataset(dataset.satellite_dataset_name)
         planet_rotation = satellite_dataset.archive.planet.rotation
 
-        if planet_rotation is Planet.Rotation.RETROGRADE:
+        if planet_rotation == Planet.Rotation.RETROGRADE:
             ax2.invert_xaxis()
     except KeyError:
         warnings.warn(f"Satellite dataset '{dataset.satellite_dataset_name}' not found")

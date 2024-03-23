@@ -1,25 +1,23 @@
-import json
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas import DataFrame
 from torch.utils import data
 
-import source.config as config
-import source.neural_network.config as nn_config
-import source.neural_network.utility as nn_util
-import source.patch_dataset.dataset as pd_dataset
+import source.neural_network as nn
+import source.patch_dataset as pd
 import user.config as user_config
-from source.neural_network.models import AutoencoderModel, SimCLREncoderModel
-from source.neural_network.typing import (
+from source import config
+from source.neural_network import (
+    AutoencoderModel,
     AutoencoderTrainParams,
+    SimCLREncoderModel,
     SimCLREncoderTrainParams,
 )
 
-if user_config.ENABLE_TEX_PLOTS:
+if user_config.PLOT_ENABLE_TEX:
     plt.rcParams["text.usetex"] = True
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.size"] = 16
@@ -49,11 +47,11 @@ def main() -> None:
         warnings.warn("Autoencoder model always uses 'resnet18' base model")
         base_model_type = "resnet18"
 
-    dataset = pd_dataset.get(name=dataset_name, version_name=version_name)
+    dataset = pd.get_dataset(name=dataset_name, version_name=version_name)
     train_dataset, test_dataset = data.random_split(
         dataset, [1 - user_config.TRAIN_TEST_RATIO, user_config.TRAIN_TEST_RATIO]
     )
-    transforms = nn_util.get_patch_dataset_transforms(dataset)
+    transforms = nn.get_patch_dataset_transforms(dataset)
 
     match model_type:
         case "autoencoder":
@@ -68,7 +66,7 @@ def main() -> None:
             model = SimCLREncoderModel(base_model_type, transforms=transforms)  # type: ignore
             train_params: SimCLREncoderTrainParams = {
                 "batch_size": user_config.TRAIN_BATCH_SIZE,
-                "loss_temperature": nn_config.SIMCLR_LOSS_TEMPERATURE,
+                "loss_temperature": user_config.SIMCLR_LOSS_TEMPERATURE,
                 "base_learning_rate": 0.3 * user_config.TRAIN_BATCH_SIZE / 256,
                 "epochs": user_config.TRAIN_EPOCHS,
                 "output_interval": user_config.TRAIN_OUTPUT_INTERVAL,
@@ -84,33 +82,17 @@ def main() -> None:
         train_dataset, test_dataset, train_params  # type: ignore
     )
 
-    file_name_base = (
-        f"{model_type}_{base_model_type}_{dataset.name}_{dataset.version_name}"
+    checkpoint_path = nn.save_checkpoint(
+        model,
+        model_type,
+        base_model_type,  # type: ignore
+        dataset.name,
+        dataset.version_name,
+        train_losses,
+        test_losses,
+        best_epoch,
+        train_params,  # type: ignore
     )
-
-    output_dir_path = nn_config.CHECKPOINTS_DIR_PATH / model_type
-    output_dir_path.mkdir(parents=True, exist_ok=True)
-
-    checkpoint_path = output_dir_path / f"{file_name_base}.pt"
-    model.save_checkpoint(checkpoint_path)
-
-    loss_table_path = output_dir_path / f"{file_name_base}_losses.pkl"
-    loss_table_dict = {"train_losses": train_losses, "test_losses": test_losses}
-    loss_table = DataFrame(data=loss_table_dict)
-    loss_table.to_pickle(loss_table_path)
-
-    model_info_json_path = output_dir_path / f"{file_name_base}_info.json"
-    model_info_dict: dict[str, float | int] = train_params.copy()  # type: ignore
-    model_info_dict.pop("output_interval")
-    model_info_dict["best_epoch"] = best_epoch
-    model_info_dict["best_test_loss"] = test_losses[best_epoch - 1]
-
-    with open(model_info_json_path, "w") as model_info_json:
-        json.dump(
-            model_info_dict,
-            model_info_json,
-            indent=user_config.JSON_INDENT,
-        )
 
     plots_dir_path = config.PLOTS_DIR_PATH / PLOTS_DIR_NAME
     plots_dir_path.mkdir(parents=True, exist_ok=True)
@@ -119,7 +101,7 @@ def main() -> None:
         train_losses,
         test_losses,
         best_epoch,
-        plots_dir_path / f"{file_name_base}_losses.pdf",
+        plots_dir_path / f"{checkpoint_path.stem}_losses.pdf",
     )
 
 

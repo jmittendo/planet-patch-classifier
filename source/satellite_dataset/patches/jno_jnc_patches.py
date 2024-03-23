@@ -16,7 +16,7 @@ import source.satellite_dataset.utility as sd_util
 import user.config as user_config
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import SatelliteDataset
+    from source.satellite_dataset import SatelliteDataset
 
 
 # see SPICE ik kernel "juno_junocam_v03.ti"

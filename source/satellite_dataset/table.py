@@ -11,7 +11,7 @@ from pvl import PVLModule, Quantity
 import source.satellite_dataset.utility as sd_util
 
 if typing.TYPE_CHECKING:
-    from source.satellite_dataset.dataset import SatelliteDataset
+    from source.satellite_dataset import SatelliteDataset
 
 
 def generate_vex_vmc_dataset_table(
