@@ -1,7 +1,5 @@
 -e .
 
-requests
-beautifulsoup4
 tqdm
 pandas
 astropy
