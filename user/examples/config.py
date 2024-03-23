@@ -37,7 +37,6 @@ PLOT_DPI = 1000
 PLOT_ENABLE_TEX = False
 
 # Misc
-DOWNLOAD_CHUNK_SIZE = 67_108_864  # 64 MB
 DATETIME_FORMAT = r"%Y-%m-%d_%H-%M-%S"
 LOGGING_FORMAT = r"%(asctime)s - %(levelname)s - %(message)s"
 JSON_INDENT = 4
