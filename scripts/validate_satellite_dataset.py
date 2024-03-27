@@ -19,8 +19,8 @@ def main() -> None:
 def parse_input_args() -> Namespace:
     arg_parser = ArgumentParser(
         description=(
-            "Validate the structure of a named dataset. Run without arguments to get "
-            "a list of available datasets."
+            "Validate the structure of a satellite dataset. Run without arguments to "
+            "get a list of available datasets."
         ),
     )
 

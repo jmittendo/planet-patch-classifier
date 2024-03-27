@@ -1,0 +1,12 @@
+{
+    "scale_km": null,
+    "resolution": 150,
+    "labels": [
+        "Clear sky",
+        "Patterned clouds",
+        "Veil clouds",
+        "Thin white clouds",
+        "Thick white clouds",
+        "Thick dark clouds"
+    ]
+}

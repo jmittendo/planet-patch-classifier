@@ -22,7 +22,7 @@ def main() -> None:
 
 def parse_input_args() -> Namespace:
     arg_parser = ArgumentParser(
-        description=("Generate a flattened version of the specified dataset."),
+        description=("Generate a flattened version of the specified patch dataset."),
     )
 
     arg_parser.add_argument("name", nargs="?", help="name of the dataset")

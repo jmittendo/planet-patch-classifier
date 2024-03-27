@@ -26,8 +26,8 @@ def main() -> None:
 def parse_input_args() -> Namespace:
     arg_parser = ArgumentParser(
         description=(
-            "Generate patches for a named dataset. Run without arguments to get a list "
-            "of available datasets."
+            "Generate patches from a satellite dataset. Run without arguments to get a "
+            "list of available datasets."
         ),
     )
 

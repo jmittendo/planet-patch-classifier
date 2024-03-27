@@ -67,7 +67,7 @@ def main() -> None:
 
     if clustering_method is None:
         clustering_method = input(
-            "Enter clustering method ('kmeans', 'hdbscan', 'hac'): "
+            "Enter clustering method ('kmeans', 'hac', 'hdbscan'): "
         )
 
     if clustering_method != "hdbscan" and num_classes is None:
