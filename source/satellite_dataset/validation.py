@@ -261,3 +261,60 @@ def validate_vco_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
 
     message = "No errors found"
     return True, message
+
+
+def validate_jno_jnc_dataset(dataset: "SatelliteDataset") -> tuple[bool, str]:
+    # Dataset path must be a valid directory
+    if not dataset.data_path.is_dir():
+        message = f"Dataset directory '{dataset.data_path.as_posix()}' not found"
+        return False, message
+
+    # Dataset directory must contain volume directories
+    # (e.g. "JNOJNC_0001" or "JNOJNC_0002", ...)
+    volume_dir_paths = list(dataset.data_path.iterdir())
+
+    if not volume_dir_paths:
+        message = "Dataset directory is empty"
+        return False, message
+
+    for volume_dir_path in volume_dir_paths:
+        if not volume_dir_path.is_dir():
+            message = (
+                "Illegal file found in dataset directory: "
+                f"'{volume_dir_path.as_posix()}'"
+            )
+            return False, message
+
+        # Volume directories must contain a subdirectory "RDR"/"JUPITER"
+        jupiter_dir_path = volume_dir_path / "RDR" / "JUPITER"
+
+        if not jupiter_dir_path.is_dir():
+            message = f"Subdirectory '{jupiter_dir_path.as_posix()}' not found"
+            return False, message
+
+        # The "JUPITER" subdir must contain the orbit directories
+        # (e.g. "ORBIT_00", "ORBIT_39", ...)
+        orbit_dir_paths = list(jupiter_dir_path.iterdir())
+
+        if not orbit_dir_paths:
+            message = f"Subdirectory '{jupiter_dir_path.as_posix()}' is empty"
+            return False, message
+
+        for orbit_dir_path in orbit_dir_paths:
+            # Image file orbit directories must contain image files with the extension
+            # ".IMG" (but can also be empty!)
+            for img_file_path in orbit_dir_path.glob("*.IMG"):
+                # Image files must have a corresponding PDS3 LBL file with the following
+                # path
+                lbl_file_name = img_file_path.with_suffix(".LBL")
+
+                if not lbl_file_name.is_file():
+                    message = (
+                        f"Image file '{img_file_path.as_posix()}' does not have a "
+                        "corresponding PDS3 LBL file (Expected path: "
+                        f"'{lbl_file_name.as_posix()}')"
+                    )
+                    return False, message
+
+    message = "No errors found"
+    return True, message

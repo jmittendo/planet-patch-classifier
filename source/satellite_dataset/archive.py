@@ -1,6 +1,5 @@
 import abc
 import typing
-import warnings
 from abc import ABC
 from pathlib import Path
 from typing import Callable
@@ -92,10 +91,7 @@ class ImgGeoArchive(Archive):
 @_register_subclass("jno-jnc")  # Has to match name of archive dir in archives dir
 class JnoJncArchive(Archive):
     def validate_dataset(self, dataset: "SatelliteDataset") -> tuple[bool, str]:
-        warnings.warn(
-            "'validate_dataset' method not yet implemented for 'JnoJncArchive'"
-        )
-        return True, ""  # TEMPORARY
+        return sd_validation.validate_jno_jnc_dataset(dataset)
 
     def generate_dataset_table(self, dataset: "SatelliteDataset") -> DataFrame:
         return sd_table.generate_jno_jnc_table(dataset)
