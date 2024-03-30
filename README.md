@@ -167,6 +167,8 @@ This script will produce model checkpoints at
 metadata, and `.pkl` table files that contain the training and test losses. It will also
 produce a plot of the losses at `<DATA_DIR_PATH>/plots/train-losses/`.
 
+A selection of model checkpoints trained on various patch datasets (used for generating the results of the [paper](?)) is also available at: https://huggingface.co/jmittendo/cloud-patch-encoders.
+
 ### Classifying Patches
 Finally, a patch dataset (version) can be classified by calling[*](#running-scripts):
 ```sh
