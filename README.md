@@ -113,7 +113,7 @@ python scripts/generate_satellite_dataset_table.py [name]
 - `[name]`: (Optional) Name of the satellite dataset (i.e. name of the directory).
 
 The patch generation process can be customized further by adjusting the parameters in
-the `PATCHES` section of `user/config.py`. Read the [paper](#?) for a detailed
+the `PATCHES` section of `user/config.py`. Read the [paper](https://doi.org/10.1016/j.ascom.2024.100884) for a detailed
 explanation of their meanings.
 
 ### Generating Patch Dataset Versions
@@ -123,7 +123,7 @@ generated a patch dataset with the global normalization flag
 [above](#generating-patches), then both a `norm-local` and `norm-global` version of the
 dataset should already be available in this directory. Using the following
 scripts[*](#running-scripts), you can also generate a *flattened* version (read the
-[paper](#?) for a detailed explanation) and a grayscale version of any patch dataset:
+[paper](https://doi.org/10.1016/j.ascom.2024.100884) for a detailed explanation) and a grayscale version of any patch dataset:
 
 -   ```sh
     python scripts/generate_flat_patches.py [name] [sigma] [contrast]
@@ -167,7 +167,7 @@ This script will produce model checkpoints at
 metadata, and `.pkl` table files that contain the training and test losses. It will also
 produce a plot of the losses at `<DATA_DIR_PATH>/plots/train-losses/`.
 
-A selection of model checkpoints trained on various patch datasets (used for generating the results of the [paper](?)) is also available at: https://huggingface.co/jmittendo/cloud-patch-encoders.
+A selection of model checkpoints trained on various patch datasets (used for generating the results of the [paper](https://doi.org/10.1016/j.ascom.2024.100884)) is also available at: https://huggingface.co/jmittendo/cloud-patch-encoders.
 
 ### Classifying Patches
 Finally, a patch dataset (version) can be classified by calling[*](#running-scripts):
@@ -243,7 +243,7 @@ accuracy, the confusion matrix, and the
     python scripts/run_benchmarks.py
     ```
 
-    Attempts to run the benchmarks from the [paper](?) on the
+    Attempts to run the benchmarks from the [paper](https://doi.org/10.1016/j.ascom.2024.100884) on the
     [*Cloud-ImVN 1.0* dataset](docs/datasets.md#cloud-imvn-10-patch-dataset). The
     benchmark can be customized with the parameters under the *BENCHMARK* section in
     `user/config.py`. The benchmark table will be located at
