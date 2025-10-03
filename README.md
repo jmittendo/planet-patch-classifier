@@ -22,7 +22,7 @@ imagery via geometrical projections and interpolation.
 Satellite Datasets
 -------------------
 The following satellite image datasets are supported:
-1. [Akatsuki / Venus Climate Orbiter (*VCO*)](https://darts.isas.jaxa.jp/planet/project/akatsuki/)
+1. [Akatsuki / Venus Climate Orbiter (*VCO*)](https://darts.isas.jaxa.jp/missions/akatsuki/index_en.html)
 (Size: ~700 GB)
 2. [Venus Express (*VEX*) / Venus Monitoring Camera (*VMC*)](https://www.cosmos.esa.int/web/psa/venus-express)
 (Size: ~2 TB)
